@@ -1,5 +1,5 @@
 /* ==========================================
-   COTIZADOR PRO - CYAN TRAVEL (DISEÑO ORIGINAL + CRUCEROS + FIREBASE)
+   COTIZADOR PRO - CYAN TRAVEL (DISEÑO VENDEDOR + VISA + PAGOS)
    ========================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -434,7 +434,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 100); 
     }
 
-    // --- RENDERIZADO DEL PDF (DISEÑO ORIGINAL) ---
+    // --- RENDERIZADO DEL PDF ---
     function formatCurrency(value, currency = 'COP') {
         const number = parseFloat(String(value).replace(/[^0-9.-]+/g, ""));
         if (isNaN(number)) return '';
@@ -449,17 +449,24 @@ document.addEventListener('DOMContentLoaded', () => {
         
         document.getElementById('confirm-intro-text').textContent = `¡Hola, ${clientName.split(' ')[0].toUpperCase()}! He preparado estas opciones para tu próximo viaje.`;
 
+        // INYECCIÓN DE LA ALERTA DE VISA
         const visaStatus = document.getElementById('requiere-visa').value;
-        const visaText = visaStatus !== 'No requiere visa' ? `<br><br>⚠️ <strong>${visaStatus}</strong>` : '';
+        const visaAlert = document.getElementById('pdf-visa-alert');
+        if(visaStatus !== 'No requiere visa') {
+            visaAlert.style.display = 'block';
+            visaAlert.innerHTML = `🛂 <strong>Requisito Migratorio:</strong> ${visaStatus}`;
+        } else {
+            visaAlert.style.display = 'none';
+        }
 
         const customerBox = document.getElementById('confirm-customer-data-box');
-        customerBox.innerHTML = `<p>Para: <strong>${clientName.toUpperCase()}</strong></p><p>Pasajeros: <strong>${adults} Adulto${adults > 1 ? 's' : ''}${children > 0 ? ` y ${children} Niño${children > 1 ? 's' : ''}` : ''}</strong></p><p>Nº Cotización: <strong>${quoteNumber}</strong> | Validez: <strong>${document.getElementById('validez-cupos').value}</strong>${visaText}</p>`;
+        customerBox.innerHTML = `<p>Para: <strong>${clientName.toUpperCase()}</strong></p><p>Pasajeros: <strong>${adults} Adulto${adults > 1 ? 's' : ''}${children > 0 ? ` y ${children} Niño${children > 1 ? 's' : ''}` : ''}</strong></p><p>Nº Cotización: <strong>${quoteNumber}</strong> | Validez: <strong>${document.getElementById('validez-cupos').value}</strong></p>`;
 
         const advisor = ADVISORS[advisorSelect.value];
         document.getElementById('advisor-photo').src = advisor.photoUrl;
         document.getElementById('advisor-name').textContent = advisor.name;
 
-        const whatsappLink = `https://wa.me/${advisorWhatsappInput.value}`;['advisor-whatsapp-btn', 'cta-reservar', 'cta-contactar', 'footer-wpp-link'].forEach(id => {
+        const whatsappLink = `https://wa.me/${advisorWhatsappInput.value}`;['advisor-whatsapp-btn', 'cta-reservar', 'cta-contactar'].forEach(id => {
             const el = document.getElementById(id);
             const baseText = id === 'cta-reservar' ? `¡Hola ${advisor.name}! Estoy listo para reservar según la cotización *${quoteNumber}*.` : `Hola ${advisor.name}, tengo una pregunta sobre la cotización *${quoteNumber}*.`;
             el.href = `${whatsappLink}?text=${encodeURIComponent(baseText)}`;
@@ -513,7 +520,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>`;
         });
 
-        // Renderizar Vuelos y Traslados
         if (document.getElementById('flights-form-wrapper')) {
             dynamicTermsHTML += TERMS_AND_CONDITIONS.flights;
             confirmationComponentsContainer.innerHTML += `<div class="component-section"><h3>Vuelos Sugeridos</h3><div class="option-body"><p>Desde: ${document.getElementById('ciudad-salida').value}</p></div></div>`;
@@ -522,6 +528,7 @@ document.addEventListener('DOMContentLoaded', () => {
             dynamicTermsHTML += TERMS_AND_CONDITIONS.transfers;
         }
 
+        // INYECCIÓN DE LA BARRA DE PAGOS
         document.getElementById('confirm-pago-reserva').textContent = formatCurrency(document.getElementById('pago-reserva').value);
         document.getElementById('confirm-pago-segundo').textContent = formatCurrency(document.getElementById('pago-segundo').value);
         document.getElementById('confirm-fecha-limite').textContent = document.getElementById('fecha-limite-pago').value;
