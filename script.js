@@ -1,6 +1,4 @@
-/* ==========================================
-   COTIZADOR PRO - VIVANTURA (VERSIÓN LOCAL + EDITAR)
-   ========================================== */
+
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -14,12 +12,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const mainWrapper = document.querySelector('.wrapper');
 
     const ADVISORS = {
-        'María_Camila': { name: 'María Camila Ramirez Rodas', photoUrl: 'https://i.imgur.com/SdubRgH.jpeg', defaultWhatsapp: '573113173286' },
-        'Sarah_George': { name: 'Sarah George Esteves', photoUrl: 'https://i.imgur.com/MCSsvz9.jpeg', defaultWhatsapp: '573332313485' },
-        'Ana_Isabel': { name: 'Ana Isabel Buitrago García', photoUrl: 'https://i.imgur.com/b7LIglY.jpeg', defaultWhatsapp: '573217598780' },
-        'Nicol_Dayanna': { name: 'Nicol Dayanna Tamayo Buitrago', photoUrl: 'https://i.imgur.com/7diSD8P.jpeg', defaultWhatsapp: '573003895626' },
-        'Oriana_Villabos': { name: 'Oriana Villalobos Miranda', photoUrl: 'https://i.imgur.com/bsnOhuX.jpeg', defaultWhatsapp: '573108472004' },
-        'Alejandra_Arroyo': { name: 'Alejandra Arroyo García', photoUrl: 'https://i.imgur.com/aeMOvMs.jpeg', defaultWhatsapp: '573137449530' }
+        'Cynthia': { 
+            name: 'Cynthia', 
+            photoUrl: 'https://dummyimage.com/150x150/000000/ffffff.png&text=Cynthia', 
+            defaultWhatsapp: '573054466406' 
+        },
+        'Andres': { 
+            name: 'Andrés', 
+            photoUrl: 'https://dummyimage.com/150x150/000000/ffffff.png&text=Andres', 
+            defaultWhatsapp: '573054466406' 
+        }
     };
 
     const ICONS = {
