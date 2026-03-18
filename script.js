@@ -1,8 +1,6 @@
-// Importaciones de Firebase (Versión Modular 10.x)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getFirestore, collection, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-// Configuración de Firebase proporcionada
 const firebaseConfig = {
   apiKey: "AIzaSyBHmGl77i125THoq5rgHFGHud9n5G9A9YM",
   authDomain: "cyan-travel-cotizador.firebaseapp.com",
@@ -12,14 +10,13 @@ const firebaseConfig = {
   appId: "1:267039635379:web:3cce7223ae64e84738bdc6"
 };
 
-// Inicializar Firebase y Firestore
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 document.addEventListener('DOMContentLoaded', () => {
-    const ACCESS_PASSWORD = 'HOLA'; // Contraseña temporal
+    const ACCESS_PASSWORD = 'HOLA';
 
-    // Elementos del DOM
+    // Elementos DOM
     const loginOverlay = document.getElementById('login-overlay');
     const loginForm = document.getElementById('login-form');
     const passwordInput = document.getElementById('password-input');
@@ -29,17 +26,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const formSection = document.getElementById('form-section');
     
     const btnNewQuote = document.getElementById('btn-new-quote');
-    const btnNewFlyer = document.getElementById('btn-new-flyer');
     const btnBackDashboard = document.getElementById('btn-back-dashboard');
     const historyBody = document.getElementById('history-body');
 
-    // --- LÓGICA DE LOGIN ---
+    // Elementos del Formulario (TRM y Precios)
+    const trmInput = document.getElementById('trm-input');
+    const btnUpdateTrm = document.getElementById('btn-update-trm');
+    const priceUsdInput = document.getElementById('price-usd');
+    const priceCopDisplay = document.getElementById('price-cop-display');
+
+    // --- LOGIN ---
     loginForm.addEventListener('submit', (e) => {
         e.preventDefault();
         if (passwordInput.value.trim() === ACCESS_PASSWORD) {
             loginOverlay.style.display = 'none';
             dashboardSection.style.display = 'block';
-            loadHistory(); // Cargar historial al entrar
+            loadHistory();
         } else {
             loginError.style.display = 'block';
             passwordInput.value = '';
@@ -50,11 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btnNewQuote.addEventListener('click', () => {
         dashboardSection.style.display = 'none';
         formSection.style.display = 'block';
-        // Aquí inicializaremos el formulario en el Paso 2
-    });
-
-    btnNewFlyer.addEventListener('click', () => {
-        alert("El módulo de Flyer Promocional se construirá en el Paso 4.");
+        fetchTRM(); // Traer la TRM automáticamente al abrir el formulario
     });
 
     btnBackDashboard.addEventListener('click', () => {
@@ -62,16 +60,56 @@ document.addEventListener('DOMContentLoaded', () => {
         dashboardSection.style.display = 'block';
     });
 
-    // --- CARGA DE HISTORIAL DESDE FIREBASE ---
+    // --- API TRM (Gobierno de Colombia) ---
+    async function fetchTRM() {
+        try {
+            btnUpdateTrm.textContent = "⏳ Cargando...";
+            // API oficial de Datos Abiertos Colombia
+            const response = await fetch('https://www.datos.gov.co/resource/32sa-8pi3.json?$limit=1&$order=vigenciadesde%20DESC');
+            const data = await response.json();
+            
+            if(data && data.length > 0) {
+                // Redondear la TRM para que sea más limpia (ej: 3950.50 -> 3951)
+                const trmValue = Math.round(parseFloat(data[0].valor));
+                trmInput.value = trmValue;
+                calculateCOP(); // Recalcular si ya había un precio en USD
+            }
+        } catch (error) {
+            console.error("Error obteniendo TRM:", error);
+            alert("No se pudo obtener la TRM automática. Por favor, ingrésala manualmente.");
+        } finally {
+            btnUpdateTrm.textContent = "🔄 Actualizar TRM";
+        }
+    }
+
+    btnUpdateTrm.addEventListener('click', fetchTRM);
+
+    // --- CALCULADORA USD A COP ---
+    function calculateCOP() {
+        const usd = parseFloat(priceUsdInput.value) || 0;
+        const trm = parseFloat(trmInput.value) || 0;
+        const cop = usd * trm;
+        
+        // Formatear a moneda colombiana
+        priceCopDisplay.textContent = cop.toLocaleString('es-CO', { 
+            style: 'currency', 
+            currency: 'COP',
+            maximumFractionDigits: 0 
+        });
+    }
+
+    // Escuchar cambios en los inputs para calcular en tiempo real
+    priceUsdInput.addEventListener('input', calculateCOP);
+    trmInput.addEventListener('input', calculateCOP);
+
+    // --- HISTORIAL FIREBASE ---
     async function loadHistory() {
         try {
-            // Referencia a la colección 'quotes' (se creará automáticamente cuando guardemos la primera)
             const quotesRef = collection(db, "quotes");
-            // Traer las últimas 20 cotizaciones ordenadas por fecha
             const q = query(quotesRef, orderBy("createdAt", "desc"), limit(20));
             const querySnapshot = await getDocs(q);
 
-            historyBody.innerHTML = ''; // Limpiar tabla
+            historyBody.innerHTML = ''; 
 
             if (querySnapshot.empty) {
                 historyBody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: var(--c-gray);">Aún no hay cotizaciones guardadas. ¡Crea la primera!</td></tr>';
@@ -80,7 +118,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             querySnapshot.forEach((doc) => {
                 const data = doc.data();
-                // Formatear fecha (asumiendo que guardaremos un timestamp)
                 const dateObj = data.createdAt ? new Date(data.createdAt.toMillis()) : new Date();
                 const dateStr = dateObj.toLocaleDateString('es-CO');
 
@@ -94,19 +131,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
                 historyBody.appendChild(tr);
             });
-
-            // Agregar eventos a los botones de editar
-            document.querySelectorAll('.btn-edit-history').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const docId = e.target.getAttribute('data-id');
-                    alert(`Funcionalidad de edición para el ID: ${docId} se activará en el Paso 5.`);
-                });
-            });
-
         } catch (error) {
             console.error("Error cargando historial:", error);
-            // Si falla (ej. reglas de seguridad de Firebase no configuradas aún), mostramos mensaje amigable
-            historyBody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: #ff4d4f;">La base de datos está conectada, pero necesitamos configurar los permisos en Firebase (Lo haremos al final).</td></tr>';
+            historyBody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: #ff4d4f;">La base de datos está conectada. Configuraremos los permisos al final.</td></tr>';
         }
     }
+
+    // Prevenir envío del formulario por ahora (se hará en el Paso 3)
+    document.getElementById('cruise-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        alert("¡Formulario listo! En el Paso 3 conectaremos esto para generar el PDF de 4 páginas.");
+    });
 });
