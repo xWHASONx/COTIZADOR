@@ -1,5 +1,5 @@
 /* ==========================================
-   COTIZADOR PRO - CYAN TRAVEL (FIREBASE + CRUCEROS + TRM OFICIAL + ESTADOS)
+   COTIZADOR PRO - CYAN TRAVEL (VERSIÓN FINAL CORPORATIVA)
    ========================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -85,7 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.warn("No se pudo obtener la TRM oficial, usando valor por defecto.", error);
-            currentTRM = 4000; // Fallback de seguridad
+            currentTRM = 4000; 
         }
     }
 
@@ -178,7 +178,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 <button class="btn-duplicate" data-id="${doc.id}">Duplicar Cotización</button>
             `;
             
-            // Cambiar estado en Firebase
             card.querySelector('.status-select').addEventListener('change', async (e) => {
                 const newStatus = e.target.value;
                 e.target.style.backgroundColor = statusColors[newStatus];
@@ -190,13 +189,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            // Click en la tarjeta para editar (evitando clics en botones/selects)
             card.addEventListener('click', (e) => {
                 if(e.target.classList.contains('btn-duplicate') || e.target.classList.contains('status-select')) return; 
                 loadQuoteIntoForm(doc.id, data);
             });
 
-            // Click en duplicar
             card.querySelector('.btn-duplicate').addEventListener('click', () => {
                 const duplicatedData = { ...data, quoteNumber: generateQuoteNumber(), status: 'Pendiente' };
                 loadQuoteIntoForm(null, duplicatedData); 
@@ -366,7 +363,7 @@ document.addEventListener('DOMContentLoaded', () => {
             clientName: document.getElementById('nombre-completo').value,
             advisorId: advisorSelect.value,
             advisorName: ADVISORS[advisorSelect.value].name,
-            status: 'Pendiente', // Estado por defecto al crear
+            status: 'Pendiente', 
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             formData: serializeForm(form),
             images: pastedImages
@@ -377,8 +374,8 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('loader-text').textContent = "Guardando en la nube...";
             
             if (currentQuoteId) {
-                delete quoteData.createdAt; // No sobreescribir la fecha de creación
-                delete quoteData.status; // No sobreescribir el estado si ya existe
+                delete quoteData.createdAt; 
+                delete quoteData.status; 
                 await db.collection('cotizaciones').doc(currentQuoteId).update(quoteData);
             } else {
                 const docRef = await db.collection('cotizaciones').add(quoteData);
@@ -437,7 +434,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 100); 
     }
 
-    // --- RENDERIZADO DEL PDF ---
+    // --- RENDERIZADO DEL PDF CORPORATIVO ---
     function formatCurrency(value, currency = 'COP') {
         const number = parseFloat(String(value).replace(/[^0-9.-]+/g, ""));
         if (isNaN(number)) return '';
@@ -447,14 +444,11 @@ document.addEventListener('DOMContentLoaded', () => {
     function populateQuote() {
         const clientName = document.getElementById('nombre-completo').value;
         
-        // Fecha actual en español
         const options = { year: 'numeric', month: 'long', day: 'numeric' };
         document.getElementById('pdf-date').textContent = new Date().toLocaleDateString('es-ES', options);
         
-        // Saludo Corporativo
         document.getElementById('pdf-greeting').textContent = `HOLA ${clientName.toUpperCase()},`;
 
-        // Alerta de Visa
         const visaStatus = document.getElementById('requiere-visa').value;
         const visaAlert = document.getElementById('pdf-visa-alert');
         if(visaStatus !== 'No requiere visa') {
@@ -467,11 +461,10 @@ document.addEventListener('DOMContentLoaded', () => {
         confirmationComponentsContainer.innerHTML = '';
         let dynamicTermsHTML = '';
 
-        // Renderizar Hoteles
         if(document.querySelectorAll('.hotel-form-wrapper').length > 0) dynamicTermsHTML += TERMS_AND_CONDITIONS.hotels;
         document.querySelectorAll('.hotel-form-wrapper').forEach((form, index) => {
             const num = form.id.match(/\d+/)[0];
-            let galleryHTML = [1, 2, 3].map(i => pastedImages[`hotel-${num}-foto-${i}`] ? `<img src="${pastedImages[`hotel-${num}-foto-${i}`]}">` : '').join('');
+            let galleryHTML =[1, 2, 3].map(i => pastedImages[`hotel-${num}-foto-${i}`] ? `<img src="${pastedImages[`hotel-${num}-foto-${i}`]}">` : '').join('');
             confirmationComponentsContainer.innerHTML += `
                 <div class="quote-option-box">
                     <div class="option-header" style="background-color: var(--c-brand-navy);"><h3>ALOJAMIENTO ${index + 1}</h3><span class="option-price">${formatCurrency(document.getElementById(`valor-total-${num}`).value, document.getElementById(`moneda-${num}`).value)}</span></div>
@@ -486,7 +479,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>`;
         });
 
-        // Renderizar Cruceros
         if(document.querySelectorAll('.cruises-form-wrapper').length > 0) dynamicTermsHTML += TERMS_AND_CONDITIONS.cruises;
         document.querySelectorAll('.cruises-form-wrapper').forEach((form, index) => {
             const num = form.id.match(/\d+/)[0];
@@ -512,7 +504,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>`;
         });
 
-        // Renderizar Vuelos y Traslados
         if (document.getElementById('flights-form-wrapper')) {
             dynamicTermsHTML += TERMS_AND_CONDITIONS.flights;
             confirmationComponentsContainer.innerHTML += `<div class="component-section"><div class="option-header" style="background-color: var(--c-brand-navy);"><h3>VUELOS</h3></div><div class="option-body"><p>Desde: ${document.getElementById('ciudad-salida').value}</p></div></div>`;
@@ -521,45 +512,11 @@ document.addEventListener('DOMContentLoaded', () => {
             dynamicTermsHTML += TERMS_AND_CONDITIONS.transfers;
         }
 
-        // Pagos y Términos
         document.getElementById('pdf-payment-info').textContent = document.getElementById('info-pago-personalizada').value;
         document.getElementById('pdf-total-reserva').textContent = document.getElementById('valor-total-reserva').value;
         
         document.getElementById('dynamic-terms-container').innerHTML = dynamicTermsHTML;
         document.getElementById('general-terms-container').innerHTML = GENERAL_TERMS;
-    }
-
-        // Renderizar Cruceros
-        document.querySelectorAll('.cruises-form-wrapper').forEach((form, index) => {
-            const num = form.id.match(/\d+/)[0];
-            let galleryHTML =[1, 2, 3].map(i => pastedImages[`crucero-${num}-foto-${i}`] ? `<img src="${pastedImages[`crucero-${num}-foto-${i}`]}">` : '').join('');
-            let mapHTML = pastedImages[`crucero-${num}-mapa`] ? `<div class="single-photo-container"><img src="${pastedImages[`crucero-${num}-mapa`]}"></div>` : '';
-            
-            confirmationComponentsContainer.innerHTML += `
-                <div class="quote-option-box">
-                    <div class="option-header" style="background-color: #005f73;"><h3>Crucero ${index + 1} - ${document.getElementById(`naviera-${num}`).value}</h3><span class="option-price">${formatCurrency(document.getElementById(`valor-crucero-${num}`).value, document.getElementById(`moneda-crucero-${num}`).value)}</span></div>
-                    <div class="option-body">
-                        <h4>Barco: ${document.getElementById(`barco-${num}`).value}</h4>
-                        ${mapHTML}
-                        <div class="photo-gallery">${galleryHTML}</div>
-                        <div class="details-grid">
-                            <div class="data-item">${ICONS.ship}<div class="data-item-content"><strong>Embarque:</strong><p>${document.getElementById(`puerto-${num}`).value}</p></div></div>
-                            <div class="data-item">${ICONS.calendar}<div class="data-item-content"><strong>Zarpe:</strong><p>${document.getElementById(`fecha-zarpe-${num}`).value}</p></div></div>
-                            <div class="data-item">${ICONS.moon}<div class="data-item-content"><strong>Noches:</strong><p>${document.getElementById(`noches-crucero-${num}`).value}</p></div></div>
-                            <div class="data-item">${ICONS.bed}<div class="data-item-content"><strong>Cabina:</strong><p>${document.getElementById(`cabina-${num}`).value}</p></div></div>
-                            <div class="data-item full-width">${ICONS.check}<div class="data-item-content"><strong>Inclusiones:</strong><p>${document.getElementById(`inclusiones-${num}`).value} | Propinas: ${document.getElementById(`propinas-${num}`).value}</p></div></div>
-                        </div>
-                        <div class="data-item full-width" style="margin-top:15px;"><div class="data-item-content"><strong>Itinerario:</strong><p style="white-space: pre-wrap;">${document.getElementById(`itinerario-${num}`).value}</p></div></div>
-                    </div>
-                </div>`;
-        });
-
-        if (document.getElementById('flights-form-wrapper')) {
-            confirmationComponentsContainer.innerHTML += `<div class="component-section"><h3>Vuelos Sugeridos</h3><div class="option-body"><p>Desde: ${document.getElementById('ciudad-salida').value}</p></div></div>`;
-        }
-
-        document.getElementById('confirm-pago-reserva').textContent = formatCurrency(document.getElementById('pago-reserva').value);
-        document.getElementById('confirm-pago-segundo').textContent = formatCurrency(document.getElementById('pago-segundo').value);
     }
 
     document.getElementById('edit-quote-btn').addEventListener('click', () => showView('form'));
