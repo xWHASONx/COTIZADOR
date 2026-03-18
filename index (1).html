@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Cotizaciones Pro - Vivantura</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- LOGIN -->
+    <div id="login-overlay">
+        <div id="login-box">
+            <img src="https://i.imgur.com/GiTvvrW.png" alt="Vivantura" class="login-logo">
+            <h2>Acceso Restringido</h2>
+            <p>Introduce la contraseña para generar cotizaciones.</p>
+            <form id="login-form">
+                <input type="password" id="password-input" placeholder="Contraseña" required>
+                <button type="submit">Ingresar</button>
+                <p id="login-error" style="color: #ff6b6b; display: none; margin-top: 15px;">Contraseña incorrecta.</p>
+            </form>
+        </div>
+    </div>
+
+    <div id="loader-overlay"><div class="spinner"></div><p id="loader-text">Generando PDF...</p></div>
+
+    <div class="wrapper">
+        <section class="section" id="form-title-section">
+            <header class="header"><img src="https://i.imgur.com/GiTvvrW.png" alt="Vivantura"></header>
+            <h1 style="margin-top: 30px;">Generador de Cotizaciones Pro</h1>
+            <p class="intro-text">Construye tu cotización añadiendo solo los componentes que necesites.</p>
+        </section>
+
+        <section class="section" id="form-section" style="padding-top: 0;">
+            <form id="pre-reserva-form" novalidate>
+                <fieldset class="form-fieldset">
+                    <legend>1. Datos del Cliente y Viaje</legend>
+                    <div class="form-grid">
+                        <div class="form-group"><label for="asesor">Tu Nombre (Asesor)</label><select id="asesor" required></select></div>
+                        <div class="form-group"><label for="whatsapp-asesor">Tu WhatsApp (sin +)</label><input type="tel" id="whatsapp-asesor" placeholder="Ej: 573147294382" required></div>
+                        <div class="form-group full-width"><label for="nombre-completo">Nombre Completo del Cliente</label><input type="text" id="nombre-completo" placeholder="Escribe el nombre completo" required></div>
+                        <div class="form-group"><label for="adultos">Adultos</label><select id="adultos"></select></div>
+                        <div class="form-group"><label for="ninos">Niños</label><select id="ninos"></select></div>
+                        <div class="form-group full-width"><label for="validez-cupos">Validez de la Oferta</label><input type="text" id="validez-cupos" required value="¡Últimos 3 cupos a este precio! Válido por 24 horas."></div>
+                        <div class="form-group full-width"><label for="cotizacion-numero">Nº Cotización</label><input type="text" id="cotizacion-numero" readonly></div>
+                    </div>
+                </fieldset>
+
+                <fieldset class="form-fieldset"><legend>2. Componentes de la Cotización</legend>
+                    <div class="add-buttons-container">
+                        <button type="button" class="add-section-btn" data-section="hotel">+ Hotel</button>
+                        <button type="button" class="add-section-btn" data-section="flights">+ Vuelos</button>
+                        <button type="button" class="add-section-btn" data-section="tours">+ Tours</button>
+                        <button type="button" class="add-section-btn" data-section="transfers">+ Traslados</button>
+                    </div>
+                    <div id="dynamic-components-container"></div>
+                </fieldset>
+                
+                <fieldset class="form-fieldset"><legend>3. Detalles Finales</legend>
+                    <div class="form-grid">
+                        <div class="form-group full-width"><label for="no-incluye">Lo que NO incluye el plan (además de los T&C)</label><textarea id="no-incluye" rows="3" placeholder="Ej: Tarjeta de asistencia médica...">Gastos o servicios no especificados en la cotización.</textarea></div>
+                        <div class="form-group"><label for="pago-reserva">Pago para Reservar</label><input type="text" id="pago-reserva" placeholder="Ej: 500000"></div>
+                        <div class="form-group"><label for="pago-segundo">Segundo Pago</label><input type="text" id="pago-segundo" placeholder="Ej: 1000000"></div>
+                        <div class="form-group full-width"><label for="fecha-limite-pago">Info. Adicional del Plan de Pagos</label><textarea id="fecha-limite-pago" rows="3">El saldo restante debe ser pagado 45 días antes de la fecha de viaje.</textarea></div>
+                    </div>
+                </fieldset>
+                
+                <button type="submit" class="submit-button">Generar Cotización</button>
+            </form>
+        </section>
+
+        <!-- TEMPLATES -->
+        <template id="template-hotel">
+            <div id="hotel-form-wrapper-PLACEHOLDER" class="dynamic-section-wrapper hotel-form-wrapper">
+                <fieldset class="form-fieldset">
+                    <button type="button" class="remove-section-btn" data-section="hotel-PLACEHOLDER">&times;</button>
+                    <legend>Hotel (Opción PLACEHOLDER)</legend>
+                    <div class="form-grid">
+                        <div class="form-group full-width"><label for="destino-PLACEHOLDER">Destino (Ciudad)</label><input type="text" id="destino-PLACEHOLDER" required></div>
+                        <div class="form-group full-width"><label for="hotel-PLACEHOLDER">Nombre del Hotel</label><input type="text" id="hotel-PLACEHOLDER" required></div>
+                        <div class="form-group full-width"><label for="regimen-PLACEHOLDER">Régimen</label><select id="regimen-PLACEHOLDER"><option value="todo_incluido" selected>Todo incluido</option><option value="pension_completa">Pensión Completa</option><option value="media_pension">Media Pensión</option><option value="desayuno">Hotel y desayuno</option><option value="solo_hotel">Solo hotel</option></select></div>
+                        <div class="form-group"><label for="valor-total-PLACEHOLDER">Valor Total</label><div class="currency-group"><input type="text" id="valor-total-PLACEHOLDER" inputmode="numeric" required><select id="moneda-PLACEHOLDER"><option selected>COP</option><option>USD</option></select></div></div>
+                        <div class="form-group"><label for="fecha-viaje-PLACEHOLDER">Fecha de Check-in</label><input type="date" id="fecha-viaje-PLACEHOLDER" required></div>
+                        <div class="form-group"><label for="cantidad-noches-PLACEHOLDER">Noches</label><select id="cantidad-noches-PLACEHOLDER"></select></div>
+                        <div class="form-group"><label for="cantidad-habitaciones-PLACEHOLDER">Habitaciones</label><select id="cantidad-habitaciones-PLACEHOLDER"></select></div>
+                        <div class="form-group full-width"><label>Galería de Fotos (Pegar hasta 3)</label><div class="gallery-paste-areas">
+                            <div class="paste-area" data-img-id="hotel-PLACEHOLDER-foto-1"><p>Pegar Foto 1</p><img src="" style="display:none;"></div>
+                            <div class="paste-area" data-img-id="hotel-PLACEHOLDER-foto-2"><p>Pegar Foto 2</p><img src="" style="display:none;"></div>
+                            <div class="paste-area" data-img-id="hotel-PLACEHOLDER-foto-3"><p>Pegar Foto 3</p><img src="" style="display:none;"></div>
+                        </div></div>
+                    </div>
+                    <button type="button" class="add-subsection-btn" data-section="hotel">+ Añadir Otro Hotel</button>
+                </fieldset>
+            </div>
+        </template>
+        <template id="template-flights">
+            <div id="flights-form-wrapper" class="dynamic-section-wrapper"><fieldset class="form-fieldset">
+                <button type="button" class="remove-section-btn" data-section="flights">&times;</button><legend>Vuelos</legend>
+                <div class="form-grid">
+                    <div class="form-group full-width"><label for="ciudad-salida">Ciudad de Salida</label><input type="text" id="ciudad-salida" placeholder="Ej: Medellín" required></div>
+                    <div class="form-group full-width"><label>Imagen Banner (1030x200px)</label><div class="paste-area" data-img-id="flight-banner-preview"><p>Pegar imagen aquí</p><img src="" style="display:none;"></div></div>
+                    <div class="sub-fieldset full-width"><label>Opción de Vuelo 1</label><div class="form-grid small-gap">
+                        <div class="form-group"><label for="flight-1-airline">Aerolínea / Ruta</label><input type="text" id="flight-1-airline" required></div>
+                        <div class="form-group"><label for="flight-1-price">Precio por persona</label><input type="text" id="flight-1-price" inputmode="numeric" required></div>
+                    </div></div>
+                    <div id="flight-2-form-wrapper" class="sub-fieldset full-width" style="display: none;"><label>Opción de Vuelo 2</label><button type="button" class="remove-section-btn" data-subsection="flight-2">&times;</button><div class="form-grid small-gap">
+                        <div class="form-group"><label for="flight-2-airline">Aerolínea / Ruta</label><input type="text" id="flight-2-airline"></div>
+                        <div class="form-group"><label for="flight-2-price">Precio por persona</label><input type="text" id="flight-2-price" inputmode="numeric"></div>
+                    </div></div>
+                    <button type="button" class="add-subsection-btn" data-subsection="flight-2">+ Añadir 2da opción</button>
+                </div>
+            </fieldset></div>
+        </template>
+        <template id="template-tours">
+            <div id="tours-form-wrapper" class="dynamic-section-wrapper"><fieldset class="form-fieldset">
+                <button type="button" class="remove-section-btn" data-section="tours">&times;</button><legend>Tours</legend>
+                <div class="form-group full-width"><label>Imagen del Tour</label><div class="paste-area" data-img-id="tour-main-photo"><p>Pegar imagen aquí</p><img src="" style="display:none;"></div></div>
+                <div class="sub-fieldset full-width"><label>Opción de Tour 1</label><div class="form-grid small-gap">
+                    <div class="form-group"><label for="tour-1-name">Nombre</label><input type="text" id="tour-1-name" required></div>
+                    <div class="form-group"><label for="tour-1-price">Precio por persona</label><input type="text" id="tour-1-price" inputmode="numeric" required></div>
+                </div></div>
+            </fieldset></div>
+        </template>
+        <template id="template-transfers">
+            <div id="transfers-form-wrapper" class="dynamic-section-wrapper"><fieldset class="form-fieldset">
+                <button type="button" class="remove-section-btn" data-section="transfers">&times;</button><legend>Traslados</legend>
+                <div class="form-group full-width"><label>Imagen</label><div class="paste-area" data-img-id="transfer-main-photo"><p>Pegar imagen aquí</p><img src="" style="display:none;"></div></div>
+                <div class="sub-fieldset full-width"><label>Opción de Traslado 1</label><div class="form-grid small-gap">
+                    <div class="form-group"><label for="transfer-1-desc">Descripción</label><input type="text" id="transfer-1-desc" required></div>
+                    <div class="form-group"><label for="transfer-1-price">Precio por persona</label><input type="text" id="transfer-1-price" inputmode="numeric" required></div>
+                </div></div>
+            </fieldset></div>
+        </template>
+
+        <!-- SECCIÓN DE CONFIRMACIÓN -->
+        <div id="confirmation-section" style="display: none;">
+            <div id="voucher-to-print">
+                <header class="confirmation-header"></header>
+                
+                <div class="voucher-content">
+                    
+                    <!-- BANNER AMARILLO -->
+                    <div class="confirmation-pill">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+                        Propuesta de Viaje
+                    </div>
+
+                    <p class="intro-text" id="confirm-intro-text"></p>
+                    <div class="customer-data-box" id="confirm-customer-data-box"></div>
+                    <div id="advisor-box">
+                        <img id="advisor-photo" src="" alt="Foto del Asesor"><div class="advisor-info">
+                            <p>Preparado por tu asesor de viajes:</p><h3 id="advisor-name"></h3>
+                        </div><div class="advisor-contact">
+                            <a id="advisor-whatsapp-btn" class="single-contact-btn" href="#" target="_blank">Contactar por WhatsApp</a>
+                        </div>
+                    </div>
+                    <div id="confirmation-components-container"></div>
+                    <div class="details-section">
+                        <div class="payment-plan-box">
+                            <h4>Plan de Pagos Sugerido</h4>
+                            <p><strong>Para reservar:</strong> <span id="confirm-pago-reserva"></span></p>
+                            <p><strong>Segundo pago:</strong> <span id="confirm-pago-segundo"></span></p>
+                            <small id="confirm-fecha-limite"></small>
+                        </div>
+                        <div class="inclusions-box">
+                            <h4>El Plan NO Incluye</h4>
+                            <p id="confirm-no-incluye"></p>
+                        </div>
+                    </div>
+                    
+                    <div class="main-cta-container">
+                        <h3>¿Listo para tu próxima aventura?</h3>
+                        <a href="#" target="_blank" class="main-cta-button reserve" id="cta-reservar">¡Sí, Quiero Reservar!</a>
+                        <a href="#" target="_blank" class="main-cta-button contact" id="cta-contactar">Tengo una Pregunta</a>
+                    </div>
+                    
+                    <div class="voucher-footer">
+                        <div class="airline-logos">
+                            <img src="https://i.imgur.com/qoE9Cbt.png" alt="Avianca Logo">
+                            <img src="https://i.imgur.com/vPhy6ij.png" alt="LATAM Logo">
+                            <img src="https://i.imgur.com/dJdsiMi.png" alt="Wingo Logo">
+                            <img src="https://i.imgur.com/DoAiNjF.png" alt="Copa Airlines Logo">
+                        </div>
+                        <a id="footer-wpp-link" class="single-contact-btn" href="#" target="_blank">Contactar a mi asesor</a>
+                    </div>
+                    
+                    <div id="terms-section-confirm" class="component-section" style="display: none;">
+                        <h3>Términos y Condiciones del Plan</h3>
+                        <div id="confirm-terms-content" class="terms-content-body"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- BOTONES DE ACCIÓN (CON EDITAR AGREGADO) -->
+            <div class="action-buttons">
+                <button class="action-button download" id="process-quote-btn">Descargar Cotización</button>
+                <button class="action-button edit" id="edit-quote-btn">✏️ Corregir / Editar</button>
+                <button class="action-button secondary" id="new-quote-btn">Nueva Cotización</button>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
