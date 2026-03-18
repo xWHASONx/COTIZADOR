@@ -14,8 +14,7 @@
     <!-- LOGIN -->
     <div id="login-overlay">
         <div id="login-box">
-            <!-- Reemplazar con el logo real de Cyan Travel cuando lo tengas en URL -->
-            <h1 style="color: var(--c-brand-primary); font-weight: 900; font-size: 40px; margin-bottom: 10px;">CYAN<span style="color: var(--c-dark); font-weight: 400;">TRAVEL</span></h1>
+            <img src="https://i.imgur.com/eEB6RKa.png" alt="Cyan Travel" class="brand-logo">
             <h2>Acceso Restringido</h2>
             <p>Introduce la contraseña para ingresar al sistema.</p>
             <form id="login-form">
@@ -32,7 +31,7 @@
     <!-- DASHBOARD (PANEL DE CONTROL) -->
     <div id="dashboard-section" class="wrapper" style="display: none;">
         <header class="header">
-            <h1 style="color: var(--c-brand-primary); font-weight: 900; margin: 0;">CYAN<span style="color: var(--c-dark); font-weight: 400;">TRAVEL</span></h1>
+            <img src="https://i.imgur.com/eEB6RKa.png" alt="Cyan Travel" class="brand-logo-small">
             <p style="margin: 5px 0 0 0; color: var(--c-gray);">Panel de Control de Cotizaciones</p>
         </header>
         
@@ -56,7 +55,6 @@
                             </tr>
                         </thead>
                         <tbody id="history-body">
-                            <!-- Los datos de Firebase se inyectarán aquí -->
                             <tr><td colspan="5" style="text-align: center; padding: 20px; color: var(--c-gray);">Cargando historial...</td></tr>
                         </tbody>
                     </table>
@@ -65,18 +63,135 @@
         </div>
     </div>
 
-    <!-- FORMULARIO (Se construirá en el Paso 2) -->
+    <!-- FORMULARIO DE CRUCEROS -->
     <div id="form-section" class="wrapper" style="display: none;">
-        <header class="header">
-            <h2>Nueva Cotización</h2>
-            <button id="btn-back-dashboard" class="action-button secondary" style="padding: 8px 15px; font-size: 14px; margin-top: 10px;">Volver al Panel</button>
+        <header class="header" style="display: flex; justify-content: space-between; align-items: center; padding: 20px 40px;">
+            <img src="https://i.imgur.com/eEB6RKa.png" alt="Cyan Travel" class="brand-logo-small" style="margin: 0;">
+            <h2 style="color: var(--c-brand-primary); font-size: 20px;">Cotización Formal</h2>
+            <button id="btn-back-dashboard" class="action-button secondary" style="padding: 8px 15px; font-size: 14px;">Volver al Panel</button>
         </header>
-        <div class="section">
-            <p>El formulario de cruceros se construirá en el Paso 2.</p>
+        
+        <div class="section" style="padding-top: 20px; text-align: left;">
+            <form id="cruise-form">
+                
+                <!-- BLOQUE 1: TRM Y CLIENTE -->
+                <fieldset class="form-fieldset">
+                    <legend>1. Configuración y Cliente</legend>
+                    <div class="trm-box">
+                        <div>
+                            <strong>Tasa de Cambio (TRM)</strong>
+                            <p style="margin: 0; font-size: 12px; color: var(--c-gray);">Se usa para calcular los precios en COP automáticamente.</p>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <span style="font-weight: bold; color: var(--c-brand-primary);">$</span>
+                            <input type="number" id="trm-input" required style="width: 120px; font-weight: bold; color: var(--c-brand-primary);">
+                            <button type="button" id="btn-update-trm" class="action-button secondary" style="padding: 10px; font-size: 12px;">🔄 Actualizar TRM</button>
+                        </div>
+                    </div>
+
+                    <div class="form-grid" style="margin-top: 20px;">
+                        <div class="form-group full-width">
+                            <label>Nombre del Cliente</label>
+                            <input type="text" id="client-name" placeholder="Ej: Maria Estela" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Adultos</label>
+                            <input type="number" id="pax-adults" value="2" min="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Niños</label>
+                            <input type="number" id="pax-children" value="0" min="0" required>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- BLOQUE 2: DATOS DEL CRUCERO -->
+                <fieldset class="form-fieldset">
+                    <legend>2. Detalles del Crucero</legend>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Naviera</label>
+                            <select id="cruise-line" required>
+                                <option value="" disabled selected>Selecciona una naviera...</option>
+                                <option value="Royal Caribbean International">Royal Caribbean International</option>
+                                <option value="MSC Cruceros">MSC Cruceros</option>
+                                <option value="Norwegian Cruise Line">Norwegian Cruise Line (NCL)</option>
+                                <option value="Carnival Cruise Line">Carnival Cruise Line</option>
+                                <option value="Princess Cruises">Princess Cruises</option>
+                                <option value="Celebrity Cruises">Celebrity Cruises</option>
+                                <option value="Disney Cruise Line">Disney Cruise Line</option>
+                                <option value="Holland America Line">Holland America Line</option>
+                                <option value="Costa Cruceros">Costa Cruceros</option>
+                                <option value="Virgin Voyages">Virgin Voyages</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Nombre del Barco</label>
+                            <input type="text" id="ship-name" placeholder="Ej: MSC GRANDIOSA" required>
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Puertos de Escala (Itinerario)</label>
+                            <textarea id="itinerary" rows="2" placeholder="Ej: Puerto Cañaveral, Nassau, Ocean Cay..." required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Fecha de Embarque</label>
+                            <input type="date" id="embark-date" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Duración (Noches)</label>
+                            <input type="number" id="nights" placeholder="Ej: 7" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Días de Navegación</label>
+                            <input type="number" id="sea-days" placeholder="Ej: 2" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Tipo de Cabina</label>
+                            <select id="cabin-type" required>
+                                <option value="Interior">Interior</option>
+                                <option value="Vista al Mar">Vista al Mar</option>
+                                <option value="Balcón">Balcón</option>
+                                <option value="Suite">Suite</option>
+                            </select>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- BLOQUE 3: PRECIOS E INCLUSIONES -->
+                <fieldset class="form-fieldset">
+                    <legend>3. Precios e Inclusiones</legend>
+                    
+                    <div class="price-calculator-box">
+                        <div class="form-group">
+                            <label>Valor Total Cabina (USD)</label>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="font-weight: bold;">USD $</span>
+                                <input type="number" id="price-usd" step="0.01" placeholder="Ej: 1121.20" required style="font-size: 18px; font-weight: bold;">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Equivalente Aproximado (COP)</label>
+                            <div class="cop-display" id="price-cop-display">COP $ 0</div>
+                        </div>
+                    </div>
+
+                    <div class="form-grid" style="margin-top: 20px;">
+                        <div class="form-group full-width">
+                            <label>¿Qué INCLUYE?</label>
+                            <textarea id="includes" rows="3" required>Cabina asignada + Impuestos + Alimentación en restaurante Buffet + Restaurante a la carta + bebidas calientes y refrescantes para acompañar comidas + Actividades a bordo + Ingreso a áreas públicas + Propinas USD.</textarea>
+                        </div>
+                        <div class="form-group full-width">
+                            <label>¿Qué NO INCLUYE?</label>
+                            <textarea id="not-includes" rows="2" required>Paquete de bebidas a bordo, Wi-Fi a bordo, Restaurantes de especialidad, actividades de valor adicional a bordo del barco, o excursiones.</textarea>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <button type="submit" class="action-button download" style="width: 100%; margin-top: 20px; font-size: 18px;">Continuar al PDF ➡️</button>
+            </form>
         </div>
     </div>
 
-    <!-- Importante: type="module" para poder usar Firebase -->
     <script type="module" src="script.js"></script>
 </body>
 </html>
