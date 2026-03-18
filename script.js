@@ -1,5 +1,5 @@
 /* ==========================================
-   COTIZADOR PRO - CYAN TRAVEL (FIREBASE + CRUCEROS)
+   COTIZADOR PRO - CYAN TRAVEL (FIREBASE + CRUCEROS + TRM OFICIAL + ESTADOS)
    ========================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -19,8 +19,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const db = firebase.firestore();
 
     // --- VARIABLES GLOBALES ---
-    let currentTRM = 4000; // Valor por defecto si falla la API
-    let currentQuoteId = null; // Para saber si estamos editando o creando
+    let currentTRM = 0; 
+    let currentQuoteId = null; 
     let pastedImages = {};
     let hotelCounter = 0;
     let cruiseCounter = 0;
@@ -61,18 +61,23 @@ document.addEventListener('DOMContentLoaded', () => {
         ship: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1v12zm0 0v7"></path></svg>'
     };
 
-    // --- OBTENER TRM ---
+    // --- OBTENER TRM OFICIAL (DATOS ABIERTOS COLOMBIA) ---
     async function fetchTRM() {
         try {
-            const response = await fetch('https://open.er-api.com/v6/latest/USD');
+            const response = await fetch('https://www.datos.gov.co/resource/32sa-8pi3.json?$limit=1&$order=vigenciadesde%20DESC');
             const data = await response.json();
-            currentTRM = Math.round(data.rates.COP);
+            if (data && data.length > 0) {
+                currentTRM = Math.round(parseFloat(data[0].valor));
+            } else {
+                throw new Error("Datos vacíos");
+            }
         } catch (error) {
-            console.warn("No se pudo obtener la TRM, usando valor por defecto.");
+            console.warn("No se pudo obtener la TRM oficial, usando valor por defecto.", error);
+            currentTRM = 4000; // Fallback de seguridad
         }
     }
 
-    // --- COMPRESIÓN DE IMÁGENES (Evita que Firebase colapse) ---
+    // --- COMPRESIÓN DE IMÁGENES ---
     function compressImage(base64Str, maxWidth = 800, quality = 0.7) {
         return new Promise((resolve) => {
             let img = new Image();
@@ -128,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderQuotes(filtered);
             });
         } catch (error) {
-            quotesList.innerHTML = '<p style="color:red;">Error al cargar datos.</p>';
+            quotesList.innerHTML = '<p style="color:red;">Error al cargar datos. Verifica que Firestore esté habilitado y sin bloqueadores de anuncios.</p>';
             console.error(error);
         }
     }
@@ -137,9 +142,12 @@ document.addEventListener('DOMContentLoaded', () => {
         quotesList.innerHTML = '';
         if (docs.length === 0) { quotesList.innerHTML = '<p>No hay cotizaciones aún.</p>'; return; }
         
+        const statusColors = { 'Pendiente': '#f39c12', 'Vendida': '#27ae60', 'Rechazada': '#c0392b' };
+
         docs.forEach(doc => {
             const data = doc.data();
             const date = data.createdAt ? new Date(data.createdAt.toDate()).toLocaleDateString('es-ES') : 'Fecha desconocida';
+            const currentStatus = data.status || 'Pendiente';
             
             const card = document.createElement('div');
             card.className = 'quote-card';
@@ -148,19 +156,38 @@ document.addEventListener('DOMContentLoaded', () => {
                 <h3>${data.clientName}</h3>
                 <p>Asesor: ${data.advisorName}</p>
                 <span class="quote-date">Creada: ${date}</span>
+                
+                <select class="status-select" data-id="${doc.id}" style="width: 100%; margin-top: 10px; padding: 8px; border-radius: 8px; border: none; color: white; font-weight: bold; background-color: ${statusColors[currentStatus]}; cursor: pointer;">
+                    <option value="Pendiente" ${currentStatus === 'Pendiente' ? 'selected' : ''}>🟡 Pendiente</option>
+                    <option value="Vendida" ${currentStatus === 'Vendida' ? 'selected' : ''}>🟢 Vendida</option>
+                    <option value="Rechazada" ${currentStatus === 'Rechazada' ? 'selected' : ''}>🔴 Rechazada</option>
+                </select>
+
                 <button class="btn-duplicate" data-id="${doc.id}">Duplicar Cotización</button>
             `;
             
-            // Click en la tarjeta para editar
+            // Cambiar estado en Firebase
+            card.querySelector('.status-select').addEventListener('change', async (e) => {
+                const newStatus = e.target.value;
+                e.target.style.backgroundColor = statusColors[newStatus];
+                try {
+                    await db.collection('cotizaciones').doc(doc.id).update({ status: newStatus });
+                } catch (error) {
+                    console.error("Error actualizando estado:", error);
+                    alert("No se pudo actualizar el estado.");
+                }
+            });
+
+            // Click en la tarjeta para editar (evitando clics en botones/selects)
             card.addEventListener('click', (e) => {
-                if(e.target.classList.contains('btn-duplicate')) return; // Evita conflicto con el botón duplicar
+                if(e.target.classList.contains('btn-duplicate') || e.target.classList.contains('status-select')) return; 
                 loadQuoteIntoForm(doc.id, data);
             });
 
             // Click en duplicar
             card.querySelector('.btn-duplicate').addEventListener('click', () => {
-                const duplicatedData = { ...data, quoteNumber: generateQuoteNumber() };
-                loadQuoteIntoForm(null, duplicatedData); // null ID significa que es nueva
+                const duplicatedData = { ...data, quoteNumber: generateQuoteNumber(), status: 'Pendiente' };
+                loadQuoteIntoForm(null, duplicatedData); 
             });
 
             quotesList.appendChild(card);
@@ -196,7 +223,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         dynamicComponentsContainer.appendChild(cloneNode);
 
-        // Llenar selects dinámicos
         if (sectionKey === 'hotel') {
             populateSelect(`cantidad-noches-${counter}`, 1, 30, 4, 'noche');
             populateSelect(`cantidad-habitaciones-${counter}`, 1, 10, 1, 'habitación', 'habitaciones');
@@ -281,7 +307,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const reader = new FileReader();
             reader.onload = async event => {
                 const base64Image = event.target.result;
-                const compressedImage = await compressImage(base64Image); // Comprimir antes de guardar
+                const compressedImage = await compressImage(base64Image); 
                 const previewImg = pasteArea.querySelector('img');
                 previewImg.src = compressedImage;
                 previewImg.style.display = 'block';
@@ -323,12 +349,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!form.checkValidity()) { form.reportValidity(); return; }
         if (dynamicComponentsContainer.children.length === 0) { alert('Añade al menos un componente.'); return; }
         
-        // Recopilar datos para Firebase
         const quoteData = {
             quoteNumber: document.getElementById('cotizacion-numero').value,
             clientName: document.getElementById('nombre-completo').value,
             advisorId: advisorSelect.value,
             advisorName: ADVISORS[advisorSelect.value].name,
+            status: 'Pendiente', // Estado por defecto al crear
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             formData: serializeForm(form),
             images: pastedImages
@@ -339,6 +365,8 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('loader-text').textContent = "Guardando en la nube...";
             
             if (currentQuoteId) {
+                delete quoteData.createdAt; // No sobreescribir la fecha de creación
+                delete quoteData.status; // No sobreescribir el estado si ya existe
                 await db.collection('cotizaciones').doc(currentQuoteId).update(quoteData);
             } else {
                 const docRef = await db.collection('cotizaciones').add(quoteData);
@@ -349,13 +377,12 @@ document.addEventListener('DOMContentLoaded', () => {
             showView('pdf');
         } catch (error) {
             console.error("Error guardando:", error);
-            alert("Hubo un error guardando la cotización. Revisa tu conexión.");
+            alert("Hubo un error guardando la cotización. Revisa tu conexión y que Firestore esté habilitado.");
         } finally {
             document.getElementById('loader-overlay').style.display = 'none';
         }
     });
 
-    // Utilidad para serializar el formulario y guardarlo
     function serializeForm(formNode) {
         const obj = {};
         const elements = formNode.querySelectorAll('input, select, textarea');
@@ -363,18 +390,13 @@ document.addEventListener('DOMContentLoaded', () => {
         return obj;
     }
 
-    // Cargar datos desde Firebase al formulario
     function loadQuoteIntoForm(id, data) {
         currentQuoteId = id;
         initializeForm();
         
-        // Restaurar imágenes
         pastedImages = data.images || {};
-        
-        // Reconstruir secciones dinámicas basándose en los IDs guardados
         const keys = Object.keys(data.formData);
         
-        // Detectar cuántos hoteles y cruceros hay
         const hotelIds = new Set(keys.filter(k => k.startsWith('hotel-')).map(k => k.split('-')[1]));
         const cruiseIds = new Set(keys.filter(k => k.startsWith('barco-')).map(k => k.split('-')[1]));
         
@@ -384,14 +406,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if(keys.includes('tour-1-name')) addSection('tours');
         if(keys.includes('transfer-1-desc')) addSection('transfers');
 
-        // Llenar valores
         setTimeout(() => {
             keys.forEach(key => {
                 const el = document.getElementById(key);
                 if(el) el.value = data.formData[key];
             });
             
-            // Restaurar previsualizaciones de imágenes
             Object.keys(pastedImages).forEach(imgId => {
                 const pasteArea = document.querySelector(`[data-img-id="${imgId}"]`);
                 if(pasteArea) {
@@ -402,7 +422,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             
             showView('form');
-        }, 100); // Pequeño delay para asegurar que el DOM se pintó
+        }, 100); 
     }
 
     // --- RENDERIZADO DEL PDF ---
@@ -413,7 +433,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function populateQuote() {
-        // (Lógica de renderizado visual del PDF)
         const clientName = document.getElementById('nombre-completo').value;
         document.getElementById('confirm-intro-text').textContent = `¡Hola, ${clientName.split(' ')[0].toUpperCase()}! He preparado estas opciones para tu próximo viaje.`;
         
@@ -469,7 +488,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>`;
         });
 
-        // Renderizar Vuelos, Tours, Traslados (Lógica simplificada para mantener el código limpio)
         if (document.getElementById('flights-form-wrapper')) {
             confirmationComponentsContainer.innerHTML += `<div class="component-section"><h3>Vuelos Sugeridos</h3><div class="option-body"><p>Desde: ${document.getElementById('ciudad-salida').value}</p></div></div>`;
         }
@@ -478,7 +496,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('confirm-pago-segundo').textContent = formatCurrency(document.getElementById('pago-segundo').value);
     }
 
-    // Botones de navegación finales
     document.getElementById('edit-quote-btn').addEventListener('click', () => showView('form'));
     document.getElementById('new-quote-btn').addEventListener('click', () => loadDashboard());
     
@@ -488,7 +505,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const elementToPrint = document.getElementById('voucher-to-print');
             const canvas = await html2canvas(elementToPrint, { scale: 2, useCORS: true });
-            const pdf = new window.jspdf.jsPDF({ orientation: 'p', unit: 'px', format: [canvas.width, canvas.height] });
+            const pdf = new window.jspdf.jsPDF({ orientation: 'p', unit: 'px', format:[canvas.width, canvas.height] });
             pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, canvas.width, canvas.height);
             pdf.save(`${document.getElementById('cotizacion-numero').value}.pdf`);
         } catch (error) { alert("Error generando PDF"); } 
