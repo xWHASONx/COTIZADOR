@@ -10,6 +10,10 @@
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <!-- Firebase y utilidades -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
     
     <link rel="stylesheet" href="style.css">
 </head>
@@ -32,6 +36,20 @@
     <div id="loader-overlay"><div class="spinner"></div><p id="loader-text">Generando PDF...</p></div>
 
     <div class="wrapper">
+        <!-- DASHBOARD DE COTIZACIONES -->
+        <section class="section" id="dashboard-section" style="display: none;">
+            <header class="header"><img src="https://i.imgur.com/eEB6RKa.png" alt="Cyan Travel"></header>
+            <div class="dashboard-header">
+                <h2>Mis Cotizaciones</h2>
+                <button id="btn-create-new" class="action-button download">+ Nueva Cotización</button>
+            </div>
+            <div class="dashboard-controls">
+                <input type="text" id="search-quote" placeholder="🔍 Buscar por cliente o número...">
+            </div>
+            <div id="quotes-list" class="quotes-grid">
+                <!-- Las cotizaciones aparecerán aquí -->
+            </div>
+        </section>
         <section class="section" id="form-title-section">
             <header class="header"><img src="https://i.imgur.com/eEB6RKa.png" alt="Cyan Travel"></header>
             <h1 style="margin-top: 30px;">Generador de Cotizaciones Pro</h1>
@@ -55,6 +73,7 @@
 
                 <fieldset class="form-fieldset"><legend>2. Componentes de la Cotización</legend>
                     <div class="add-buttons-container">
+                        <button type="button" class="add-section-btn" data-section="cruises">+ Crucero</button>
                         <button type="button" class="add-section-btn" data-section="hotel">+ Hotel</button>
                         <button type="button" class="add-section-btn" data-section="flights">+ Vuelos</button>
                         <button type="button" class="add-section-btn" data-section="tours">+ Tours</button>
@@ -77,6 +96,59 @@
         </section>
 
         <!-- TEMPLATES -->
+        <template id="template-cruises">
+            <div id="cruises-form-wrapper-PLACEHOLDER" class="dynamic-section-wrapper cruises-form-wrapper">
+                <fieldset class="form-fieldset">
+                    <button type="button" class="remove-section-btn" data-section="cruises-PLACEHOLDER">&times;</button>
+                    <legend>Crucero (Opción PLACEHOLDER)</legend>
+                    <div class="form-grid">
+                        <div class="form-group"><label>Naviera</label><select id="naviera-PLACEHOLDER" required>
+                            <option value="" disabled selected>Selecciona una naviera</option>
+                            <option value="Royal Caribbean">Royal Caribbean</option>
+                            <option value="Carnival Cruise Line">Carnival Cruise Line</option>
+                            <option value="MSC Cruceros">MSC Cruceros</option>
+                            <option value="Norwegian Cruise Line (NCL)">Norwegian Cruise Line (NCL)</option>
+                            <option value="Princess Cruises">Princess Cruises</option>
+                            <option value="Celebrity Cruises">Celebrity Cruises</option>
+                            <option value="Disney Cruise Line">Disney Cruise Line</option>
+                            <option value="Holland America Line">Holland America Line</option>
+                            <option value="Costa Cruceros">Costa Cruceros</option>
+                            <option value="Virgin Voyages">Virgin Voyages</option>
+                        </select></div>
+                        <div class="form-group"><label>Nombre del Barco</label><input type="text" id="barco-PLACEHOLDER" placeholder="Ej: Icon of the Seas" required></div>
+                        <div class="form-group"><label>Puerto de Embarque</label><input type="text" id="puerto-PLACEHOLDER" placeholder="Ej: Miami, FL" required></div>
+                        <div class="form-group"><label>Fecha de Zarpe</label><input type="date" id="fecha-zarpe-PLACEHOLDER" required></div>
+                        <div class="form-group"><label>Noches</label><select id="noches-crucero-PLACEHOLDER"></select></div>
+                        <div class="form-group"><label>Tipo de Cabina</label><select id="cabina-PLACEHOLDER">
+                            <option value="Interior">Interior</option>
+                            <option value="Vista al Mar (Exterior)">Vista al Mar (Exterior)</option>
+                            <option value="Balcón">Balcón</option>
+                            <option value="Suite">Suite</option>
+                        </select></div>
+                        <div class="form-group"><label>Inclusiones</label><select id="inclusiones-PLACEHOLDER">
+                            <option value="Pensión Completa Básica">Pensión Completa Básica</option>
+                            <option value="Paquete de Bebidas Clásico">Paquete de Bebidas Clásico</option>
+                            <option value="Paquete Premium (Bebidas + Wi-Fi)">Paquete Premium (Bebidas + Wi-Fi)</option>
+                        </select></div>
+                        <div class="form-group"><label>Propinas (Gratuities)</label><select id="propinas-PLACEHOLDER">
+                            <option value="Incluidas en el valor total">Incluidas en el valor total</option>
+                            <option value="Se pagan a bordo">Se pagan a bordo</option>
+                        </select></div>
+                        <div class="form-group full-width"><label>Itinerario (Puertos por día)</label><textarea id="itinerario-PLACEHOLDER" rows="4" placeholder="Día 1: Miami&#10;Día 2: Navegación&#10;Día 3: Bahamas..." required></textarea></div>
+                        <div class="form-group"><label>Valor Total</label><div class="currency-group"><input type="text" id="valor-crucero-PLACEHOLDER" inputmode="numeric" required><select id="moneda-crucero-PLACEHOLDER"><option>USD</option><option>COP</option></select></div></div>
+                        <div class="form-group"><label>TRM Aplicada (Si es USD)</label><input type="number" id="trm-crucero-PLACEHOLDER" placeholder="Cargando TRM..."></div>
+                        
+                        <div class="form-group full-width"><label>Mapa del Recorrido (Pegar 1 imagen)</label><div class="paste-area" data-img-id="crucero-PLACEHOLDER-mapa"><p>Pegar Mapa Aquí</p><img src="" style="display:none;"></div></div>
+                        <div class="form-group full-width"><label>Galería del Barco/Cabina (Pegar hasta 3)</label><div class="gallery-paste-areas">
+                            <div class="paste-area" data-img-id="crucero-PLACEHOLDER-foto-1"><p>Pegar Foto 1</p><img src="" style="display:none;"></div>
+                            <div class="paste-area" data-img-id="crucero-PLACEHOLDER-foto-2"><p>Pegar Foto 2</p><img src="" style="display:none;"></div>
+                            <div class="paste-area" data-img-id="crucero-PLACEHOLDER-foto-3"><p>Pegar Foto 3</p><img src="" style="display:none;"></div>
+                        </div></div>
+                    </div>
+                    <button type="button" class="add-subsection-btn" data-section="cruises">+ Añadir Otra Opción de Crucero</button>
+                </fieldset>
+            </div>
+        </template>
         <template id="template-hotel">
             <div id="hotel-form-wrapper-PLACEHOLDER" class="dynamic-section-wrapper hotel-form-wrapper">
                 <fieldset class="form-fieldset">
