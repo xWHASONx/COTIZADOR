@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyan Travel - Cotizador Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- LOGIN -->
+    <div id="login-overlay">
+        <div id="login-box">
+            <!-- Reemplazar con el logo real de Cyan Travel cuando lo tengas en URL -->
+            <h1 style="color: var(--c-brand-primary); font-weight: 900; font-size: 40px; margin-bottom: 10px;">CYAN<span style="color: var(--c-dark); font-weight: 400;">TRAVEL</span></h1>
+            <h2>Acceso Restringido</h2>
+            <p>Introduce la contraseña para ingresar al sistema.</p>
+            <form id="login-form">
+                <input type="password" id="password-input" placeholder="Contraseña" required>
+                <button type="submit">Ingresar</button>
+                <p id="login-error" style="color: #ff4d4f; display: none; margin-top: 15px; font-size: 14px;">Contraseña incorrecta.</p>
+            </form>
+        </div>
+    </div>
+
+    <!-- LOADER -->
+    <div id="loader-overlay"><div class="spinner"></div><p id="loader-text">Cargando...</p></div>
+
+    <!-- DASHBOARD (PANEL DE CONTROL) -->
+    <div id="dashboard-section" class="wrapper" style="display: none;">
+        <header class="header">
+            <h1 style="color: var(--c-brand-primary); font-weight: 900; margin: 0;">CYAN<span style="color: var(--c-dark); font-weight: 400;">TRAVEL</span></h1>
+            <p style="margin: 5px 0 0 0; color: var(--c-gray);">Panel de Control de Cotizaciones</p>
+        </header>
+        
+        <div class="section">
+            <div class="dashboard-actions">
+                <button id="btn-new-quote" class="action-button download">🚢 Nueva Cotización Formal</button>
+                <button id="btn-new-flyer" class="action-button secondary">🖼️ Nuevo Flyer Promocional</button>
+            </div>
+
+            <div class="history-container">
+                <h3 style="text-align: left; margin-bottom: 20px; color: var(--c-dark); border-bottom: 2px solid #eee; padding-bottom: 10px;">Últimas Cotizaciones</h3>
+                <div class="table-responsive">
+                    <table id="history-table">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Cliente</th>
+                                <th>Naviera / Barco</th>
+                                <th>Total</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-body">
+                            <!-- Los datos de Firebase se inyectarán aquí -->
+                            <tr><td colspan="5" style="text-align: center; padding: 20px; color: var(--c-gray);">Cargando historial...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FORMULARIO (Se construirá en el Paso 2) -->
+    <div id="form-section" class="wrapper" style="display: none;">
+        <header class="header">
+            <h2>Nueva Cotización</h2>
+            <button id="btn-back-dashboard" class="action-button secondary" style="padding: 8px 15px; font-size: 14px; margin-top: 10px;">Volver al Panel</button>
+        </header>
+        <div class="section">
+            <p>El formulario de cruceros se construirá en el Paso 2.</p>
+        </div>
+    </div>
+
+    <!-- Importante: type="module" para poder usar Firebase -->
+    <script type="module" src="script.js"></script>
+</body>
+</html>
