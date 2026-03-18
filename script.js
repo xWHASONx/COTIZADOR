@@ -1,5 +1,5 @@
 /* ==========================================
-   COTIZADOR PRO - CYAN TRAVEL (VERSIÓN FINAL CORPORATIVA)
+   COTIZADOR PRO - CYAN TRAVEL (DISEÑO ORIGINAL + CRUCEROS + FIREBASE)
    ========================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -434,7 +434,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 100); 
     }
 
-    // --- RENDERIZADO DEL PDF CORPORATIVO ---
+    // --- RENDERIZADO DEL PDF (DISEÑO ORIGINAL) ---
     function formatCurrency(value, currency = 'COP') {
         const number = parseFloat(String(value).replace(/[^0-9.-]+/g, ""));
         if (isNaN(number)) return '';
@@ -443,31 +443,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function populateQuote() {
         const clientName = document.getElementById('nombre-completo').value;
+        const quoteNumber = document.getElementById('cotizacion-numero').value;
+        const adults = document.getElementById('adultos').value;
+        const children = document.getElementById('ninos').value;
         
-        const options = { year: 'numeric', month: 'long', day: 'numeric' };
-        document.getElementById('pdf-date').textContent = new Date().toLocaleDateString('es-ES', options);
-        
-        document.getElementById('pdf-greeting').textContent = `HOLA ${clientName.toUpperCase()},`;
+        document.getElementById('confirm-intro-text').textContent = `¡Hola, ${clientName.split(' ')[0].toUpperCase()}! He preparado estas opciones para tu próximo viaje.`;
 
         const visaStatus = document.getElementById('requiere-visa').value;
-        const visaAlert = document.getElementById('pdf-visa-alert');
-        if(visaStatus !== 'No requiere visa') {
-            visaAlert.style.display = 'block';
-            visaAlert.textContent = `⚠️ Atención: Este viaje ${visaStatus}.`;
-        } else {
-            visaAlert.style.display = 'none';
-        }
+        const visaText = visaStatus !== 'No requiere visa' ? `<br><br>⚠️ <strong>${visaStatus}</strong>` : '';
+
+        const customerBox = document.getElementById('confirm-customer-data-box');
+        customerBox.innerHTML = `<p>Para: <strong>${clientName.toUpperCase()}</strong></p><p>Pasajeros: <strong>${adults} Adulto${adults > 1 ? 's' : ''}${children > 0 ? ` y ${children} Niño${children > 1 ? 's' : ''}` : ''}</strong></p><p>Nº Cotización: <strong>${quoteNumber}</strong> | Validez: <strong>${document.getElementById('validez-cupos').value}</strong>${visaText}</p>`;
+
+        const advisor = ADVISORS[advisorSelect.value];
+        document.getElementById('advisor-photo').src = advisor.photoUrl;
+        document.getElementById('advisor-name').textContent = advisor.name;
+
+        const whatsappLink = `https://wa.me/${advisorWhatsappInput.value}`;['advisor-whatsapp-btn', 'cta-reservar', 'cta-contactar', 'footer-wpp-link'].forEach(id => {
+            const el = document.getElementById(id);
+            const baseText = id === 'cta-reservar' ? `¡Hola ${advisor.name}! Estoy listo para reservar según la cotización *${quoteNumber}*.` : `Hola ${advisor.name}, tengo una pregunta sobre la cotización *${quoteNumber}*.`;
+            el.href = `${whatsappLink}?text=${encodeURIComponent(baseText)}`;
+        });
 
         confirmationComponentsContainer.innerHTML = '';
         let dynamicTermsHTML = '';
 
+        // Renderizar Hoteles
         if(document.querySelectorAll('.hotel-form-wrapper').length > 0) dynamicTermsHTML += TERMS_AND_CONDITIONS.hotels;
         document.querySelectorAll('.hotel-form-wrapper').forEach((form, index) => {
             const num = form.id.match(/\d+/)[0];
             let galleryHTML =[1, 2, 3].map(i => pastedImages[`hotel-${num}-foto-${i}`] ? `<img src="${pastedImages[`hotel-${num}-foto-${i}`]}">` : '').join('');
             confirmationComponentsContainer.innerHTML += `
                 <div class="quote-option-box">
-                    <div class="option-header" style="background-color: var(--c-brand-navy);"><h3>ALOJAMIENTO ${index + 1}</h3><span class="option-price">${formatCurrency(document.getElementById(`valor-total-${num}`).value, document.getElementById(`moneda-${num}`).value)}</span></div>
+                    <div class="option-header"><h3>Hotel ${index + 1}</h3><span class="option-price">${formatCurrency(document.getElementById(`valor-total-${num}`).value, document.getElementById(`moneda-${num}`).value)}</span></div>
                     <div class="option-body">
                         <h4>${document.getElementById(`hotel-${num}`).value}</h4>
                         <div class="photo-gallery">${galleryHTML}</div>
@@ -479,6 +487,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>`;
         });
 
+        // Renderizar Cruceros
         if(document.querySelectorAll('.cruises-form-wrapper').length > 0) dynamicTermsHTML += TERMS_AND_CONDITIONS.cruises;
         document.querySelectorAll('.cruises-form-wrapper').forEach((form, index) => {
             const num = form.id.match(/\d+/)[0];
@@ -487,7 +496,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             confirmationComponentsContainer.innerHTML += `
                 <div class="quote-option-box">
-                    <div class="option-header" style="background-color: var(--c-brand-navy);"><h3>CRUCERO ${index + 1} - ${document.getElementById(`naviera-${num}`).value}</h3><span class="option-price">${formatCurrency(document.getElementById(`valor-crucero-${num}`).value, document.getElementById(`moneda-crucero-${num}`).value)}</span></div>
+                    <div class="option-header" style="background-color: #005f73;"><h3>Crucero ${index + 1} - ${document.getElementById(`naviera-${num}`).value}</h3><span class="option-price">${formatCurrency(document.getElementById(`valor-crucero-${num}`).value, document.getElementById(`moneda-crucero-${num}`).value)}</span></div>
                     <div class="option-body">
                         <h4>Barco: ${document.getElementById(`barco-${num}`).value}</h4>
                         ${mapHTML}
@@ -504,19 +513,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>`;
         });
 
+        // Renderizar Vuelos y Traslados
         if (document.getElementById('flights-form-wrapper')) {
             dynamicTermsHTML += TERMS_AND_CONDITIONS.flights;
-            confirmationComponentsContainer.innerHTML += `<div class="component-section"><div class="option-header" style="background-color: var(--c-brand-navy);"><h3>VUELOS</h3></div><div class="option-body"><p>Desde: ${document.getElementById('ciudad-salida').value}</p></div></div>`;
+            confirmationComponentsContainer.innerHTML += `<div class="component-section"><h3>Vuelos Sugeridos</h3><div class="option-body"><p>Desde: ${document.getElementById('ciudad-salida').value}</p></div></div>`;
         }
         if (document.getElementById('transfers-form-wrapper')) {
             dynamicTermsHTML += TERMS_AND_CONDITIONS.transfers;
         }
 
-        document.getElementById('pdf-payment-info').textContent = document.getElementById('info-pago-personalizada').value;
-        document.getElementById('pdf-total-reserva').textContent = document.getElementById('valor-total-reserva').value;
-        
-        document.getElementById('dynamic-terms-container').innerHTML = dynamicTermsHTML;
-        document.getElementById('general-terms-container').innerHTML = GENERAL_TERMS;
+        document.getElementById('confirm-pago-reserva').textContent = formatCurrency(document.getElementById('pago-reserva').value);
+        document.getElementById('confirm-pago-segundo').textContent = formatCurrency(document.getElementById('pago-segundo').value);
+        document.getElementById('confirm-fecha-limite').textContent = document.getElementById('fecha-limite-pago').value;
+        document.getElementById('confirm-no-incluye').textContent = document.getElementById('no-incluye').value;
+
+        document.getElementById('confirm-terms-content').innerHTML = dynamicTermsHTML + GENERAL_TERMS;
+        document.getElementById('terms-section-confirm').style.display = 'block';
     }
 
     document.getElementById('edit-quote-btn').addEventListener('click', () => showView('form'));
