@@ -7,11 +7,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
-    
-    <!-- Librerías para crear el PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -30,10 +27,7 @@
         </div>
     </div>
 
-    <!-- LOADER -->
-    <div id="loader-overlay"><div class="spinner"></div><p id="loader-text">Cargando...</p></div>
-
-    <!-- BOTÓN FLOTANTE TEMA OSCURO/CLARO -->
+    <div id="loader-overlay"><div class="spinner"></div><p id="loader-text">Generando PDF Premium...</p></div>
     <button id="theme-toggle" class="theme-btn">🌙 Tema Oscuro</button>
 
     <!-- DASHBOARD -->
@@ -42,246 +36,225 @@
             <img src="https://i.imgur.com/eEB6RKa.png" alt="Cyan Travel" class="brand-logo-small">
             <p style="margin: 5px 0 0 0; color: var(--c-gray);">Panel de Control de Cotizaciones</p>
         </header>
-        
         <div class="section">
             <div class="dashboard-actions">
-                <button id="btn-new-quote" class="action-button download">🚢 Nueva Cotización Formal</button>
-                <button id="btn-new-flyer" class="action-button secondary">🖼️ Nuevo Flyer Promocional</button>
+                <button id="btn-new-quote" class="action-button download">🚢 Crear Nueva Cotización</button>
             </div>
-
             <div class="history-container">
                 <h3 class="section-title">Últimas Cotizaciones</h3>
                 <div class="table-responsive">
                     <table id="history-table">
-                        <thead>
-                            <tr>
-                                <th>Fecha</th>
-                                <th>Cliente</th>
-                                <th>Naviera / Barco</th>
-                                <th>Total</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody id="history-body">
-                            <tr><td colspan="5" style="text-align: center; padding: 20px; color: var(--c-gray);">Cargando historial...</td></tr>
-                        </tbody>
+                        <thead><tr><th>Fecha</th><th>Cliente</th><th>Total</th><th>Acciones</th></tr></thead>
+                        <tbody id="history-body"><tr><td colspan="4" style="text-align: center; padding: 20px; color: var(--c-gray);">Cargando historial...</td></tr></tbody>
                     </table>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- FORMULARIO DE CRUCEROS -->
+    <!-- FORMULARIO ROBUSTO -->
     <div id="form-section" class="wrapper" style="display: none;">
         <header class="header" style="display: flex; justify-content: space-between; align-items: center; padding: 20px 40px;">
             <img src="https://i.imgur.com/eEB6RKa.png" alt="Cyan Travel" class="brand-logo-small" style="margin: 0;">
-            <h2 style="color: var(--c-brand-primary); font-size: 20px;">Cotización Formal</h2>
+            <h2 style="color: var(--c-brand-primary); font-size: 20px;">Constructor de Viajes</h2>
             <button id="btn-back-dashboard" class="action-button secondary" style="padding: 8px 15px; font-size: 14px;">Volver</button>
         </header>
         
         <div class="section" style="padding-top: 20px; text-align: left;">
-            <form id="cruise-form">
+            <form id="main-form" novalidate>
                 
+                <!-- 1. DATOS BASE -->
                 <fieldset class="form-fieldset">
-                    <legend>1. Configuración y Cliente</legend>
+                    <legend>1. Datos del Cliente y TRM</legend>
                     <div class="trm-box">
-                        <div>
-                            <strong>Tasa de Cambio (TRM)</strong>
-                            <p style="margin: 0; font-size: 12px; color: var(--c-gray);">Se usa para calcular los precios en COP.</p>
-                        </div>
+                        <div><strong>Tasa de Cambio (TRM)</strong><p style="margin: 0; font-size: 12px;">Para calcular valores de USD a COP.</p></div>
                         <div style="display: flex; gap: 10px; align-items: center;">
                             <span style="font-weight: bold; color: var(--c-brand-primary);">$</span>
                             <input type="number" id="trm-input" required style="width: 120px; font-weight: bold; color: var(--c-brand-primary);">
                             <button type="button" id="btn-update-trm" class="action-button secondary" style="padding: 10px; font-size: 12px;">🔄 Actualizar</button>
                         </div>
                     </div>
-
                     <div class="form-grid" style="margin-top: 20px;">
-                        <div class="form-group full-width">
-                            <label>Nombre del Cliente</label>
-                            <input type="text" id="client-name" placeholder="Ej: Maria Estela" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Adultos</label>
-                            <input type="number" id="pax-adults" value="2" min="1" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Niños</label>
-                            <input type="number" id="pax-children" value="0" min="0" required>
-                        </div>
+                        <div class="form-group"><label>Asesor</label><select id="asesor" required></select></div>
+                        <div class="form-group"><label>WhatsApp Asesor</label><input type="tel" id="whatsapp-asesor" required></div>
+                        <div class="form-group full-width"><label>Nombre del Cliente</label><input type="text" id="nombre-completo" required></div>
+                        <div class="form-group"><label>Adultos</label><input type="number" id="adultos" value="2" min="1" required></div>
+                        <div class="form-group"><label>Niños</label><input type="number" id="ninos" value="0" min="0" required></div>
+                        <div class="form-group full-width"><label>Validez de la Oferta</label><input type="text" id="validez-cupos" value="Cotización válida por 48 horas o hasta agotar disponibilidad." required></div>
                     </div>
                 </fieldset>
 
+                <!-- 2. CONSTRUCTOR DINÁMICO -->
                 <fieldset class="form-fieldset">
-                    <legend>2. Detalles del Crucero</legend>
+                    <legend>2. Componentes del Viaje</legend>
+                    <div class="add-buttons-container">
+                        <button type="button" class="add-section-btn" data-section="cruise">🚢 + Crucero</button>
+                        <button type="button" class="add-section-btn" data-section="hotel">🏨 + Hotel</button>
+                        <button type="button" class="add-section-btn" data-section="flights">✈️ + Vuelos</button>
+                        <button type="button" class="add-section-btn" data-section="tours">🗺️ + Tours</button>
+                        <button type="button" class="add-section-btn" data-section="transfers">🚐 + Traslados</button>
+                    </div>
+                    <div id="dynamic-components-container"></div>
+                </fieldset>
+
+                <!-- 3. TOTALES Y PAGOS -->
+                <fieldset class="form-fieldset">
+                    <legend>3. Totales y Plan de Pagos</legend>
                     <div class="form-grid">
-                        <div class="form-group full-width">
-                            <label>Imagen del Mapa / Itinerario (Pega aquí con Ctrl+V)</label>
-                            <div class="paste-area" id="map-paste-area">
-                                <p>Haz clic aquí y presiona Ctrl+V para pegar la imagen</p>
-                                <img id="map-preview" src="" style="display:none;">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>Naviera</label>
-                            <select id="cruise-line" required>
-                                <option value="Royal Caribbean International">Royal Caribbean International</option>
-                                <option value="MSC Cruceros" selected>MSC Cruceros</option>
-                                <option value="Norwegian Cruise Line">Norwegian Cruise Line (NCL)</option>
-                                <option value="Carnival Cruise Line">Carnival Cruise Line</option>
-                                <option value="Princess Cruises">Princess Cruises</option>
-                                <option value="Disney Cruise Line">Disney Cruise Line</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Nombre del Barco</label>
-                            <input type="text" id="ship-name" placeholder="Ej: MSC GRANDIOSA" required>
-                        </div>
-                        <div class="form-group full-width">
-                            <label>Puertos de Escala</label>
-                            <textarea id="itinerary" rows="2" required>Puerto Cañaveral, Nassau, Ocean Cay, Cozumel, Costa Maya</textarea>
-                        </div>
-                        <div class="form-group">
-                            <label>Fecha de Embarque</label>
-                            <input type="date" id="embark-date" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Duración (Noches)</label>
-                            <input type="number" id="nights" value="7" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Tipo de Cabina</label>
-                            <select id="cabin-type" required>
-                                <option value="Interior">Interior</option>
-                                <option value="Vista al Mar">Vista al Mar</option>
-                                <option value="Balcón">Balcón</option>
-                                <option value="Suite">Suite</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Validez de la Cotización</label>
-                            <input type="date" id="validity-date" required>
-                        </div>
+                        <div class="form-group"><label>Valor Total del Viaje (USD)</label><input type="number" id="total-usd" step="0.01" placeholder="Ej: 2500" required></div>
+                        <div class="form-group"><label>Valor Total (COP Automático)</label><input type="text" id="total-cop" readonly style="background-color: var(--c-brand-primary); color: white; font-weight: bold;"></div>
+                        <div class="form-group"><label>Pago Inicial / Separación (USD)</label><input type="number" id="pago-reserva-usd" step="0.01" placeholder="Ej: 500" required></div>
+                        <div class="form-group"><label>Fecha Límite Pago Final</label><input type="date" id="fecha-limite-pago" required></div>
+                        <div class="form-group full-width"><label>Lo que NO incluye el plan general</label><textarea id="no-incluye" rows="2">Gastos o servicios no especificados en la cotización, seguros médicos, visados.</textarea></div>
                     </div>
                 </fieldset>
 
-                <fieldset class="form-fieldset">
-                    <legend>3. Precios y Plan de Pagos</legend>
-                    
-                    <div class="price-calculator-box">
-                        <div class="form-group">
-                            <label>Valor Total Cabina (USD)</label>
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <span style="font-weight: bold;">USD $</span>
-                                <input type="number" id="price-usd" step="0.01" placeholder="Ej: 1121.20" required style="font-size: 18px; font-weight: bold;">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>Equivalente (COP)</label>
-                            <div class="cop-display" id="price-cop-display">COP $ 0</div>
-                        </div>
-                    </div>
-
-                    <div class="form-grid" style="margin-top: 20px;">
-                        <div class="form-group">
-                            <label>Pago Inicial / Separación (USD)</label>
-                            <input type="number" id="deposit-usd" step="0.01" placeholder="Ej: 225" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Fecha Límite Pago Final</label>
-                            <input type="date" id="final-payment-date" required>
-                        </div>
-                        <div class="form-group full-width">
-                            <label>¿Qué INCLUYE?</label>
-                            <textarea id="includes" rows="2" required>Cabina asignada + Impuestos + Alimentación Buffet y a la carta + Bebidas básicas + Actividades + Propinas USD.</textarea>
-                        </div>
-                        <div class="form-group full-width">
-                            <label>¿Qué NO INCLUYE?</label>
-                            <textarea id="not-includes" rows="2" required>Paquete de bebidas alcohólicas, Wi-Fi, Restaurantes de especialidad, excursiones.</textarea>
-                        </div>
-                    </div>
-                </fieldset>
-
-                <button type="submit" class="action-button download" style="width: 100%; margin-top: 20px; font-size: 18px;">Generar Cotización PDF ➡️</button>
+                <button type="submit" class="action-button download" style="width: 100%; margin-top: 20px; font-size: 18px;">Generar Cotización Premium ➡️</button>
             </form>
         </div>
     </div>
 
-    <!-- SECCIÓN DE CONFIRMACIÓN Y PDF (Oculta) -->
-    <div id="confirmation-section" class="wrapper" style="display: none; background-color: #525659; padding: 40px 0;">
+    <!-- TEMPLATES DINÁMICOS -->
+    <template id="template-cruise">
+        <div id="cruise-form-wrapper" class="dynamic-section-wrapper">
+            <fieldset class="form-fieldset sub-component">
+                <button type="button" class="remove-section-btn" data-section="cruise">&times;</button>
+                <legend style="background-color: var(--c-brand-dark);">🚢 Módulo Crucero</legend>
+                <div class="form-grid">
+                    <div class="form-group full-width"><label>Imagen del Itinerario (Pegar Ctrl+V)</label><div class="paste-area" data-img-id="cruise-map"><p>Pegar imagen aquí</p><img src="" style="display:none;"></div></div>
+                    <div class="form-group"><label>Naviera</label><select id="cruise-line" required><option value="Royal Caribbean International">Royal Caribbean</option><option value="MSC Cruceros" selected>MSC Cruceros</option><option value="Norwegian Cruise Line">Norwegian (NCL)</option><option value="Carnival Cruise Line">Carnival</option><option value="Disney Cruise Line">Disney</option></select></div>
+                    <div class="form-group"><label>Barco</label><input type="text" id="cruise-ship" required></div>
+                    <div class="form-group full-width"><label>Itinerario (Puertos)</label><input type="text" id="cruise-itinerary" required></div>
+                    <div class="form-group"><label>Fecha Embarque</label><input type="date" id="cruise-date" required></div>
+                    <div class="form-group"><label>Noches</label><input type="number" id="cruise-nights" value="7" required></div>
+                    <div class="form-group"><label>Tipo Cabina</label><select id="cruise-cabin"><option>Interior</option><option>Vista al Mar</option><option>Balcón</option><option>Suite</option></select></div>
+                    <div class="form-group full-width"><label>¿Qué Incluye el Crucero?</label><textarea id="cruise-includes" rows="2">Alimentación Buffet y a la carta, bebidas básicas, actividades, propinas.</textarea></div>
+                </div>
+            </fieldset>
+        </div>
+    </template>
+
+    <template id="template-hotel">
+        <div id="hotel-form-wrapper-PLACEHOLDER" class="dynamic-section-wrapper hotel-form-wrapper">
+            <fieldset class="form-fieldset sub-component">
+                <button type="button" class="remove-section-btn" data-section="hotel-PLACEHOLDER">&times;</button>
+                <legend style="background-color: var(--c-brand-dark);">🏨 Hotel PLACEHOLDER</legend>
+                <div class="form-grid">
+                    <div class="form-group full-width"><label>Nombre del Hotel</label><input type="text" id="hotel-name-PLACEHOLDER" required></div>
+                    <div class="form-group"><label>Destino</label><input type="text" id="hotel-dest-PLACEHOLDER" required></div>
+                    <div class="form-group"><label>Régimen</label><select id="hotel-regimen-PLACEHOLDER"><option>Todo Incluido</option><option>Desayuno</option><option>Solo Alojamiento</option></select></div>
+                    <div class="form-group"><label>Check-in</label><input type="date" id="hotel-date-PLACEHOLDER" required></div>
+                    <div class="form-group"><label>Noches</label><input type="number" id="hotel-nights-PLACEHOLDER" value="3" required></div>
+                    <div class="form-group full-width"><label>Galería (Pegar hasta 3 fotos)</label><div class="gallery-paste-areas">
+                        <div class="paste-area" data-img-id="hotel-PLACEHOLDER-foto-1"><p>Foto 1</p><img src="" style="display:none;"></div>
+                        <div class="paste-area" data-img-id="hotel-PLACEHOLDER-foto-2"><p>Foto 2</p><img src="" style="display:none;"></div>
+                        <div class="paste-area" data-img-id="hotel-PLACEHOLDER-foto-3"><p>Foto 3</p><img src="" style="display:none;"></div>
+                    </div></div>
+                </div>
+            </fieldset>
+        </div>
+    </template>
+
+    <template id="template-flights">
+        <div id="flights-form-wrapper" class="dynamic-section-wrapper">
+            <fieldset class="form-fieldset sub-component">
+                <button type="button" class="remove-section-btn" data-section="flights">&times;</button>
+                <legend style="background-color: var(--c-brand-dark);">✈️ Vuelos</legend>
+                <div class="form-grid">
+                    <div class="form-group full-width"><label>Ruta (Ej: BOG - MCO - BOG)</label><input type="text" id="flight-route" required></div>
+                    <div class="form-group full-width"><label>Aerolínea y Detalles</label><input type="text" id="flight-details" placeholder="Ej: Vuelo directo con LATAM, incluye maleta de cabina." required></div>
+                    <div class="form-group full-width"><label>Banner Vuelo (Pegar Imagen)</label><div class="paste-area" data-img-id="flight-banner"><p>Pegar imagen aquí</p><img src="" style="display:none;"></div></div>
+                </div>
+            </fieldset>
+        </div>
+    </template>
+
+    <template id="template-tours">
+        <div id="tours-form-wrapper" class="dynamic-section-wrapper">
+            <fieldset class="form-fieldset sub-component">
+                <button type="button" class="remove-section-btn" data-section="tours">&times;</button>
+                <legend style="background-color: var(--c-brand-dark);">🗺️ Tours / Extras</legend>
+                <div class="form-grid">
+                    <div class="form-group full-width"><label>Descripción del Tour</label><input type="text" id="tour-desc" required></div>
+                    <div class="form-group full-width"><label>Imagen del Tour</label><div class="paste-area" data-img-id="tour-img"><p>Pegar imagen aquí</p><img src="" style="display:none;"></div></div>
+                </div>
+            </fieldset>
+        </div>
+    </template>
+
+    <template id="template-transfers">
+        <div id="transfers-form-wrapper" class="dynamic-section-wrapper">
+            <fieldset class="form-fieldset sub-component">
+                <button type="button" class="remove-section-btn" data-section="transfers">&times;</button>
+                <legend style="background-color: var(--c-brand-dark);">🚐 Traslados</legend>
+                <div class="form-grid">
+                    <div class="form-group full-width"><label>Descripción del Traslado</label><input type="text" id="transfer-desc" placeholder="Ej: Traslado Aeropuerto - Hotel - Puerto" required></div>
+                </div>
+            </fieldset>
+        </div>
+    </template>
+
+    <!-- SECCIÓN DE CONFIRMACIÓN Y PDF -->
+    <div id="confirmation-section" class="wrapper" style="display: none; background-color: #333; padding: 40px 0;">
         <div style="text-align: center; margin-bottom: 20px;">
             <button id="btn-download-pdf" class="action-button download" style="font-size: 18px; padding: 15px 40px;">📥 Descargar PDF</button>
-            <button id="btn-edit-quote" class="action-button secondary" style="margin-left: 10px;">✏️ Corregir</button>
+            <button id="btn-edit-quote" class="action-button secondary" style="margin-left: 10px; background-color: white;">✏️ Corregir</button>
         </div>
 
-        <!-- ESTE ES EL LIENZO QUE SE CONVIERTE EN PDF -->
+        <!-- LIENZO PDF -->
         <div id="voucher-to-print" class="pdf-canvas">
             
-            <!-- Header PDF -->
-            <div class="pdf-header">
-                <img src="https://i.imgur.com/eEB6RKa.png" alt="Cyan Travel">
-                <div class="pdf-date" id="pdf-current-date">16 DE MARZO DE 2026</div>
-            </div>
-
-            <!-- Saludo -->
-            <div class="pdf-greeting">
-                <h1 id="pdf-client-name">HOLA MARIA ESTELA,</h1>
-                <p>Conoce todos los detalles y opciones para tu viaje.</p>
-            </div>
-
-            <!-- Título Sección -->
-            <div class="pdf-section-title">CRUCERO</div>
-
-            <!-- Barra Negra Barco -->
-            <div class="pdf-ship-bar">
-                <span id="pdf-ship-name">MSC GRANDIOSA</span>
-                <span id="pdf-embark-date">28/11/2026</span>
-            </div>
-
-            <!-- Cuerpo del Crucero -->
-            <div class="pdf-cruise-body">
-                <div class="pdf-map-container">
-                    <img id="pdf-map-img" src="" alt="Mapa del Itinerario">
-                </div>
-                <div class="pdf-cruise-details">
-                    <p><strong>Puertos:</strong> <span id="pdf-ports"></span></p>
-                    <p><strong>Días de Navegación:</strong> <span id="pdf-sea-days">2</span></p>
-                    <p><strong>Fecha de Embarque:</strong> <span id="pdf-embark-text"></span></p>
-                    <p><strong>Duración:</strong> <span id="pdf-nights"></span> Noches</p>
-                    <p><strong>Barco:</strong> <span id="pdf-ship-text"></span></p>
-                    <p><strong>Tipo de cabinas:</strong> <span id="pdf-cabin"></span></p>
-                    <p><strong>Número de cabina:</strong> POR ASIGNAR</p>
+            <!-- HEADER PREMIUM (Mosaico/Olas) -->
+            <div class="pdf-premium-header">
+                <div class="header-overlay">
+                    <img src="https://i.imgur.com/eEB6RKa.png" alt="Cyan Travel" class="pdf-logo-white">
+                    <div class="pdf-date-badge" id="pdf-current-date"></div>
                 </div>
             </div>
 
-            <!-- Validez -->
-            <div class="pdf-validity">Cotización válida hasta <span id="pdf-validity-text"></span></div>
-
-            <!-- Inclusiones -->
-            <div class="pdf-inclusions">
-                <p class="cyan-text"><strong>QUÉ INCLUYE:</strong></p>
-                <p id="pdf-includes"></p>
-                <p class="cyan-text" style="margin-top: 15px;"><strong>QUÉ NO INCLUYE:</strong></p>
-                <p id="pdf-not-includes"></p>
-            </div>
-
-            <!-- SÚPER BANNER DE PRECIOS -->
-            <div class="pdf-super-banner">
-                <div class="banner-left">
-                    <div class="banner-title">TOTAL CABINA</div>
-                    <div class="banner-subtitle">PARA <span id="pdf-pax-total"></span> PERSONAS</div>
-                    <div class="banner-price">USD <span id="pdf-total-usd"></span> <span style="font-size: 18px; font-weight: 400;">~ COP <span id="pdf-total-cop"></span></span></div>
+            <div class="pdf-body-content">
+                <!-- Saludo y Asesor -->
+                <div class="pdf-intro-flex">
+                    <div class="pdf-greeting">
+                        <h1 id="pdf-client-name">HOLA,</h1>
+                        <p>Hemos diseñado esta propuesta exclusiva para ti.</p>
+                    </div>
+                    <div class="pdf-advisor-box">
+                        <img id="pdf-advisor-photo" src="" alt="Asesor">
+                        <div>
+                            <p style="margin:0; font-size: 12px; color: #666;">Tu asesor de viajes:</p>
+                            <strong id="pdf-advisor-name" style="font-size: 16px; color: var(--c-brand-primary);"></strong>
+                        </div>
+                    </div>
                 </div>
-                <div class="banner-right">
-                    <div class="banner-title" style="color: var(--c-brand-primary);">PLAN DE PAGOS</div>
-                    <div class="banner-plan-text">Separa hoy con: <strong>USD <span id="pdf-deposit-usd"></span></strong></div>
-                    <div class="banner-plan-text">Paga el saldo hasta: <strong><span id="pdf-deadline"></span></strong></div>
+
+                <!-- CONTENEDOR DINÁMICO DE COMPONENTES -->
+                <div id="pdf-dynamic-content"></div>
+
+                <!-- SÚPER BANNER DE PRECIOS -->
+                <div class="pdf-super-banner">
+                    <div class="banner-left">
+                        <div class="banner-title">INVERSIÓN TOTAL</div>
+                        <div class="banner-subtitle">PARA <span id="pdf-pax-total"></span> PERSONAS</div>
+                        <div class="banner-price">USD <span id="pdf-total-usd"></span></div>
+                        <div class="banner-price-cop">~ COP <span id="pdf-total-cop"></span></div>
+                    </div>
+                    <div class="banner-right">
+                        <div class="banner-title" style="color: var(--c-brand-primary);">PLAN DE PAGOS</div>
+                        <div class="banner-plan-text">Reserva hoy con: <strong>USD <span id="pdf-deposit-usd"></span></strong></div>
+                        <div class="banner-plan-text">Paga el saldo hasta: <strong><span id="pdf-deadline"></span></strong></div>
+                    </div>
+                </div>
+
+                <!-- Términos -->
+                <div class="pdf-terms">
+                    <strong>El plan NO incluye:</strong> <span id="pdf-not-includes"></span><br><br>
+                    <small>Validez: <span id="pdf-validity-text"></span>. Tarifas sujetas a disponibilidad y cambios sin previo aviso. La TRM es aproximada y se liquidará a la tasa del día del pago.</small>
                 </div>
             </div>
-
-            <!-- Footer PDF -->
+            
             <div class="pdf-footer">
-                Si requieres información adicional, te invitamos a contactarnos a través de Whatsapp: +57 305 4466406
+                Si requieres información adicional, contáctanos a través de Whatsapp: <span id="pdf-advisor-wpp"></span>
             </div>
         </div>
     </div>
