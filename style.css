@@ -1,110 +1,263 @@
-:root {
-    --c-brand-primary: #0088aa;
-    --c-brand-dark: #005f77;
-    --c-bg-main: #f0f4f8;
-    --c-bg-card: #ffffff;
-    --c-dark: #1a1a1a;
-    --c-gray: #666666;
-    --c-border: #e2e8f0;
-    --c-black-accent: #000000;
-    --c-white: #ffffff;
-}[data-theme="dark"] {
-    --c-bg-main: #121212;
-    --c-bg-card: #1e1e1e;
-    --c-dark: #ffffff;
-    --c-gray: #a0a0a0;
-    --c-border: #333333;
-    --c-black-accent: #0a0a0a;
-    --c-white: #1e1e1e;
-}
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+import { getFirestore, collection, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-body { margin: 0; padding: 0; font-family: 'Poppins', sans-serif; background-color: var(--c-bg-main); color: var(--c-dark); transition: all 0.3s; }
+const firebaseConfig = {
+  apiKey: "AIzaSyBHmGl77i125THoq5rgHFGHud9n5G9A9YM",
+  authDomain: "cyan-travel-cotizador.firebaseapp.com",
+  projectId: "cyan-travel-cotizador",
+  storageBucket: "cyan-travel-cotizador.firebasestorage.app",
+  messagingSenderId: "267039635379",
+  appId: "1:267039635379:web:3cce7223ae64e84738bdc6"
+};
 
-.theme-btn { position: fixed; top: 20px; right: 20px; background-color: var(--c-bg-card); color: var(--c-dark); border: 1px solid var(--c-border); padding: 10px 15px; border-radius: 50px; cursor: pointer; font-weight: 600; z-index: 100; }
-.brand-logo { max-width: 280px; margin-bottom: 20px; }
-.brand-logo-small { max-width: 180px; margin: 0 auto; display: block; }
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-.wrapper { max-width: 1000px; margin: 40px auto; background-color: var(--c-bg-card); box-shadow: 0 10px 40px rgba(0,0,0,0.08); border-radius: 16px; overflow: hidden; }
-.header { background-color: var(--c-bg-card); padding: 30px; text-align: center; border-bottom: 1px solid var(--c-border); }
-.section { padding: 40px; text-align: center; }
-h1, h2, h3 { font-weight: 700; margin:0; }
+document.addEventListener('DOMContentLoaded', () => {
+    const ACCESS_PASSWORD = 'HOLA';
+    let pastedImages = {}; // Almacén global de imágenes pegadas
+    let hotelCounter = 0;
 
-.action-button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 16px 30px; border-radius: 8px; font-size: 16px; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s; }
-.action-button.download { background-color: var(--c-brand-primary); color: #fff; }
-.action-button.download:hover { background-color: var(--c-brand-dark); }
-.action-button.secondary { background-color: transparent; color: var(--c-dark); border: 1px solid var(--c-border); }
+    // --- ASESORES ---
+    const ADVISORS = {
+        'Maria': { name: 'María Camila', photo: 'https://i.imgur.com/SdubRgH.jpeg', wpp: '573113173286' },
+        'Sarah': { name: 'Sarah George', photo: 'https://i.imgur.com/MCSsvz9.jpeg', wpp: '573332313485' },
+        'Ana': { name: 'Ana Isabel', photo: 'https://i.imgur.com/b7LIglY.jpeg', wpp: '573217598780' }
+    };
 
-/* Constructor Dinámico */
-.add-buttons-container { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; background-color: rgba(0,136,170,0.05); padding: 15px; border-radius: 8px; }
-.add-section-btn { flex-grow: 1; background-color: var(--c-bg-card); border: 1px dashed var(--c-brand-primary); color: var(--c-brand-primary); padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; }
-.add-section-btn:hover { background-color: var(--c-brand-primary); color: #fff; }
-.sub-component { border: 2px solid var(--c-border); box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
-.remove-section-btn { position: absolute; top: 15px; right: 15px; background-color: #ffeaea; color: #ff4d4f; border: none; width: 30px; height: 30px; border-radius: 50%; font-weight: bold; cursor: pointer; z-index: 10; }
+    const advisorSelect = document.getElementById('asesor');
+    advisorSelect.innerHTML = '<option value="" disabled selected>Selecciona tu nombre</option>' + 
+        Object.keys(ADVISORS).map(id => `<option value="${id}">${ADVISORS[id].name}</option>`).join('');
+    
+    advisorSelect.addEventListener('change', () => {
+        if(ADVISORS[advisorSelect.value]) {
+            document.getElementById('whatsapp-asesor').value = ADVISORS[advisorSelect.value].wpp;
+        }
+    });
 
-.form-fieldset { background-color: transparent; border: 1px solid var(--c-border); border-radius: 12px; padding: 30px; margin-bottom: 25px; position: relative; }
-.form-fieldset legend { font-weight: 700; font-size: 16px; padding: 8px 20px; background-color: var(--c-black-accent); color: #fff; border-radius: 50px; }
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.form-group { display: flex; flex-direction: column; }
-.form-group.full-width { grid-column: 1 / -1; }
-.form-group label { font-weight: 600; font-size: 13px; margin-bottom: 8px; color: var(--c-gray); text-transform: uppercase; }
-.form-group input, .form-group textarea, .form-group select { width: 100%; padding: 14px; border-radius: 8px; border: 1px solid var(--c-border); font-family: 'Poppins', sans-serif; font-size: 15px; box-sizing: border-box; background-color: var(--c-bg-main); color: var(--c-dark); }
+    // --- TEMA OSCURO ---
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    const htmlEl = document.documentElement;
+    const savedTheme = localStorage.getItem('cyan-theme') || 'light';
+    htmlEl.setAttribute('data-theme', savedTheme);
+    themeToggleBtn.innerHTML = savedTheme === 'light' ? '🌙 Tema Oscuro' : '☀️ Tema Claro';
 
-.paste-area { border: 2px dashed var(--c-border); border-radius: 8px; padding: 20px; text-align: center; cursor: pointer; background-color: var(--c-bg-main); min-height: 80px; display: flex; justify-content: center; align-items: center; overflow: hidden; }
-.paste-area img { max-width: 100%; max-height: 150px; border-radius: 4px; object-fit: contain; }
-.gallery-paste-areas { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+    themeToggleBtn.addEventListener('click', () => {
+        const newTheme = htmlEl.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        htmlEl.setAttribute('data-theme', newTheme);
+        localStorage.setItem('cyan-theme', newTheme);
+        themeToggleBtn.innerHTML = newTheme === 'light' ? '🌙 Tema Oscuro' : '☀️ Tema Claro';
+    });
 
-.trm-box { display: flex; justify-content: space-between; align-items: center; background-color: rgba(0, 136, 170, 0.1); border: 1px solid rgba(0, 136, 170, 0.3); padding: 15px 20px; border-radius: 8px; }
+    // --- NAVEGACIÓN ---
+    document.getElementById('login-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (document.getElementById('password-input').value === ACCESS_PASSWORD) {
+            document.getElementById('login-overlay').style.display = 'none';
+            document.getElementById('dashboard-section').style.display = 'block';
+        } else {
+            document.getElementById('login-error').style.display = 'block';
+        }
+    });
 
-/* =========================================
-   ESTILOS DEL PDF PREMIUM
-   ========================================= */
-.pdf-canvas { width: 800px; min-height: 1131px; background-color: #ffffff; color: #000000; margin: 0 auto; position: relative; font-family: 'Poppins', sans-serif; }
-/* HEADER PREMIUM CON IMAGEN DE CRUCERO/OLAS */
-.pdf-premium-header { 
-    height: 220px; 
-    background-image: url('https://images.unsplash.com/photo-1599640842225-85d111c60e6b?q=80&w=1000&auto=format&fit=crop'); 
-    background-size: cover; 
-    background-position: center; 
-    position: relative; 
-}
-.header-overlay { background: linear-gradient(to bottom, rgba(0,0,0,0.7), rgba(0,136,170,0.4)); width: 100%; height: 100%; display: flex; justify-content: space-between; align-items: flex-start; padding: 40px 50px; box-sizing: border-box; }
-.pdf-logo-white { max-width: 220px; filter: brightness(0) invert(1); } /* Vuelve el logo blanco */
-.pdf-date-badge { background-color: #ffffff; color: #000000; padding: 8px 20px; border-radius: 50px; font-weight: 700; font-size: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+    document.getElementById('btn-new-quote').addEventListener('click', () => {
+        document.getElementById('dashboard-section').style.display = 'none';
+        document.getElementById('form-section').style.display = 'block';
+        fetchTRM();
+    });
 
-.pdf-body-content { padding: 40px 50px; }
-.pdf-intro-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-.pdf-greeting h1 { font-size: 28px; font-weight: 900; margin: 0 0 5px 0; color: #000; }
-.pdf-greeting p { font-size: 16px; color: #444; margin: 0; }
-.pdf-advisor-box { display: flex; align-items: center; gap: 15px; background-color: #f8f9fa; padding: 10px 20px; border-radius: 50px; border: 1px solid #eee; }
-.pdf-advisor-box img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; }
+    document.getElementById('btn-back-dashboard').addEventListener('click', () => {
+        document.getElementById('form-section').style.display = 'none';
+        document.getElementById('dashboard-section').style.display = 'block';
+    });
 
-/* Bloques Dinámicos PDF */
-.pdf-component-box { border: 1px solid #eee; border-radius: 12px; margin-bottom: 25px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
-.pdf-comp-header { background-color: #000000; color: #ffffff; padding: 12px 20px; font-size: 18px; font-weight: 700; display: flex; justify-content: space-between; }
-.pdf-comp-header.cyan { background-color: #0088aa; }
-.pdf-comp-body { padding: 20px; display: flex; gap: 20px; }
-.pdf-comp-img { width: 40%; border-radius: 8px; object-fit: cover; }
-.pdf-comp-details { width: 60%; font-size: 14px; line-height: 1.6; }
-.pdf-comp-details p { margin: 0 0 8px 0; }
-.pdf-gallery { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 15px; }
-.pdf-gallery img { width: 100%; height: 100px; object-fit: cover; border-radius: 8px; }
+    document.getElementById('btn-edit-quote').addEventListener('click', () => {
+        document.getElementById('confirmation-section').style.display = 'none';
+        document.getElementById('form-section').style.display = 'block';
+    });
 
-/* SÚPER BANNER */
-.pdf-super-banner { display: flex; border-radius: 16px; overflow: hidden; margin-top: 40px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-.banner-left { background-color: #000000; color: #ffffff; padding: 25px; width: 55%; display: flex; flex-direction: column; justify-content: center; }
-.banner-right { background-color: #e6f4f8; color: #000000; padding: 25px; width: 45%; display: flex; flex-direction: column; justify-content: center; border: 2px solid #0088aa; border-left: none; border-radius: 0 16px 16px 0; }
-.banner-title { font-size: 22px; font-weight: 900; margin-bottom: 5px; }
-.banner-subtitle { font-size: 14px; font-weight: 600; color: #aaa; margin-bottom: 15px; letter-spacing: 1px; }
-.banner-price { font-size: 32px; font-weight: 900; color: #0088aa; line-height: 1; }
-.banner-price-cop { font-size: 18px; color: #fff; margin-top: 5px; }
-.banner-plan-text { font-size: 15px; margin-bottom: 8px; }
-.banner-plan-text strong { font-size: 18px; color: #000000; }
+    // --- TRM Y CALCULADORA ---
+    const trmInput = document.getElementById('trm-input');
+    const totalUsdInput = document.getElementById('total-usd');
+    const totalCopInput = document.getElementById('total-cop');
 
-.pdf-terms { font-size: 12px; color: #666; background-color: #f9f9f9; padding: 15px; border-radius: 8px; }
-.pdf-footer { text-align: center; font-size: 12px; color: #666; border-top: 1px solid #eee; padding: 20px 50px; position: absolute; bottom: 0; width: 100%; box-sizing: border-box; background-color: #fff; }
+    async function fetchTRM() {
+        try {
+            const res = await fetch('https://www.datos.gov.co/resource/32sa-8pi3.json?$limit=1&$order=vigenciadesde%20DESC');
+            const data = await res.json();
+            if(data.length > 0) {
+                trmInput.value = Math.round(parseFloat(data[0].valor));
+                calcTotalCop();
+            }
+        } catch (e) { console.error(e); }
+    }
+    document.getElementById('btn-update-trm').addEventListener('click', fetchTRM);
 
-#loader-overlay, #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--c-bg-main); display: flex; justify-content: center; align-items: center; z-index: 2000; }
-#loader-overlay { display: none; flex-direction: column; color: var(--c-brand-primary); font-weight: 700; }
-.spinner { border: 4px solid var(--c-border); border-top: 4px solid var(--c-brand-primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-#login-box { background-color: var(--c-bg-card); padding: 50px 40px; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); text-align: center; max-width: 400px; width: 90%; border-top: 6px solid var(--c-black-accent); }
+    function calcTotalCop() {
+        const usd = parseFloat(totalUsdInput.value) || 0;
+        const trm = parseFloat(trmInput.value) || 0;
+        totalCopInput.value = (usd * trm).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
+    }
+    totalUsdInput.addEventListener('input', calcTotalCop);
+    trmInput.addEventListener('input', calcTotalCop);
+
+    // --- CONSTRUCTOR DINÁMICO (LEGO) ---
+    const container = document.getElementById('dynamic-components-container');
+
+    function handlePaste(e) {
+        e.preventDefault();
+        const pasteArea = e.currentTarget; 
+        const imageId = pasteArea.dataset.imgId;
+        const item = Array.from(e.clipboardData.items).find(i => i.type.startsWith('image/'));
+        if (item) {
+            const reader = new FileReader();
+            reader.onload = event => {
+                pastedImages[imageId] = event.target.result;
+                const img = pasteArea.querySelector('img');
+                img.src = event.target.result;
+                img.style.display = 'block';
+                pasteArea.querySelector('p').style.display = 'none';
+            };
+            reader.readAsDataURL(item.getAsFile());
+        }
+    }
+
+    document.querySelector('.add-buttons-container').addEventListener('click', e => {
+        if(e.target.matches('.add-section-btn')) {
+            const section = e.target.dataset.section;
+            if(section === 'hotel') {
+                hotelCounter++;
+                let html = document.getElementById('template-hotel').innerHTML.replace(/PLACEHOLDER/g, hotelCounter);
+                const div = document.createElement('div'); div.innerHTML = html;
+                container.appendChild(div.firstElementChild);
+            } else {
+                const template = document.getElementById(`template-${section}`);
+                container.appendChild(template.content.cloneNode(true));
+                e.target.style.display = 'none'; // Solo 1 crucero, 1 vuelo, etc.
+            }
+            // Activar pegado en los nuevos elementos
+            container.querySelectorAll('.paste-area:not(.bound)').forEach(area => {
+                area.addEventListener('paste', handlePaste);
+                area.classList.add('bound');
+            });
+        }
+    });
+
+    container.addEventListener('click', e => {
+        if(e.target.matches('.remove-section-btn')) {
+            const section = e.target.dataset.section;
+            e.target.closest('.dynamic-section-wrapper').remove();
+            if(!section.startsWith('hotel')) {
+                document.querySelector(`.add-section-btn[data-section="${section}"]`).style.display = 'block';
+            }
+        }
+    });
+
+    // --- GENERAR PDF ---
+    function formatDate(dateStr) {
+        if (!dateStr) return '';
+        return new Date(dateStr + 'T00:00:00').toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase();
+    }
+
+    document.getElementById('main-form').addEventListener('submit', e => {
+        e.preventDefault();
+        
+        // 1. Datos Base
+        document.getElementById('pdf-current-date').textContent = formatDate(new Date().toISOString().split('T')[0]);
+        document.getElementById('pdf-client-name').textContent = `HOLA ${document.getElementById('nombre-completo').value.toUpperCase()},`;
+        
+        const adv = ADVISORS[advisorSelect.value];
+        if(adv) {
+            document.getElementById('pdf-advisor-photo').src = adv.photo;
+            document.getElementById('pdf-advisor-name').textContent = adv.name;
+            document.getElementById('pdf-advisor-wpp').textContent = `+${adv.wpp}`;
+        }
+
+        // 2. Construir Componentes Dinámicos
+        const pdfContainer = document.getElementById('pdf-dynamic-content');
+        pdfContainer.innerHTML = '';
+
+        // Crucero
+        if(document.getElementById('cruise-form-wrapper')) {
+            const mapImg = pastedImages['cruise-map'] ? `<img src="${pastedImages['cruise-map']}" class="pdf-comp-img">` : '';
+            pdfContainer.innerHTML += `
+                <div class="pdf-component-box">
+                    <div class="pdf-comp-header cyan"><span>🚢 CRUCERO: ${document.getElementById('cruise-ship').value.toUpperCase()}</span></div>
+                    <div class="pdf-comp-body">
+                        ${mapImg}
+                        <div class="pdf-comp-details" style="width: ${mapImg ? '60%' : '100%'}">
+                            <p><strong>Naviera:</strong> ${document.getElementById('cruise-line').value}</p>
+                            <p><strong>Itinerario:</strong> ${document.getElementById('cruise-itinerary').value}</p>
+                            <p><strong>Embarque:</strong> ${formatDate(document.getElementById('cruise-date').value)}</p>
+                            <p><strong>Duración:</strong> ${document.getElementById('cruise-nights').value} Noches</p>
+                            <p><strong>Cabina:</strong> ${document.getElementById('cruise-cabin').value}</p>
+                            <p style="margin-top:10px; color:#0088aa;"><strong>Incluye:</strong> ${document.getElementById('cruise-includes').value}</p>
+                        </div>
+                    </div>
+                </div>`;
+        }
+
+        // Vuelos
+        if(document.getElementById('flights-form-wrapper')) {
+            const banner = pastedImages['flight-banner'] ? `<img src="${pastedImages['flight-banner']}" style="width:100%; border-radius:8px; margin-bottom:15px;">` : '';
+            pdfContainer.innerHTML += `
+                <div class="pdf-component-box">
+                    <div class="pdf-comp-header"><span>✈️ VUELOS SUGERIDOS</span></div>
+                    <div class="pdf-comp-body" style="flex-direction: column;">
+                        ${banner}
+                        <p><strong>Ruta:</strong> ${document.getElementById('flight-route').value}</p>
+                        <p><strong>Detalles:</strong> ${document.getElementById('flight-details').value}</p>
+                    </div>
+                </div>`;
+        }
+
+        // Hoteles
+        document.querySelectorAll('.hotel-form-wrapper').forEach(wrapper => {
+            const id = wrapper.id.split('-').pop();
+            let gal = '';
+            for(let i=1; i<=3; i++) {
+                if(pastedImages[`hotel-${id}-foto-${i}`]) gal += `<img src="${pastedImages[`hotel-${id}-foto-${i}`]}">`;
+            }
+            pdfContainer.innerHTML += `
+                <div class="pdf-component-box">
+                    <div class="pdf-comp-header"><span>🏨 HOTEL: ${document.getElementById(`hotel-name-${id}`).value.toUpperCase()}</span></div>
+                    <div class="pdf-comp-body" style="flex-direction: column;">
+                        <div class="pdf-comp-details" style="width: 100%;">
+                            <p><strong>Destino:</strong> ${document.getElementById(`hotel-dest-${id}`).value}</p>
+                            <p><strong>Check-in:</strong> ${formatDate(document.getElementById(`hotel-date-${id}`).value)} (${document.getElementById(`hotel-nights-${id}`).value} Noches)</p>
+                            <p><strong>Régimen:</strong> ${document.getElementById(`hotel-regimen-${id}`).value}</p>
+                        </div>
+                        ${gal ? `<div class="pdf-gallery">${gal}</div>` : ''}
+                    </div>
+                </div>`;
+        });
+
+        // 3. Súper Banner y Totales
+        const pax = parseInt(document.getElementById('adultos').value) + parseInt(document.getElementById('ninos').value);
+        document.getElementById('pdf-pax-total').textContent = pax;
+        document.getElementById('pdf-total-usd').textContent = parseFloat(totalUsdInput.value).toLocaleString('en-US');
+        document.getElementById('pdf-total-cop').textContent = totalCopInput.value.replace('COP', '').trim();
+        document.getElementById('pdf-deposit-usd').textContent = parseFloat(document.getElementById('pago-reserva-usd').value).toLocaleString('en-US');
+        document.getElementById('pdf-deadline').textContent = formatDate(document.getElementById('fecha-limite-pago').value);
+        
+        document.getElementById('pdf-not-includes').textContent = document.getElementById('no-incluye').value;
+        document.getElementById('pdf-validity-text').textContent = document.getElementById('validez-cupos').value;
+
+        document.getElementById('form-section').style.display = 'none';
+        document.getElementById('confirmation-section').style.display = 'block';
+        window.scrollTo(0, 0);
+    });
+
+    // --- DESCARGAR PDF ---
+    document.getElementById('btn-download-pdf').addEventListener('click', async () => {
+        document.getElementById('loader-overlay').style.display = 'flex';
+        try {
+            const element = document.getElementById('voucher-to-print');
+            const canvas = await html2canvas(element, { scale: 2, useCORS: true });
+            const pdf = new window.jspdf.jsPDF({ orientation: 'p', unit: 'px', format:[canvas.width, canvas.height] });
+            pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, canvas.width, canvas.height);
+            pdf.save(`Cotizacion_Cyan_${document.getElementById('nombre-completo').value.replace(/ /g, '_')}.pdf`);
+        } catch (e) { alert("Error generando PDF."); } 
+        finally { document.getElementById('loader-overlay').style.display = 'none'; }
+    });
+});
