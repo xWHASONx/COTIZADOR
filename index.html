@@ -66,6 +66,12 @@
                         <div class="form-group full-width"><label for="nombre-completo">Nombre Completo del Cliente</label><input type="text" id="nombre-completo" placeholder="Escribe el nombre completo" required></div>
                         <div class="form-group"><label for="adultos">Adultos</label><select id="adultos"></select></div>
                         <div class="form-group"><label for="ninos">Niños</label><select id="ninos"></select></div>
+                        <div class="form-group full-width"><label for="requiere-visa">¿Requiere Visa?</label><select id="requiere-visa">
+                            <option value="No requiere visa">No requiere visa</option>
+                            <option value="Requiere visa americana">Requiere visa americana</option>
+                            <option value="Requiere visa Schengen">Requiere visa Schengen</option>
+                            <option value="Solo pasaporte vigente">Solo pasaporte vigente</option>
+                        </select></div>
                         <div class="form-group full-width"><label for="validez-cupos">Validez de la Oferta</label><input type="text" id="validez-cupos" required value="¡Últimos 3 cupos a este precio! Válido por 24 horas."></div>
                         <div class="form-group full-width"><label for="cotizacion-numero">Nº Cotización</label><input type="text" id="cotizacion-numero" readonly></div>
                     </div>
@@ -82,12 +88,16 @@
                     <div id="dynamic-components-container"></div>
                 </fieldset>
                 
-                <fieldset class="form-fieldset"><legend>3. Detalles Finales</legend>
+                <fieldset class="form-fieldset"><legend>3. Detalles Finales y Pagos</legend>
                     <div class="form-grid">
-                        <div class="form-group full-width"><label for="no-incluye">Lo que NO incluye el plan (además de los T&C)</label><textarea id="no-incluye" rows="3" placeholder="Ej: Tarjeta de asistencia médica...">Gastos o servicios no especificados en la cotización.</textarea></div>
-                        <div class="form-group"><label for="pago-reserva">Pago para Reservar</label><input type="text" id="pago-reserva" placeholder="Ej: 500000"></div>
-                        <div class="form-group"><label for="pago-segundo">Segundo Pago</label><input type="text" id="pago-segundo" placeholder="Ej: 1000000"></div>
-                        <div class="form-group full-width"><label for="fecha-limite-pago">Info. Adicional del Plan de Pagos</label><textarea id="fecha-limite-pago" rows="3">El saldo restante debe ser pagado 45 días antes de la fecha de viaje.</textarea></div>
+                        <div class="form-group full-width"><label for="info-pago-personalizada">Información del Pago (Edita los valores y fechas para este cliente)</label><textarea id="info-pago-personalizada" rows="8">La tarifa oficial del crucero es en dólares estadounidenses y el valor dado en pesos es únicamente un estimado ya que el valor real puede variar dependiendo de la tasa de cambio el día del pago. El pago del crucero se realiza directamente a la naviera a través de un link oficial donde se deberá cancelar el valor con tarjeta débito o crédito.
+
+Para realizar la reserva del crucero se debe hacer el envío de los nombres completos y fecha de nacimiento de todos los pasajeros para generar un número de reserva en el sistema. Una vez creado, se debe realizar a más tardar en los 5 días siguientes el pago mínimo conocido como depósito correspondiente a un 25% del valor total del crucero, en este caso siendo USD 225 (apróximadamente 840.000 COP). El pago final debe realizarse a más tardar 50 días antes de la salida del barco, en este caso a más tardar el viernes 9 de octubre.
+
+Respecto a los vuelos y el hotel, el pago debe hacerse directamente a CYAN TRAVEL SAS a través de transferencia bancaria, llave (Bre-B) o link para pagar con tarjeta débito o crédito. Una vez confirmado el pago se enviará en el transcurso de una hora los respectivos tiquetes aéreos y/o voucher de reserva del hotel.
+
+El traslado al aeropuerto es un servicio directo de la naviera que puede ser añadido a la reserva del crucero posterior a su confirmación. El valor se añadiría al total de la reserva por lo que el pago sería directamente a la naviera a través de link oficial para cancelar con tarjeta de débito o crédito.</textarea></div>
+                        <div class="form-group full-width"><label for="valor-total-reserva">Valor Total de la Reserva (Ej: USD 1.121,20 ~ COP 4.170.000)</label><input type="text" id="valor-total-reserva" placeholder="Escribe el valor total a mostrar al final" required></div>
                     </div>
                 </fieldset>
                 
@@ -214,59 +224,39 @@
         <!-- SECCIÓN DE CONFIRMACIÓN -->
         <div id="confirmation-section" style="display: none;">
             <div id="voucher-to-print">
-                <header class="confirmation-header"></header>
+                <div class="corporate-header">
+                    <img src="https://i.imgur.com/eEB6RKa.png" alt="Cyan Travel">
+                    <div class="quote-date" id="pdf-date"></div>
+                </div>
                 
                 <div class="voucher-content">
-                    
-                    <!-- BANNER AMARILLO -->
-                    <div class="confirmation-pill">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
-                        Propuesta de Viaje
-                    </div>
+                    <h1 class="greeting-title" id="pdf-greeting"></h1>
+                    <p class="intro-text" style="text-align: left; margin-bottom: 30px;">Conoce todos los detalles y opciones para tu viaje.</p>
 
-                    <p class="intro-text" id="confirm-intro-text"></p>
-                    <div class="customer-data-box" id="confirm-customer-data-box"></div>
-                    <div id="advisor-box">
-                        <img id="advisor-photo" src="" alt="Foto del Asesor"><div class="advisor-info">
-                            <p>Preparado por tu asesor de viajes:</p><h3 id="advisor-name"></h3>
-                        </div><div class="advisor-contact">
-                            <a id="advisor-whatsapp-btn" class="single-contact-btn" href="#" target="_blank">Contactar por WhatsApp</a>
-                        </div>
-                    </div>
+                    <div id="pdf-visa-alert" class="visa-alert"></div>
+
                     <div id="confirmation-components-container"></div>
-                    <div class="details-section">
-                        <div class="payment-plan-box">
-                            <h4>Plan de Pagos Sugerido</h4>
-                            <p><strong>Para reservar:</strong> <span id="confirm-pago-reserva"></span></p>
-                            <p><strong>Segundo pago:</strong> <span id="confirm-pago-segundo"></span></p>
-                            <small id="confirm-fecha-limite"></small>
-                        </div>
-                        <div class="inclusions-box">
-                            <h4>El Plan NO Incluye</h4>
-                            <p id="confirm-no-incluye"></p>
+
+                    <div class="payment-info-section" style="margin-top: 40px; text-align: left;">
+                        <h3 class="section-dark-title" style="color: var(--c-brand-primary); margin-bottom: 15px;">INFORMACIÓN DEL PAGO:</h3>
+                        <p id="pdf-payment-info" style="white-space: pre-wrap; text-align: justify; font-size: 13px; color: var(--c-dark-blue); line-height: 1.6;"></p>
+                        
+                        <div class="total-dark-box">
+                            <h4>VALOR TOTAL RESERVA</h4>
+                            <span class="price" id="pdf-total-reserva"></span>
                         </div>
                     </div>
                     
-                    <div class="main-cta-container">
-                        <h3>¿Listo para tu próxima aventura?</h3>
-                        <a href="#" target="_blank" class="main-cta-button reserve" id="cta-reservar">¡Sí, Quiero Reservar!</a>
-                        <a href="#" target="_blank" class="main-cta-button contact" id="cta-contactar">Tengo una Pregunta</a>
+                    <div class="legal-section">
+                        <div id="dynamic-terms-container" class="legal-text"></div>
+                        <div id="general-terms-container" class="legal-text"></div>
                     </div>
-                    
-                    <div class="voucher-footer">
-                        <div class="airline-logos">
-                            <img src="https://i.imgur.com/qoE9Cbt.png" alt="Avianca Logo">
-                            <img src="https://i.imgur.com/vPhy6ij.png" alt="LATAM Logo">
-                            <img src="https://i.imgur.com/dJdsiMi.png" alt="Wingo Logo">
-                            <img src="https://i.imgur.com/DoAiNjF.png" alt="Copa Airlines Logo">
-                        </div>
-                        <a id="footer-wpp-link" class="single-contact-btn" href="#" target="_blank">Contactar a mi asesor</a>
-                    </div>
-                    
-                    <div id="terms-section-confirm" class="component-section" style="display: none;">
-                        <h3>Términos y Condiciones del Plan</h3>
-                        <div id="confirm-terms-content" class="terms-content-body"></div>
-                    </div>
+                </div>
+
+                <div class="cyan-footer">
+                    <p><strong>CYAN TRAVEL S.A.S.</strong><br>NIT: 902000065-0 | RNT: 264434<br><br>
+                    Si requieres información adicional, te invitamos a contactarnos a través de Whatsapp: <strong>+57 305 4466406</strong><br>
+                    Correo: <strong>Reservas@cyantravel.co</strong></p>
                 </div>
             </div>
             
