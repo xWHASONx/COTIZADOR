@@ -15,198 +15,249 @@ const db = getFirestore(app);
 
 document.addEventListener('DOMContentLoaded', () => {
     const ACCESS_PASSWORD = 'HOLA';
-    let pastedMapImage = ''; // Guardará la imagen del mapa en base64
+    let pastedImages = {}; // Almacén global de imágenes pegadas
+    let hotelCounter = 0;
 
-    // --- TEMA OSCURO / CLARO ---
-    const themeToggleBtn = document.getElementById('theme-toggle');
-    const htmlEl = document.documentElement;
+    // --- ASESORES ---
+    const ADVISORS = {
+        'Maria': { name: 'María Camila', photo: 'https://i.imgur.com/SdubRgH.jpeg', wpp: '573113173286' },
+        'Sarah': { name: 'Sarah George', photo: 'https://i.imgur.com/MCSsvz9.jpeg', wpp: '573332313485' },
+        'Ana': { name: 'Ana Isabel', photo: 'https://i.imgur.com/b7LIglY.jpeg', wpp: '573217598780' }
+    };
+
+    const advisorSelect = document.getElementById('asesor');
+    advisorSelect.innerHTML = '<option value="" disabled selected>Selecciona tu nombre</option>' + 
+        Object.keys(ADVISORS).map(id => `<option value="${id}">${ADVISORS[id].name}</option>`).join('');
     
-    // Revisar si ya había elegido un tema antes
-    const savedTheme = localStorage.getItem('cyan-theme') || 'light';
-    htmlEl.setAttribute('data-theme', savedTheme);
-    updateThemeButtonText(savedTheme);
-
-    themeToggleBtn.addEventListener('click', () => {
-        const currentTheme = htmlEl.getAttribute('data-theme');
-        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-        htmlEl.setAttribute('data-theme', newTheme);
-        localStorage.setItem('cyan-theme', newTheme);
-        updateThemeButtonText(newTheme);
-    });
-
-    function updateThemeButtonText(theme) {
-        themeToggleBtn.innerHTML = theme === 'light' ? '🌙 Tema Oscuro' : '☀️ Tema Claro';
-    }
-
-    // --- ELEMENTOS DOM ---
-    const loginOverlay = document.getElementById('login-overlay');
-    const loginForm = document.getElementById('login-form');
-    const passwordInput = document.getElementById('password-input');
-    
-    const dashboardSection = document.getElementById('dashboard-section');
-    const formSection = document.getElementById('form-section');
-    const confirmationSection = document.getElementById('confirmation-section');
-    
-    const btnNewQuote = document.getElementById('btn-new-quote');
-    const btnBackDashboard = document.getElementById('btn-back-dashboard');
-    const btnEditQuote = document.getElementById('btn-edit-quote');
-    const btnDownloadPdf = document.getElementById('btn-download-pdf');
-    const loaderOverlay = document.getElementById('loader-overlay');
-
-    // --- LOGIN ---
-    loginForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        if (passwordInput.value.trim() === ACCESS_PASSWORD) {
-            loginOverlay.style.display = 'none';
-            dashboardSection.style.display = 'block';
-        } else {
-            document.getElementById('login-error').style.display = 'block';
-            passwordInput.value = '';
+    advisorSelect.addEventListener('change', () => {
+        if(ADVISORS[advisorSelect.value]) {
+            document.getElementById('whatsapp-asesor').value = ADVISORS[advisorSelect.value].wpp;
         }
     });
 
+    // --- TEMA OSCURO ---
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    const htmlEl = document.documentElement;
+    const savedTheme = localStorage.getItem('cyan-theme') || 'light';
+    htmlEl.setAttribute('data-theme', savedTheme);
+    themeToggleBtn.innerHTML = savedTheme === 'light' ? '🌙 Tema Oscuro' : '☀️ Tema Claro';
+
+    themeToggleBtn.addEventListener('click', () => {
+        const newTheme = htmlEl.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        htmlEl.setAttribute('data-theme', newTheme);
+        localStorage.setItem('cyan-theme', newTheme);
+        themeToggleBtn.innerHTML = newTheme === 'light' ? '🌙 Tema Oscuro' : '☀️ Tema Claro';
+    });
+
     // --- NAVEGACIÓN ---
-    btnNewQuote.addEventListener('click', () => {
-        dashboardSection.style.display = 'none';
-        formSection.style.display = 'block';
-        fetchTRM();
-        // Setear fechas por defecto (hoy y validez mañana)
-        const today = new Date();
-        const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
-        document.getElementById('validity-date').value = tomorrow.toISOString().split('T')[0];
-    });
-
-    btnBackDashboard.addEventListener('click', () => {
-        formSection.style.display = 'none';
-        dashboardSection.style.display = 'block';
-    });
-
-    btnEditQuote.addEventListener('click', () => {
-        confirmationSection.style.display = 'none';
-        formSection.style.display = 'block';
-        window.scrollTo(0, 0);
-    });
-
-    // --- PEGADO DE IMAGEN (MAPA) ---
-    const mapPasteArea = document.getElementById('map-paste-area');
-    const mapPreview = document.getElementById('map-preview');
-
-    mapPasteArea.addEventListener('paste', (e) => {
+    document.getElementById('login-form').addEventListener('submit', (e) => {
         e.preventDefault();
+        if (document.getElementById('password-input').value === ACCESS_PASSWORD) {
+            document.getElementById('login-overlay').style.display = 'none';
+            document.getElementById('dashboard-section').style.display = 'block';
+        } else {
+            document.getElementById('login-error').style.display = 'block';
+        }
+    });
+
+    document.getElementById('btn-new-quote').addEventListener('click', () => {
+        document.getElementById('dashboard-section').style.display = 'none';
+        document.getElementById('form-section').style.display = 'block';
+        fetchTRM();
+    });
+
+    document.getElementById('btn-back-dashboard').addEventListener('click', () => {
+        document.getElementById('form-section').style.display = 'none';
+        document.getElementById('dashboard-section').style.display = 'block';
+    });
+
+    document.getElementById('btn-edit-quote').addEventListener('click', () => {
+        document.getElementById('confirmation-section').style.display = 'none';
+        document.getElementById('form-section').style.display = 'block';
+    });
+
+    // --- TRM Y CALCULADORA ---
+    const trmInput = document.getElementById('trm-input');
+    const totalUsdInput = document.getElementById('total-usd');
+    const totalCopInput = document.getElementById('total-cop');
+
+    async function fetchTRM() {
+        try {
+            const res = await fetch('https://www.datos.gov.co/resource/32sa-8pi3.json?$limit=1&$order=vigenciadesde%20DESC');
+            const data = await res.json();
+            if(data.length > 0) {
+                trmInput.value = Math.round(parseFloat(data[0].valor));
+                calcTotalCop();
+            }
+        } catch (e) { console.error(e); }
+    }
+    document.getElementById('btn-update-trm').addEventListener('click', fetchTRM);
+
+    function calcTotalCop() {
+        const usd = parseFloat(totalUsdInput.value) || 0;
+        const trm = parseFloat(trmInput.value) || 0;
+        totalCopInput.value = (usd * trm).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
+    }
+    totalUsdInput.addEventListener('input', calcTotalCop);
+    trmInput.addEventListener('input', calcTotalCop);
+
+    // --- CONSTRUCTOR DINÁMICO (LEGO) ---
+    const container = document.getElementById('dynamic-components-container');
+
+    function handlePaste(e) {
+        e.preventDefault();
+        const pasteArea = e.currentTarget; 
+        const imageId = pasteArea.dataset.imgId;
         const item = Array.from(e.clipboardData.items).find(i => i.type.startsWith('image/'));
         if (item) {
             const reader = new FileReader();
             reader.onload = event => {
-                pastedMapImage = event.target.result;
-                mapPreview.src = pastedMapImage;
-                mapPreview.style.display = 'block';
-                mapPasteArea.querySelector('p').style.display = 'none';
+                pastedImages[imageId] = event.target.result;
+                const img = pasteArea.querySelector('img');
+                img.src = event.target.result;
+                img.style.display = 'block';
+                pasteArea.querySelector('p').style.display = 'none';
             };
             reader.readAsDataURL(item.getAsFile());
         }
+    }
+
+    document.querySelector('.add-buttons-container').addEventListener('click', e => {
+        if(e.target.matches('.add-section-btn')) {
+            const section = e.target.dataset.section;
+            if(section === 'hotel') {
+                hotelCounter++;
+                let html = document.getElementById('template-hotel').innerHTML.replace(/PLACEHOLDER/g, hotelCounter);
+                const div = document.createElement('div'); div.innerHTML = html;
+                container.appendChild(div.firstElementChild);
+            } else {
+                const template = document.getElementById(`template-${section}`);
+                container.appendChild(template.content.cloneNode(true));
+                e.target.style.display = 'none'; // Solo 1 crucero, 1 vuelo, etc.
+            }
+            // Activar pegado en los nuevos elementos
+            container.querySelectorAll('.paste-area:not(.bound)').forEach(area => {
+                area.addEventListener('paste', handlePaste);
+                area.classList.add('bound');
+            });
+        }
     });
 
-    // --- CALCULADORA TRM ---
-    const trmInput = document.getElementById('trm-input');
-    const priceUsdInput = document.getElementById('price-usd');
-    const priceCopDisplay = document.getElementById('price-cop-display');
-
-    async function fetchTRM() {
-        try {
-            const response = await fetch('https://www.datos.gov.co/resource/32sa-8pi3.json?$limit=1&$order=vigenciadesde%20DESC');
-            const data = await response.json();
-            if(data && data.length > 0) {
-                trmInput.value = Math.round(parseFloat(data[0].valor));
-                calculateCOP();
+    container.addEventListener('click', e => {
+        if(e.target.matches('.remove-section-btn')) {
+            const section = e.target.dataset.section;
+            e.target.closest('.dynamic-section-wrapper').remove();
+            if(!section.startsWith('hotel')) {
+                document.querySelector(`.add-section-btn[data-section="${section}"]`).style.display = 'block';
             }
-        } catch (error) { console.error("Error TRM:", error); }
-    }
+        }
+    });
 
-    document.getElementById('btn-update-trm').addEventListener('click', fetchTRM);
-
-    function calculateCOP() {
-        const usd = parseFloat(priceUsdInput.value) || 0;
-        const trm = parseFloat(trmInput.value) || 0;
-        priceCopDisplay.textContent = (usd * trm).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
-    }
-    priceUsdInput.addEventListener('input', calculateCOP);
-    trmInput.addEventListener('input', calculateCOP);
-
-    // --- GENERAR VISTA PREVIA DEL PDF ---
+    // --- GENERAR PDF ---
     function formatDate(dateStr) {
         if (!dateStr) return '';
-        const date = new Date(dateStr + 'T00:00:00');
-        const options = { year: 'numeric', month: 'long', day: 'numeric' };
-        return date.toLocaleDateString('es-ES', options).toUpperCase();
+        return new Date(dateStr + 'T00:00:00').toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase();
     }
 
-    function formatCurrency(value) {
-        return parseFloat(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    }
-
-    document.getElementById('cruise-form').addEventListener('submit', (e) => {
+    document.getElementById('main-form').addEventListener('submit', e => {
         e.preventDefault();
         
-        // 1. Recopilar datos
-        const clientName = document.getElementById('client-name').value;
-        const paxTotal = parseInt(document.getElementById('pax-adults').value) + parseInt(document.getElementById('pax-children').value);
-        const usdTotal = document.getElementById('price-usd').value;
-        const copTotal = (parseFloat(usdTotal) * parseFloat(trmInput.value)).toLocaleString('es-CO', { maximumFractionDigits: 0 });
-        
-        // 2. Inyectar en el HTML del PDF
+        // 1. Datos Base
         document.getElementById('pdf-current-date').textContent = formatDate(new Date().toISOString().split('T')[0]);
-        document.getElementById('pdf-client-name').textContent = `HOLA ${clientName.toUpperCase()},`;
-        document.getElementById('pdf-ship-name').textContent = document.getElementById('ship-name').value.toUpperCase();
-        document.getElementById('pdf-embark-date').textContent = document.getElementById('embark-date').value.split('-').reverse().join('/');
+        document.getElementById('pdf-client-name').textContent = `HOLA ${document.getElementById('nombre-completo').value.toUpperCase()},`;
         
-        if(pastedMapImage) {
-            document.getElementById('pdf-map-img').src = pastedMapImage;
-            document.getElementById('pdf-map-img').style.display = 'block';
-        } else {
-            document.getElementById('pdf-map-img').style.display = 'none';
+        const adv = ADVISORS[advisorSelect.value];
+        if(adv) {
+            document.getElementById('pdf-advisor-photo').src = adv.photo;
+            document.getElementById('pdf-advisor-name').textContent = adv.name;
+            document.getElementById('pdf-advisor-wpp').textContent = `+${adv.wpp}`;
         }
 
-        document.getElementById('pdf-ports').textContent = document.getElementById('itinerary').value;
-        document.getElementById('pdf-embark-text').textContent = formatDate(document.getElementById('embark-date').value);
-        document.getElementById('pdf-nights').textContent = document.getElementById('nights').value;
-        document.getElementById('pdf-ship-text').textContent = document.getElementById('ship-name').value.toUpperCase();
-        document.getElementById('pdf-cabin').textContent = document.getElementById('cabin-type').value.toUpperCase();
+        // 2. Construir Componentes Dinámicos
+        const pdfContainer = document.getElementById('pdf-dynamic-content');
+        pdfContainer.innerHTML = '';
+
+        // Crucero
+        if(document.getElementById('cruise-form-wrapper')) {
+            const mapImg = pastedImages['cruise-map'] ? `<img src="${pastedImages['cruise-map']}" class="pdf-comp-img">` : '';
+            pdfContainer.innerHTML += `
+                <div class="pdf-component-box">
+                    <div class="pdf-comp-header cyan"><span>🚢 CRUCERO: ${document.getElementById('cruise-ship').value.toUpperCase()}</span></div>
+                    <div class="pdf-comp-body">
+                        ${mapImg}
+                        <div class="pdf-comp-details" style="width: ${mapImg ? '60%' : '100%'}">
+                            <p><strong>Naviera:</strong> ${document.getElementById('cruise-line').value}</p>
+                            <p><strong>Itinerario:</strong> ${document.getElementById('cruise-itinerary').value}</p>
+                            <p><strong>Embarque:</strong> ${formatDate(document.getElementById('cruise-date').value)}</p>
+                            <p><strong>Duración:</strong> ${document.getElementById('cruise-nights').value} Noches</p>
+                            <p><strong>Cabina:</strong> ${document.getElementById('cruise-cabin').value}</p>
+                            <p style="margin-top:10px; color:#0088aa;"><strong>Incluye:</strong> ${document.getElementById('cruise-includes').value}</p>
+                        </div>
+                    </div>
+                </div>`;
+        }
+
+        // Vuelos
+        if(document.getElementById('flights-form-wrapper')) {
+            const banner = pastedImages['flight-banner'] ? `<img src="${pastedImages['flight-banner']}" style="width:100%; border-radius:8px; margin-bottom:15px;">` : '';
+            pdfContainer.innerHTML += `
+                <div class="pdf-component-box">
+                    <div class="pdf-comp-header"><span>✈️ VUELOS SUGERIDOS</span></div>
+                    <div class="pdf-comp-body" style="flex-direction: column;">
+                        ${banner}
+                        <p><strong>Ruta:</strong> ${document.getElementById('flight-route').value}</p>
+                        <p><strong>Detalles:</strong> ${document.getElementById('flight-details').value}</p>
+                    </div>
+                </div>`;
+        }
+
+        // Hoteles
+        document.querySelectorAll('.hotel-form-wrapper').forEach(wrapper => {
+            const id = wrapper.id.split('-').pop();
+            let gal = '';
+            for(let i=1; i<=3; i++) {
+                if(pastedImages[`hotel-${id}-foto-${i}`]) gal += `<img src="${pastedImages[`hotel-${id}-foto-${i}`]}">`;
+            }
+            pdfContainer.innerHTML += `
+                <div class="pdf-component-box">
+                    <div class="pdf-comp-header"><span>🏨 HOTEL: ${document.getElementById(`hotel-name-${id}`).value.toUpperCase()}</span></div>
+                    <div class="pdf-comp-body" style="flex-direction: column;">
+                        <div class="pdf-comp-details" style="width: 100%;">
+                            <p><strong>Destino:</strong> ${document.getElementById(`hotel-dest-${id}`).value}</p>
+                            <p><strong>Check-in:</strong> ${formatDate(document.getElementById(`hotel-date-${id}`).value)} (${document.getElementById(`hotel-nights-${id}`).value} Noches)</p>
+                            <p><strong>Régimen:</strong> ${document.getElementById(`hotel-regimen-${id}`).value}</p>
+                        </div>
+                        ${gal ? `<div class="pdf-gallery">${gal}</div>` : ''}
+                    </div>
+                </div>`;
+        });
+
+        // 3. Súper Banner y Totales
+        const pax = parseInt(document.getElementById('adultos').value) + parseInt(document.getElementById('ninos').value);
+        document.getElementById('pdf-pax-total').textContent = pax;
+        document.getElementById('pdf-total-usd').textContent = parseFloat(totalUsdInput.value).toLocaleString('en-US');
+        document.getElementById('pdf-total-cop').textContent = totalCopInput.value.replace('COP', '').trim();
+        document.getElementById('pdf-deposit-usd').textContent = parseFloat(document.getElementById('pago-reserva-usd').value).toLocaleString('en-US');
+        document.getElementById('pdf-deadline').textContent = formatDate(document.getElementById('fecha-limite-pago').value);
         
-        document.getElementById('pdf-validity-text').textContent = document.getElementById('validity-date').value.split('-').reverse().join('/');
-        document.getElementById('pdf-includes').textContent = document.getElementById('includes').value;
-        document.getElementById('pdf-not-includes').textContent = document.getElementById('not-includes').value;
+        document.getElementById('pdf-not-includes').textContent = document.getElementById('no-incluye').value;
+        document.getElementById('pdf-validity-text').textContent = document.getElementById('validez-cupos').value;
 
-        // Súper Banner
-        document.getElementById('pdf-pax-total').textContent = paxTotal;
-        document.getElementById('pdf-total-usd').textContent = formatCurrency(usdTotal);
-        document.getElementById('pdf-total-cop').textContent = copTotal;
-        document.getElementById('pdf-deposit-usd').textContent = formatCurrency(document.getElementById('deposit-usd').value);
-        document.getElementById('pdf-deadline').textContent = formatDate(document.getElementById('final-payment-date').value);
-
-        // 3. Mostrar sección
-        formSection.style.display = 'none';
-        confirmationSection.style.display = 'block';
+        document.getElementById('form-section').style.display = 'none';
+        document.getElementById('confirmation-section').style.display = 'block';
         window.scrollTo(0, 0);
     });
 
-    // --- DESCARGAR PDF (html2canvas + jsPDF) ---
-    btnDownloadPdf.addEventListener('click', async () => {
-        loaderOverlay.style.display = 'flex';
+    // --- DESCARGAR PDF ---
+    document.getElementById('btn-download-pdf').addEventListener('click', async () => {
+        document.getElementById('loader-overlay').style.display = 'flex';
         try {
-            const elementToPrint = document.getElementById('voucher-to-print');
-            const canvas = await html2canvas(elementToPrint, { scale: 2, useCORS: true });
-            const pdf = new window.jspdf.jsPDF({ orientation: 'p', unit: 'px', format: [canvas.width, canvas.height] });
+            const element = document.getElementById('voucher-to-print');
+            const canvas = await html2canvas(element, { scale: 2, useCORS: true });
+            const pdf = new window.jspdf.jsPDF({ orientation: 'p', unit: 'px', format:[canvas.width, canvas.height] });
             pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, canvas.width, canvas.height);
-            
-            const clientName = document.getElementById('client-name').value.replace(/ /g, '_');
-            pdf.save(`Cotizacion_Crucero_${clientName}.pdf`);
-            
-            alert("¡ÉXITO! La cotización ha sido descargada.");
-        } catch (error) { 
-            console.error("Error generando PDF:", error); 
-            alert("Hubo un error al generar el PDF."); 
-        } finally { 
-            loaderOverlay.style.display = 'none'; 
-        }
+            pdf.save(`Cotizacion_Cyan_${document.getElementById('nombre-completo').value.replace(/ /g, '_')}.pdf`);
+        } catch (e) { alert("Error generando PDF."); } 
+        finally { document.getElementById('loader-overlay').style.display = 'none'; }
     });
 });
