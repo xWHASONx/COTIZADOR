@@ -280,3 +280,26 @@ input[readonly] { background-color: #e9ecef; cursor: not-allowed; color: var(--c
 .quote-date { font-size: 12px; color: #aaa; display: block; margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; }
 .btn-duplicate { background: #f4f6f8; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: bold; color: var(--c-dark-blue); margin-top: 10px; width: 100%; transition: background 0.2s; }
 .btn-duplicate:hover { background: #e2e6ea; }
+/* === DISEÑO CORPORATIVO CYAN TRAVEL (PDF) === */
+:root {
+    --c-brand-navy: #1a2332; /* Azul Marino Oscuro para cajas de totales */
+}
+
+.corporate-header { display: flex; justify-content: space-between; align-items: center; padding: 30px; border-bottom: 3px solid var(--c-light-gray); background-color: var(--c-white); }
+.corporate-header img { max-width: 220px; }
+.corporate-header .quote-date { font-weight: 600; color: var(--c-gray); text-transform: uppercase; font-size: 14px; }
+
+.greeting-title { font-size: 28px; font-weight: 900; color: var(--c-brand-navy); text-transform: uppercase; margin-bottom: 5px; text-align: left; }
+
+.visa-alert { background-color: #e0f7fa; color: var(--c-brand-primary); padding: 12px 20px; border-radius: 8px; font-weight: 700; text-align: center; margin-bottom: 25px; border-left: 5px solid var(--c-brand-primary); }
+
+.total-dark-box { background-color: var(--c-brand-navy); color: var(--c-white); padding: 20px 30px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-top: 25px; box-shadow: 0 10px 20px rgba(26, 35, 50, 0.2); }
+.total-dark-box h4 { margin: 0; font-size: 18px; text-transform: uppercase; color: var(--c-white); }
+.total-dark-box .price { font-size: 24px; font-weight: 900; color: var(--c-white); }
+
+.cyan-footer { text-align: center; padding: 40px 30px; background-color: #f4f6f8; border-top: 2px solid #eee; margin-top: 40px; font-size: 14px; color: var(--c-gray); line-height: 1.6; }
+.cyan-footer strong { color: var(--c-brand-navy); }
+
+.legal-section { margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px; }
+.legal-text { font-size: 10px; color: #666; text-align: justify; line-height: 1.5; margin-bottom: 15px; }
+.legal-text h3 { font-size: 12px; color: var(--c-brand-navy); margin-bottom: 8px; text-transform: uppercase; }
