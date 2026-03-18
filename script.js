@@ -52,6 +52,17 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const ICONS = {
+       const TERMS_AND_CONDITIONS = {
+        flights: `<h3>✈️ Tiquetes Aéreos</h3><p>Los valores e itinerarios cotizados están sujetos a cambios y disponibilidad por parte de las aerolíneas sin previo aviso. Los vuelos incluidos en esta cotización son aproximados al momento de su emisión. Para garantizar el valor y el itinerario proporcionado, se debe realizar el pago total inmediato. Ninguna aerolínea permite separar, reservar o congelar precios sin el pago completo. En caso de cambio de fecha, nombre del pasajero o cualquier modificación, la aerolínea aplicará penalidades según su política interna. Niños mayores de 2 años cumplidos pagan tarifa de adulto.</p>`,
+        hotels: `<h3>🏨 Hoteles</h3><p>La reserva hotelera se realiza inicialmente con un pago parcial (separación). El saldo restante deberá estar completamente pagado al menos 45 días antes de la fecha del viaje. Si deseas modificar la fecha del viaje, se validará primero la disponibilidad en el hotel. En caso de no estar disponible, se intentará mantener el valor en otro hotel de la misma categoría. Si la nueva fecha corresponde a temporada alta y el valor se incrementa, el cliente deberá asumir la diferencia.</p>`,
+        transfers: `<h3>🚐 Traslados</h3><p>Si el plan incluye traslados desde el aeropuerto al hotel y posteriormente decides comprar vuelos con llegada a otra ciudad, los traslados adicionales correrán por cuenta del cliente debido a la diferencia de distancia y el reajuste necesario en la logística.</p>`,
+        cruises: `<h3>🚢 Cruceros</h3><p>La tarifa oficial del crucero es en dólares estadounidenses y el valor dado en pesos es únicamente un estimado ya que el valor real puede variar dependiendo de la tasa de cambio el día del pago. El pago del crucero se realiza directamente a la naviera a través de un link oficial donde se deberá cancelar el valor con tarjeta débito o crédito.</p>`
+    };
+
+    const GENERAL_TERMS = `<h3>Términos y condiciones</h3>
+    <p>Al confirmar una reserva con Cyan Travel (en adelante, “la Agencia”), el pasajero y/o titular de la reserva (en adelante, “el Cliente”) acepta los presentes términos y condiciones: 1) Rol de la Agencia: La Agencia actúa como intermediaria entre el Cliente y los proveedores de servicios turísticos. Los servicios efectivamente prestados son responsabilidad directa de cada proveedor. 2) Itinerarios, horarios y cambios operativos: Los itinerarios, horarios, rutas, escalas, cabinas, asientos, tipos de habitación, categorías, servicios incluidos y demás características del viaje pueden ser modificados por los proveedores por razones operativas, climáticas, de seguridad, disposiciones gubernamentales o causas de fuerza mayor. La Agencia no se hace responsable por cambios, reprogramaciones, demoras, cancelaciones, overbooking, sustituciones de equipo, cierres de puertos/aeropuertos. 3) Documentación y requisitos de viaje: Es responsabilidad del Cliente contar con documentos vigentes y requisitos exigidos para su viaje: pasaporte, visas, permisos, vacunas, formularios migratorios, seguros, autorizaciones para menores, entre otros. 4) Exactitud de datos: El Cliente debe suministrar datos correctos y completos. Errores o inconsistencias pueden generar costos adicionales. 5) Pagos, confirmación y emisión: Las reservas se confirman únicamente cuando el pago ha sido recibido según lo acordado. 6) Tarifas administrativas y cargos por gestión: Las tarifas administrativas, cargos de gestión y/o cargos por servicio cobrados por la Agencia no son reembolsables. 7) Fuerza mayor y eventos fuera de control: La Agencia no será responsable por incumplimientos o afectaciones derivadas de eventos fuera de su control razonable. 8) Aceptación: La compra, pago o confirmación de la reserva implica aceptación total de estos términos.</p>
+    <h3>Políticas de Cancelación, Cambios y Reembolsos</h3>
+    <p>1) Política general: Todas las solicitudes de cancelación, cambios, reembolsos, reemisiones, cambios de nombre/fecha o correcciones están sujetas a las políticas y condiciones del proveedor y al tipo de tarifa adquirida. 2) Tarifas administrativas no reembolsables: Independientemente del resultado ante el proveedor, las tarifas administrativas de la Agencia no son reembolsables. 3) Penalidades, retenciones y diferencias tarifarias: En caso de que el proveedor permita cambios o reembolsos, el Cliente podrá asumir penalidades por cambio/cancelación, diferencia de tarifa, impuestos no reembolsables. 4) No show (no presentación): Si el Cliente no se presenta a tiempo, aplicarán políticas de no show del proveedor, que suelen implicar pérdida total del valor pagado. 5) Tiempos de reembolso: Cuando un reembolso sea aprobado por el proveedor, los tiempos de devolución dependen del proveedor y/o entidad financiera. La Agencia no controla estos plazos. 6) Cancelaciones o cambios del proveedor: Si el proveedor cancela o modifica el servicio, se aplicarán sus políticas. 7) Recomendación de seguro de viaje: Se recomienda adquirir seguro de asistencia/seguro de cancelación para cubrir imprevistos médicos, interrupciones del viaje o cancelaciones por causas justificadas.</p>`;
         destination: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>',
         calendar: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>',
         moon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>',
@@ -434,24 +445,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function populateQuote() {
         const clientName = document.getElementById('nombre-completo').value;
-        document.getElementById('confirm-intro-text').textContent = `¡Hola, ${clientName.split(' ')[0].toUpperCase()}! He preparado estas opciones para tu próximo viaje.`;
         
-        const customerBox = document.getElementById('confirm-customer-data-box');
-        customerBox.innerHTML = `<p>Para: <strong>${clientName.toUpperCase()}</strong></p><p>Nº Cotización: <strong>${document.getElementById('cotizacion-numero').value}</strong></p>`;
+        // Fecha actual en español
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('pdf-date').textContent = new Date().toLocaleDateString('es-ES', options);
+        
+        // Saludo Corporativo
+        document.getElementById('pdf-greeting').textContent = `HOLA ${clientName.toUpperCase()},`;
 
-        const advisor = ADVISORS[advisorSelect.value];
-        document.getElementById('advisor-photo').src = advisor.photoUrl;
-        document.getElementById('advisor-name').textContent = advisor.name;
+        // Alerta de Visa
+        const visaStatus = document.getElementById('requiere-visa').value;
+        const visaAlert = document.getElementById('pdf-visa-alert');
+        if(visaStatus !== 'No requiere visa') {
+            visaAlert.style.display = 'block';
+            visaAlert.textContent = `⚠️ Atención: Este viaje ${visaStatus}.`;
+        } else {
+            visaAlert.style.display = 'none';
+        }
 
         confirmationComponentsContainer.innerHTML = '';
+        let dynamicTermsHTML = '';
 
         // Renderizar Hoteles
+        if(document.querySelectorAll('.hotel-form-wrapper').length > 0) dynamicTermsHTML += TERMS_AND_CONDITIONS.hotels;
         document.querySelectorAll('.hotel-form-wrapper').forEach((form, index) => {
             const num = form.id.match(/\d+/)[0];
             let galleryHTML = [1, 2, 3].map(i => pastedImages[`hotel-${num}-foto-${i}`] ? `<img src="${pastedImages[`hotel-${num}-foto-${i}`]}">` : '').join('');
             confirmationComponentsContainer.innerHTML += `
                 <div class="quote-option-box">
-                    <div class="option-header"><h3>Hotel ${index + 1}</h3><span class="option-price">${formatCurrency(document.getElementById(`valor-total-${num}`).value, document.getElementById(`moneda-${num}`).value)}</span></div>
+                    <div class="option-header" style="background-color: var(--c-brand-navy);"><h3>ALOJAMIENTO ${index + 1}</h3><span class="option-price">${formatCurrency(document.getElementById(`valor-total-${num}`).value, document.getElementById(`moneda-${num}`).value)}</span></div>
                     <div class="option-body">
                         <h4>${document.getElementById(`hotel-${num}`).value}</h4>
                         <div class="photo-gallery">${galleryHTML}</div>
@@ -462,6 +484,49 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>`;
         });
+
+        // Renderizar Cruceros
+        if(document.querySelectorAll('.cruises-form-wrapper').length > 0) dynamicTermsHTML += TERMS_AND_CONDITIONS.cruises;
+        document.querySelectorAll('.cruises-form-wrapper').forEach((form, index) => {
+            const num = form.id.match(/\d+/)[0];
+            let galleryHTML =[1, 2, 3].map(i => pastedImages[`crucero-${num}-foto-${i}`] ? `<img src="${pastedImages[`crucero-${num}-foto-${i}`]}">` : '').join('');
+            let mapHTML = pastedImages[`crucero-${num}-mapa`] ? `<div class="single-photo-container"><img src="${pastedImages[`crucero-${num}-mapa`]}"></div>` : '';
+            
+            confirmationComponentsContainer.innerHTML += `
+                <div class="quote-option-box">
+                    <div class="option-header" style="background-color: var(--c-brand-navy);"><h3>CRUCERO ${index + 1} - ${document.getElementById(`naviera-${num}`).value}</h3><span class="option-price">${formatCurrency(document.getElementById(`valor-crucero-${num}`).value, document.getElementById(`moneda-crucero-${num}`).value)}</span></div>
+                    <div class="option-body">
+                        <h4>Barco: ${document.getElementById(`barco-${num}`).value}</h4>
+                        ${mapHTML}
+                        <div class="photo-gallery">${galleryHTML}</div>
+                        <div class="details-grid">
+                            <div class="data-item">${ICONS.ship}<div class="data-item-content"><strong>Embarque:</strong><p>${document.getElementById(`puerto-${num}`).value}</p></div></div>
+                            <div class="data-item">${ICONS.calendar}<div class="data-item-content"><strong>Zarpe:</strong><p>${document.getElementById(`fecha-zarpe-${num}`).value}</p></div></div>
+                            <div class="data-item">${ICONS.moon}<div class="data-item-content"><strong>Noches:</strong><p>${document.getElementById(`noches-crucero-${num}`).value}</p></div></div>
+                            <div class="data-item">${ICONS.bed}<div class="data-item-content"><strong>Cabina:</strong><p>${document.getElementById(`cabina-${num}`).value}</p></div></div>
+                            <div class="data-item full-width">${ICONS.check}<div class="data-item-content"><strong>Inclusiones:</strong><p>${document.getElementById(`inclusiones-${num}`).value} | Propinas: ${document.getElementById(`propinas-${num}`).value}</p></div></div>
+                        </div>
+                        <div class="data-item full-width" style="margin-top:15px;"><div class="data-item-content"><strong>Itinerario:</strong><p style="white-space: pre-wrap;">${document.getElementById(`itinerario-${num}`).value}</p></div></div>
+                    </div>
+                </div>`;
+        });
+
+        // Renderizar Vuelos y Traslados
+        if (document.getElementById('flights-form-wrapper')) {
+            dynamicTermsHTML += TERMS_AND_CONDITIONS.flights;
+            confirmationComponentsContainer.innerHTML += `<div class="component-section"><div class="option-header" style="background-color: var(--c-brand-navy);"><h3>VUELOS</h3></div><div class="option-body"><p>Desde: ${document.getElementById('ciudad-salida').value}</p></div></div>`;
+        }
+        if (document.getElementById('transfers-form-wrapper')) {
+            dynamicTermsHTML += TERMS_AND_CONDITIONS.transfers;
+        }
+
+        // Pagos y Términos
+        document.getElementById('pdf-payment-info').textContent = document.getElementById('info-pago-personalizada').value;
+        document.getElementById('pdf-total-reserva').textContent = document.getElementById('valor-total-reserva').value;
+        
+        document.getElementById('dynamic-terms-container').innerHTML = dynamicTermsHTML;
+        document.getElementById('general-terms-container').innerHTML = GENERAL_TERMS;
+    }
 
         // Renderizar Cruceros
         document.querySelectorAll('.cruises-form-wrapper').forEach((form, index) => {
