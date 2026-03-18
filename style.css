@@ -1,17 +1,17 @@
 :root {
-    /* === PALETA VIVANTURA === */
-    --c-brand-primary: #FE8050;       /* Coral */
-    --c-brand-dark-accent: #14A7CA;   /* Turquesa */
-    --c-bg-card: #bbe0e4;             /* Azul Pálido (Fondo) */
-    --c-brand-yellow: #FFC300;        /* Amarillo Brillante */
+    /* === PALETA CYAN TRAVEL === */
+    --c-brand-primary: #0088aa;       /* Cyan Principal */
+    --c-brand-dark-accent: #000000;   /* Negro para contrastes fuertes */
+    --c-bg-card: #ffffff;             /* Blanco puro para el fondo de la tarjeta */
+    --c-brand-yellow: #000000;        /* Reemplazado por negro para mantener la paleta limpia */
     
     /* Neutros */
-    --c-dark-blue: #293241; 
-    --c-dark: #1d1d1f;      
-    --c-gray: #5f5f63;      
-    --c-light-gray: #f4f6f8; 
+    --c-dark-blue: #111111;           /* Casi negro para textos de títulos */
+    --c-dark: #000000;      
+    --c-gray: #666666;      
+    --c-light-gray: #f4f6f8;          /* Gris muy claro para el fondo exterior */
     --c-white: #ffffff;
-    --c-success-green: #2ecc71;
+    --c-success-green: #0088aa;       /* Usamos Cyan en vez de verde para botones de contacto */
 }
 
 body { margin: 0; padding: 0; font-family: 'Poppins', sans-serif; background-color: var(--c-light-gray); color: var(--c-dark); -webkit-font-smoothing: antialiased; }
@@ -156,8 +156,8 @@ input[readonly] { background-color: #e9ecef; cursor: not-allowed; color: var(--c
 
 /* Banner Amarillo - Cotización */
 .confirmation-pill {
-    background-color: var(--c-brand-yellow);
-    color: var(--c-dark-blue);
+    background-color: var(--c-brand-dark-accent);
+    color: var(--c-white);
     padding: 12px 30px;
     border-radius: 50px;
     font-size: 20px;
@@ -214,7 +214,8 @@ input[readonly] { background-color: #e9ecef; cursor: not-allowed; color: var(--c
 
 /* Footer PDF */
 .details-section { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px; text-align: left; }
-.payment-plan-box, .inclusions-box { background-color: #fff8e1; border: 1px solid #ffe082; padding: 20px; border-radius: 16px; } /* Fondo amarillito suave */
+.payment-plan-box, .inclusions-box { background-color: #f9f9f9; border: 1px solid #eeeeee; padding: 20px; border-radius: 16px; } 
+.inclusions-box { background-color: #f0f8fa; border-color: #cce7ee; } /* Tono Cyan muy suave */
 .inclusions-box { background-color: #e3f2fd; border-color: #bbdefb; } /* Fondo azulito suave */
 .payment-plan-box h4, .inclusions-box h4 { font-size: 16px; color: var(--c-dark-blue); margin-bottom: 10px; font-weight: 800; }
 .payment-plan-box p, .inclusions-box p { font-size: 13px; margin: 0 0 8px 0; line-height: 1.5; color: var(--c-gray); white-space: pre-wrap; }
