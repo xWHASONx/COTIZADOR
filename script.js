@@ -18,11 +18,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let pastedImages = {}; 
     let hotelCounter = 0;
 
-    // --- ASESORES ---
     const ADVISORS = {
-        'Maria': { name: 'María Camila', photo: 'https://i.imgur.com/SdubRgH.jpeg', wpp: '573113173286' },
-        'Sarah': { name: 'Sarah George', photo: 'https://i.imgur.com/MCSsvz9.jpeg', wpp: '573332313485' },
-        'Ana': { name: 'Ana Isabel', photo: 'https://i.imgur.com/b7LIglY.jpeg', wpp: '573217598780' }
+        'Maria': { name: 'María Camila', wpp: '573113173286' },
+        'Sarah': { name: 'Sarah George', wpp: '573332313485' },
+        'Ana': { name: 'Ana Isabel', wpp: '573217598780' }
     };
 
     const REGIMEN_TEMPLATES = {
@@ -33,7 +32,6 @@ document.addEventListener('DOMContentLoaded', () => {
         'solo_hotel': `Solo alojamiento.`
     };
 
-    // --- INICIALIZACIÓN DEL FORMULARIO (Lógica Original Restaurada) ---
     function initializeForm() {
         document.getElementById('pre-reserva-form').reset();
         pastedImages = {};
@@ -41,12 +39,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('dynamic-components-container').innerHTML = '';
         document.querySelectorAll('.add-section-btn').forEach(btn => btn.style.display = 'block');
         
-        // Asesores
         const advisorSelect = document.getElementById('asesor');
         advisorSelect.innerHTML = '<option value="" disabled selected>Selecciona tu nombre</option>' + 
             Object.keys(ADVISORS).map(id => `<option value="${id}">${ADVISORS[id].name}</option>`).join('');
         
-        // Dropdowns Adultos/Niños
         const adultsSelect = document.getElementById('adultos');
         const ninosSelect = document.getElementById('ninos');
         adultsSelect.innerHTML = ''; ninosSelect.innerHTML = '';
@@ -60,29 +56,12 @@ document.addEventListener('DOMContentLoaded', () => {
             ninosSelect.add(new Option(text, i));
         }
 
-        // Generar Número de Cotización Automático
         const now = new Date();
         document.getElementById('cotizacion-numero').value = `COT-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}-${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
     }
 
     document.getElementById('asesor').addEventListener('change', (e) => {
-        if(ADVISORS[e.target.value]) {
-            document.getElementById('whatsapp-asesor').value = ADVISORS[e.target.value].wpp;
-        }
-    });
-
-    // --- TEMA OSCURO ---
-    const themeToggleBtn = document.getElementById('theme-toggle');
-    const htmlEl = document.documentElement;
-    const savedTheme = localStorage.getItem('cyan-theme') || 'light';
-    htmlEl.setAttribute('data-theme', savedTheme);
-    themeToggleBtn.innerHTML = savedTheme === 'light' ? '🌙 Tema Oscuro' : '☀️ Tema Claro';
-
-    themeToggleBtn.addEventListener('click', () => {
-        const newTheme = htmlEl.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-        htmlEl.setAttribute('data-theme', newTheme);
-        localStorage.setItem('cyan-theme', newTheme);
-        themeToggleBtn.innerHTML = newTheme === 'light' ? '🌙 Tema Oscuro' : '☀️ Tema Claro';
+        if(ADVISORS[e.target.value]) document.getElementById('whatsapp-asesor').value = ADVISORS[e.target.value].wpp;
     });
 
     // --- NAVEGACIÓN ---
@@ -138,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
     totalUsdInput.addEventListener('input', calcTotalCop);
     trmInput.addEventListener('input', calcTotalCop);
 
-    // --- LÓGICA ORIGINAL DE COMPONENTES (Sin Bugs) ---
+    // --- CONSTRUCTOR DINÁMICO ---
     const dynamicComponentsContainer = document.getElementById('dynamic-components-container');
 
     function handlePaste(e) {
@@ -253,7 +232,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (target.matches('.add-subsection-btn')) addSubSection(section || subsection);
     });
 
-    // --- GENERAR PDF ---
+    // --- GENERAR PDF EDITORIAL ---
     function formatDate(dateStr) {
         if (!dateStr) return '';
         return new Date(dateStr + 'T00:00:00').toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase();
@@ -268,50 +247,51 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('pdf-quote-number').textContent = document.getElementById('cotizacion-numero').value;
         
         const adv = ADVISORS[document.getElementById('asesor').value];
-        if(adv) {
-            document.getElementById('pdf-advisor-photo').src = adv.photo;
-            document.getElementById('pdf-advisor-name').textContent = adv.name;
-            document.getElementById('pdf-advisor-wpp').textContent = `+${adv.wpp}`;
-        }
+        if(adv) document.getElementById('pdf-advisor-wpp').textContent = `+${adv.wpp}`;
 
-        // 2. Construir Componentes Dinámicos
+        // 2. Construir Componentes Dinámicos (Estilo Editorial)
         const pdfContainer = document.getElementById('pdf-dynamic-content');
         pdfContainer.innerHTML = '';
 
         // Crucero
         if(document.getElementById('cruise-form-wrapper')) {
-            const mapImg = pastedImages['cruise-map'] ? `<img src="${pastedImages['cruise-map']}" class="pdf-comp-img">` : '';
+            const mapImg = pastedImages['cruise-map'] ? `<div class="pdf-img-container"><img src="${pastedImages['cruise-map']}"></div>` : '';
             pdfContainer.innerHTML += `
-                <div class="pdf-component-box">
-                    <div class="pdf-comp-header cyan"><span>🚢 CRUCERO: ${document.getElementById('cruise-ship').value.toUpperCase()}</span></div>
-                    <div class="pdf-comp-body">
-                        ${mapImg}
-                        <div class="pdf-comp-details" style="width: ${mapImg ? '60%' : '100%'}">
-                            <p><strong>Naviera:</strong> ${document.getElementById('cruise-line').value}</p>
-                            <p><strong>Itinerario:</strong><br>${document.getElementById('cruise-itinerary').value}</p>
-                            <p><strong>Embarque:</strong> ${formatDate(document.getElementById('cruise-date').value)}</p>
-                            <p><strong>Duración:</strong> ${document.getElementById('cruise-nights').value} Noches</p>
-                            <p><strong>Cabina:</strong> ${document.getElementById('cruise-cabin').value}</p>
-                            <p style="margin-top:10px; color:#0088aa;"><strong>Incluye:</strong> ${document.getElementById('cruise-includes').value}</p>
-                        </div>
+                <div class="pdf-section-title">CRUCERO</div>
+                <div class="pdf-sub-bar">
+                    <span>${document.getElementById('cruise-ship').value.toUpperCase()}</span>
+                    <span>${document.getElementById('cruise-date').value.split('-').reverse().join('/')}</span>
+                </div>
+                <div class="pdf-flex-row">
+                    ${mapImg}
+                    <div class="pdf-details" style="width: ${mapImg ? '55%' : '100%'}">
+                        <p><strong>Puertos:</strong> ${document.getElementById('cruise-itinerary').value}</p>
+                        <p><strong>Fecha de Embarque:</strong> ${formatDate(document.getElementById('cruise-date').value)}</p>
+                        <p><strong>Duración:</strong> ${document.getElementById('cruise-nights').value} Noches</p>
+                        <p><strong>Barco:</strong> ${document.getElementById('cruise-ship').value.toUpperCase()}</p>
+                        <p><strong>Tipo de cabinas:</strong> ${document.getElementById('cruise-cabin').value}</p>
+                        <p><strong>Número de cabina:</strong> POR ASIGNAR</p>
                     </div>
+                </div>
+                <div class="pdf-inclusions">
+                    <div class="pdf-inc-title">QUÉ INCLUYE:</div>
+                    <p>${document.getElementById('cruise-includes').value}</p>
                 </div>`;
         }
 
         // Vuelos
         if(document.getElementById('flights-form-wrapper')) {
-            const banner = pastedImages['flight-banner-preview'] ? `<img src="${pastedImages['flight-banner-preview']}" style="width:100%; border-radius:8px; margin-bottom:15px;">` : '';
-            let vuelosHtml = `<p><strong>Opción 1:</strong> ${document.getElementById('flight-1-airline').value}</p>`;
+            const banner = pastedImages['flight-banner-preview'] ? `<div class="pdf-img-container" style="width:100%; margin-bottom:15px;"><img src="${pastedImages['flight-banner-preview']}"></div>` : '';
+            let vuelosHtml = `<p><strong>Ida/Vuelta:</strong> ${document.getElementById('flight-1-airline').value}</p>`;
             if(document.getElementById('flight-2-form-wrapper').style.display !== 'none' && document.getElementById('flight-2-airline').value) {
                 vuelosHtml += `<p><strong>Opción 2:</strong> ${document.getElementById('flight-2-airline').value}</p>`;
             }
             pdfContainer.innerHTML += `
-                <div class="pdf-component-box">
-                    <div class="pdf-comp-header"><span>✈️ VUELOS SUGERIDOS (Desde ${document.getElementById('ciudad-salida').value})</span></div>
-                    <div class="pdf-comp-body" style="flex-direction: column;">
-                        ${banner}
-                        ${vuelosHtml}
-                    </div>
+                <div class="pdf-section-title">VUELOS</div>
+                <div class="pdf-sub-bar"><span>DESDE ${document.getElementById('ciudad-salida').value.toUpperCase()}</span></div>
+                <div class="pdf-flex-row" style="flex-direction: column;">
+                    ${banner}
+                    <div class="pdf-details" style="width: 100%;">${vuelosHtml}</div>
                 </div>`;
         }
 
@@ -323,55 +303,45 @@ document.addEventListener('DOMContentLoaded', () => {
                 if(pastedImages[`hotel-${id}-foto-${i}`]) gal += `<img src="${pastedImages[`hotel-${id}-foto-${i}`]}">`;
             }
             pdfContainer.innerHTML += `
-                <div class="pdf-component-box">
-                    <div class="pdf-comp-header"><span>🏨 HOTEL: ${document.getElementById(`hotel-${id}`).value.toUpperCase()}</span></div>
-                    <div class="pdf-comp-body" style="flex-direction: column;">
-                        <div class="pdf-comp-details" style="width: 100%;">
-                            <p><strong>Destino:</strong> ${document.getElementById(`destino-${id}`).value}</p>
-                            <p><strong>Check-in:</strong> ${formatDate(document.getElementById(`fecha-viaje-${id}`).value)} (${document.getElementById(`cantidad-noches-${id}`).options[document.getElementById(`cantidad-noches-${id}`).selectedIndex].text})</p>
-                            <p><strong>Régimen:</strong> ${REGIMEN_TEMPLATES[document.getElementById(`regimen-${id}`).value]}</p>
-                        </div>
-                        ${gal ? `<div class="pdf-gallery">${gal}</div>` : ''}
+                <div class="pdf-section-title">ALOJAMIENTO</div>
+                <div class="pdf-sub-bar"><span>${document.getElementById(`hotel-${id}`).value.toUpperCase()}</span></div>
+                <div class="pdf-flex-row" style="flex-direction: column;">
+                    <div class="pdf-details" style="width: 100%;">
+                        <p><strong>Destino:</strong> ${document.getElementById(`destino-${id}`).value}</p>
+                        <p><strong>Check-in:</strong> ${formatDate(document.getElementById(`fecha-viaje-${id}`).value)} (${document.getElementById(`cantidad-noches-${id}`).options[document.getElementById(`cantidad-noches-${id}`).selectedIndex].text})</p>
+                        <p><strong>Régimen:</strong> ${REGIMEN_TEMPLATES[document.getElementById(`regimen-${id}`).value]}</p>
                     </div>
+                    ${gal ? `<div class="pdf-gallery">${gal}</div>` : ''}
                 </div>`;
         });
 
-        // Tours
+        // Tours y Traslados (Mismo estilo limpio)
         if(document.getElementById('tours-form-wrapper')) {
-            const img = pastedImages['tour-main-photo'] ? `<img src="${pastedImages['tour-main-photo']}" class="pdf-comp-img">` : '';
+            const img = pastedImages['tour-main-photo'] ? `<div class="pdf-img-container"><img src="${pastedImages['tour-main-photo']}"></div>` : '';
             pdfContainer.innerHTML += `
-                <div class="pdf-component-box">
-                    <div class="pdf-comp-header"><span>🗺️ TOURS / EXTRAS</span></div>
-                    <div class="pdf-comp-body">
-                        ${img}
-                        <div class="pdf-comp-details" style="width: ${img ? '60%' : '100%'}">
-                            <p>${document.getElementById('tour-1-name').value}</p>
-                        </div>
-                    </div>
+                <div class="pdf-section-title">TOURS / EXTRAS</div>
+                <div class="pdf-flex-row" style="margin-top: 20px;">
+                    ${img}
+                    <div class="pdf-details" style="width: ${img ? '55%' : '100%'}"><p>${document.getElementById('tour-1-name').value}</p></div>
                 </div>`;
         }
 
-        // Traslados
         if(document.getElementById('transfers-form-wrapper')) {
-            const img = pastedImages['transfer-main-photo'] ? `<img src="${pastedImages['transfer-main-photo']}" class="pdf-comp-img">` : '';
+            const img = pastedImages['transfer-main-photo'] ? `<div class="pdf-img-container"><img src="${pastedImages['transfer-main-photo']}"></div>` : '';
             pdfContainer.innerHTML += `
-                <div class="pdf-component-box">
-                    <div class="pdf-comp-header"><span>🚐 TRASLADOS</span></div>
-                    <div class="pdf-comp-body">
-                        ${img}
-                        <div class="pdf-comp-details" style="width: ${img ? '60%' : '100%'}">
-                            <p>${document.getElementById('transfer-1-desc').value}</p>
-                        </div>
-                    </div>
+                <div class="pdf-section-title">TRASLADOS</div>
+                <div class="pdf-flex-row" style="margin-top: 20px;">
+                    ${img}
+                    <div class="pdf-details" style="width: ${img ? '55%' : '100%'}"><p>${document.getElementById('transfer-1-desc').value}</p></div>
                 </div>`;
         }
 
         // 3. Súper Banner y Totales
         const pax = parseInt(document.getElementById('adultos').value) + parseInt(document.getElementById('ninos').value);
         document.getElementById('pdf-pax-total').textContent = pax;
-        document.getElementById('pdf-total-usd').textContent = parseFloat(totalUsdInput.value).toLocaleString('en-US');
+        document.getElementById('pdf-total-usd').textContent = parseFloat(totalUsdInput.value).toLocaleString('en-US', {minimumFractionDigits: 2});
         document.getElementById('pdf-total-cop').textContent = totalCopInput.value.replace('COP', '').trim();
-        document.getElementById('pdf-deposit-usd').textContent = parseFloat(document.getElementById('pago-reserva').value).toLocaleString('en-US');
+        document.getElementById('pdf-deposit-usd').textContent = parseFloat(document.getElementById('pago-reserva').value).toLocaleString('en-US', {minimumFractionDigits: 2});
         document.getElementById('pdf-deadline').textContent = formatDate(document.getElementById('fecha-limite-pago').value);
         
         document.getElementById('pdf-not-includes').textContent = document.getElementById('no-incluye').value;
