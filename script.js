@@ -1,5 +1,5 @@
 /* ==========================================
-   COTIZADOR PRO - CYAN TRAVEL (DISEÑO VENDEDOR + LINKS PDF RESTAURADOS)
+   COTIZADOR PRO - CYAN TRAVEL (COMPRESIÓN AGRESIVA + PREVENCIÓN DE ERRORES)
    ========================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <h3>Políticas de Cancelación, Cambios y Reembolsos</h3>
     <p>1) Política general: Todas las solicitudes de cancelación, cambios, reembolsos, reemisiones, cambios de nombre/fecha o correcciones están sujetas a las políticas y condiciones del proveedor y al tipo de tarifa adquirida. 2) Tarifas administrativas no reembolsables: Independientemente del resultado ante el proveedor, las tarifas administrativas de la Agencia no son reembolsables. 3) Penalidades, retenciones y diferencias tarifarias: En caso de que el proveedor permita cambios o reembolsos, el Cliente podrá asumir penalidades por cambio/cancelación, diferencia de tarifa, impuestos no reembolsables. 4) No show (no presentación): Si el Cliente no se presenta a tiempo, aplicarán políticas de no show del proveedor, que suelen implicar pérdida total del valor pagado. 5) Tiempos de reembolso: Cuando un reembolso sea aprobado por el proveedor, los tiempos de devolución dependen del proveedor y/o entidad financiera. La Agencia no controla estos plazos. 6) Cancelaciones o cambios del proveedor: Si el proveedor cancela o modifica el servicio, se aplicarán sus políticas. 7) Recomendación de seguro de viaje: Se recomienda adquirir seguro de asistencia/seguro de cancelación para cubrir imprevistos médicos, interrupciones del viaje o cancelaciones por causas justificadas.</p>`;
 
-    // --- OBTENER TRM OFICIAL (DATOS ABIERTOS COLOMBIA) ---
+    // --- OBTENER TRM OFICIAL ---
     async function fetchTRM() {
         try {
             const response = await fetch('https://www.datos.gov.co/resource/32sa-8pi3.json?$limit=1&$order=vigenciadesde%20DESC');
@@ -89,8 +89,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- COMPRESIÓN DE IMÁGENES ---
-    function compressImage(base64Str, maxWidth = 800, quality = 0.7) {
+    // --- COMPRESIÓN SÚPER AGRESIVA (PREVENCIÓN DE LÍMITE 1MB) ---
+    function compressImage(base64Str, maxWidth = 500, quality = 0.4) {
         return new Promise((resolve) => {
             let img = new Image();
             img.src = base64Str;
@@ -145,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderQuotes(filtered);
             });
         } catch (error) {
-            quotesList.innerHTML = '<p style="color:red;">Error al cargar datos. Verifica que Firestore esté habilitado y sin bloqueadores de anuncios.</p>';
+            quotesList.innerHTML = '<p style="color:red;">Error al cargar datos. Por favor, desactiva tu bloqueador de anuncios (AdBlock/Brave Shields) para que la base de datos funcione.</p>';
             console.error(error);
         }
     }
@@ -369,6 +369,13 @@ document.addEventListener('DOMContentLoaded', () => {
             images: pastedImages
         };
 
+        // SEGURO CONTRA LÍMITE DE 1MB
+        const payloadSize = JSON.stringify(quoteData).length;
+        if (payloadSize > 1000000) {
+            alert("⚠️ La cotización tiene demasiadas imágenes o son muy pesadas. Por favor, elimina algunas fotos e intenta de nuevo.");
+            return;
+        }
+
         try {
             document.getElementById('loader-overlay').style.display = 'flex';
             document.getElementById('loader-text').textContent = "Guardando en la nube...";
@@ -386,7 +393,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showView('pdf');
         } catch (error) {
             console.error("Error guardando:", error);
-            alert("Hubo un error guardando la cotización. Revisa tu conexión y que Firestore esté habilitado.");
+            alert("Hubo un error guardando la cotización. Revisa tu conexión y asegúrate de no tener bloqueadores de anuncios activos.");
         } finally {
             document.getElementById('loader-overlay').style.display = 'none';
         }
@@ -449,7 +456,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         document.getElementById('confirm-intro-text').textContent = `¡Hola, ${clientName.split(' ')[0].toUpperCase()}! He preparado estas opciones para tu próximo viaje.`;
 
-        // INYECCIÓN DE LA ALERTA DE VISA
         const visaStatus = document.getElementById('requiere-visa').value;
         const visaAlert = document.getElementById('pdf-visa-alert');
         if(visaStatus !== 'No requiere visa') {
@@ -475,7 +481,6 @@ document.addEventListener('DOMContentLoaded', () => {
         confirmationComponentsContainer.innerHTML = '';
         let dynamicTermsHTML = '';
 
-        // Renderizar Hoteles
         if(document.querySelectorAll('.hotel-form-wrapper').length > 0) dynamicTermsHTML += TERMS_AND_CONDITIONS.hotels;
         document.querySelectorAll('.hotel-form-wrapper').forEach((form, index) => {
             const num = form.id.match(/\d+/)[0];
@@ -494,7 +499,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>`;
         });
 
-        // Renderizar Cruceros (NUEVO DISEÑO GRID)
         if(document.querySelectorAll('.cruises-form-wrapper').length > 0) dynamicTermsHTML += TERMS_AND_CONDITIONS.cruises;
         document.querySelectorAll('.cruises-form-wrapper').forEach((form, index) => {
             const num = form.id.match(/\d+/)[0];
@@ -540,7 +544,6 @@ document.addEventListener('DOMContentLoaded', () => {
             dynamicTermsHTML += TERMS_AND_CONDITIONS.transfers;
         }
 
-        // INYECCIÓN DE LA BARRA DE PAGOS
         document.getElementById('confirm-pago-reserva').textContent = formatCurrency(document.getElementById('pago-reserva').value);
         document.getElementById('confirm-pago-segundo').textContent = formatCurrency(document.getElementById('pago-segundo').value);
         document.getElementById('confirm-fecha-limite').textContent = document.getElementById('fecha-limite-pago').value;
@@ -553,7 +556,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('edit-quote-btn').addEventListener('click', () => showView('form'));
     document.getElementById('new-quote-btn').addEventListener('click', () => loadDashboard());
     
-    // --- GENERACIÓN DEL PDF CON LINKS RESTAURADOS ---
     document.getElementById('process-quote-btn').addEventListener('click', async () => {
         document.getElementById('loader-overlay').style.display = 'flex';
         document.getElementById('loader-text').textContent = "Generando PDF...";
@@ -563,7 +565,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const pdf = new window.jspdf.jsPDF({ orientation: 'p', unit: 'px', format:[canvas.width, canvas.height] });
             pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, canvas.width, canvas.height);
             
-            // RESTAURAR LINKS CLICKEABLES EN EL PDF
             const scaleFactor = canvas.width / elementToPrint.offsetWidth;
             ['advisor-whatsapp-btn', 'cta-reservar', 'cta-contactar'].forEach(id => {
                 const element = document.getElementById(id);
