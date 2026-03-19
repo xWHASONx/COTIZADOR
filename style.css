@@ -1,17 +1,17 @@
 :root {
     /* === PALETA CYAN TRAVEL === */
     --c-brand-primary: #0088aa;       /* Cyan Principal */
-    --c-brand-dark-accent: #000000;   /* Negro */
+    --c-brand-dark-accent: #00334e;   /* Azul Marino Profundo (Reemplaza al negro) */
     --c-bg-card: #ffffff;             
-    --c-brand-yellow: #0088aa;        /* Cambiado a Cyan para mantener la marca */
+    --c-brand-yellow: #0088aa;        
     
     /* Neutros */
-    --c-dark-blue: #111111;           
-    --c-dark: #000000;      
+    --c-dark-blue: #00334e;           
+    --c-dark: #111111;      
     --c-gray: #666666;      
     --c-light-gray: #f4f6f8;          
     --c-white: #ffffff;
-    --c-success-green: #27ae60;       /* Verde Esmeralda para incitar al pago */
+    --c-success-green: #27ae60;       /* Verde Esmeralda */
 }
 
 body { margin: 0; padding: 0; font-family: 'Poppins', sans-serif; background-color: var(--c-light-gray); color: var(--c-dark); -webkit-font-smoothing: antialiased; }
@@ -63,9 +63,10 @@ input[readonly] { background-color: #e9ecef; cursor: not-allowed; color: var(--c
 /* DISEÑO DEL PDF */
 #confirmation-section { padding-bottom: 40px; }
 
-/* NUEVO HEADER NEGRO CON LOGO CYAN */
-.confirmation-header { background-color: var(--c-dark); width: 100%; height: 180px; border-radius: 24px 24px 0 0; display: flex; justify-content: center; align-items: center; }
-.confirmation-header img { max-width: 280px; height: auto; }
+/* NUEVO HEADER CON FONDO DEL MAR */
+.confirmation-header { background-size: cover; background-position: center; width: 100%; height: 220px; border-radius: 24px 24px 0 0; display: flex; justify-content: center; align-items: center; position: relative; }
+.confirmation-header::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 51, 78, 0.3); border-radius: 24px 24px 0 0; } /* Filtro oscuro sutil para que el logo resalte */
+.confirmation-header img { max-width: 280px; height: auto; position: relative; z-index: 2; }
 
 .voucher-content { padding: 30px; text-align: center; }
 .confirmation-pill { background-color: var(--c-brand-primary); color: var(--c-white); padding: 12px 30px; border-radius: 50px; font-size: 20px; font-weight: 900; display: inline-flex; align-items: center; justify-content: center; gap: 10px; margin: 0 auto 25px auto; box-shadow: 0 4px 10px rgba(0,136,170,0.3); max-width: 90%; text-transform: uppercase; }
@@ -103,8 +104,18 @@ input[readonly] { background-color: #e9ecef; cursor: not-allowed; color: var(--c
 .data-item-content strong { display: block; font-size: 12px; color: var(--c-gray); text-transform: uppercase; margin-bottom: 2px; }
 .data-item-content p { margin: 0; font-weight: 600; color: var(--c-dark); }
 
-/* NUEVA BARRA DE PAGOS VERDE */
-.premium-payment-bar { background-color: var(--c-success-green); color: var(--c-white); border-radius: 16px; padding: 25px; margin-top: 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 25px rgba(39, 174, 96, 0.3); text-align: left; flex-wrap: wrap; gap: 15px; }
+/* NUEVOS ESTILOS PARA CRUCEROS (MÁS LLENITO Y ORGANIZADO) */
+.cruise-specs-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px; }
+.cruise-spec-item { display: flex; align-items: center; gap: 12px; background: #f4f6f8; padding: 15px; border-radius: 12px; border: 1px solid #e9ecef; }
+.cruise-spec-item svg { width: 24px; height: 24px; color: var(--c-brand-primary); }
+.cruise-spec-item strong { font-size: 12px; color: var(--c-gray); text-transform: uppercase; display: block; margin-bottom: 2px; }
+.cruise-spec-item span { font-size: 14px; font-weight: 700; color: var(--c-dark-blue); }
+.cruise-inclusions { background-color: #e0f7fa; border-left: 5px solid var(--c-brand-primary); padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; }
+.cruise-itinerary { background: var(--c-white); border: 1px solid #eee; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+.cruise-itinerary p { white-space: pre-wrap; line-height: 1.6; margin: 0; font-size: 13px; color: var(--c-gray); }
+
+/* NUEVA BARRA DE PAGOS VERDE ESMERALDA */
+.premium-payment-bar { background: linear-gradient(135deg, #27ae60, #2ecc71); color: var(--c-white); border-radius: 16px; padding: 25px; margin-top: 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 25px rgba(39, 174, 96, 0.3); text-align: left; flex-wrap: wrap; gap: 15px; }
 .payment-step { flex: 1; min-width: 200px; }
 .payment-step span { display: block; font-size: 14px; text-transform: uppercase; font-weight: 600; opacity: 0.9; margin-bottom: 5px; }
 .payment-step h3 { font-size: 28px; font-weight: 900; margin: 0; color: var(--c-white); }
@@ -125,12 +136,12 @@ input[readonly] { background-color: #e9ecef; cursor: not-allowed; color: var(--c
 .pulse-sticker { position: absolute; top: -15px; right: 10px; background-color: #ff3b30; color: white; font-size: 11px; font-weight: 900; padding: 4px 10px; border-radius: 12px; text-transform: uppercase; box-shadow: 0 4px 10px rgba(255, 59, 48, 0.4); animation: pulse 1.5s infinite; z-index: 10; }
 @keyframes pulse { 0% { transform: scale(1) rotate(5deg); } 50% { transform: scale(1.15) rotate(5deg); } 100% { transform: scale(1) rotate(5deg); } }
 
-/* NUEVO FOOTER IMPONENTE */
-.premium-footer-banner { background-color: var(--c-dark); color: var(--c-white); padding: 40px 20px; border-radius: 16px; margin-top: 40px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+/* NUEVO FOOTER AZUL MARINO CON LOGOS DE PAGO */
+.premium-footer-banner { background-color: var(--c-brand-dark-accent); color: var(--c-white); padding: 40px 20px; border-radius: 16px; margin-top: 40px; text-align: center; box-shadow: 0 10px 30px rgba(0,51,78,0.2); }
 .premium-footer-banner h4 { font-size: 22px; color: var(--c-brand-primary); margin-bottom: 10px; letter-spacing: 1px; }
 .premium-footer-banner p { font-size: 14px; color: #ccc; margin: 5px 0; }
 .payment-logos { display: flex; justify-content: center; align-items: center; gap: 25px; margin-top: 25px; flex-wrap: wrap; }
-.payment-logos img { height: 35px; width: auto; filter: brightness(0) invert(1); opacity: 0.8; } /* Vuelve los logos blancos para que resalten en el fondo negro */
+.payment-logos img { max-height: 40px; width: auto; object-fit: contain; } /* Muestra los logos tal cual los enviaste */
 
 .action-buttons { margin-top: 40px; display: flex; gap: 15px; justify-content: center; padding: 0 20px; }
 .action-button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 16px 30px; border-radius: 12px; font-size: 18px; font-weight: 700; border: none; cursor: pointer; transition: all 0.2s; flex-grow: 1; }
@@ -168,7 +179,7 @@ input[readonly] { background-color: #e9ecef; cursor: not-allowed; color: var(--c
 @media (max-width: 768px) {
     .wrapper { margin: 0; border-radius: 0; }
     .section, .voucher-content { padding: 20px; }
-    .form-grid, .gallery-paste-areas, .details-section, .details-grid { grid-template-columns: 1fr; }
+    .form-grid, .gallery-paste-areas, .details-section, .details-grid, .cruise-specs-grid { grid-template-columns: 1fr; }
     .action-buttons { flex-direction: column; }
     #advisor-box { flex-direction: column; text-align: center; }
     .premium-payment-bar { flex-direction: column; text-align: center; }
