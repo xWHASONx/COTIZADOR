@@ -1,5 +1,5 @@
 /* ==========================================
-   COTIZADOR PRO - CYAN TRAVEL (DISEÑO VENDEDOR + VISA + PAGOS + CRUCEROS GRID)
+   COTIZADOR PRO - CYAN TRAVEL (DISEÑO VENDEDOR + LINKS PDF RESTAURADOS)
    ========================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -553,6 +553,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('edit-quote-btn').addEventListener('click', () => showView('form'));
     document.getElementById('new-quote-btn').addEventListener('click', () => loadDashboard());
     
+    // --- GENERACIÓN DEL PDF CON LINKS RESTAURADOS ---
     document.getElementById('process-quote-btn').addEventListener('click', async () => {
         document.getElementById('loader-overlay').style.display = 'flex';
         document.getElementById('loader-text').textContent = "Generando PDF...";
@@ -561,6 +562,23 @@ document.addEventListener('DOMContentLoaded', () => {
             const canvas = await html2canvas(elementToPrint, { scale: 2, useCORS: true });
             const pdf = new window.jspdf.jsPDF({ orientation: 'p', unit: 'px', format:[canvas.width, canvas.height] });
             pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, canvas.width, canvas.height);
+            
+            // RESTAURAR LINKS CLICKEABLES EN EL PDF
+            const scaleFactor = canvas.width / elementToPrint.offsetWidth;
+            ['advisor-whatsapp-btn', 'cta-reservar', 'cta-contactar'].forEach(id => {
+                const element = document.getElementById(id);
+                if (!element || !element.href) return;
+                const rect = element.getBoundingClientRect();
+                const containerRect = elementToPrint.getBoundingClientRect();
+                pdf.link(
+                    (rect.left - containerRect.left) * scaleFactor,
+                    (rect.top - containerRect.top) * scaleFactor,
+                    rect.width * scaleFactor,
+                    rect.height * scaleFactor,
+                    { url: element.href }
+                );
+            });
+
             pdf.save(`${document.getElementById('cotizacion-numero').value}.pdf`);
         } catch (error) { alert("Error generando PDF"); } 
         finally { document.getElementById('loader-overlay').style.display = 'none'; }
