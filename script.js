@@ -1,5 +1,5 @@
 /* ==========================================
-   COTIZADOR PRO - CYAN TRAVEL (COMPRESIÓN AGRESIVA + PREVENCIÓN DE ERRORES)
+   COTIZADOR PRO - CYAN TRAVEL (VERSIÓN FINAL MILIMÉTRICA)
    ========================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -59,6 +59,14 @@ document.addEventListener('DOMContentLoaded', () => {
         check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>',
         plane: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>',
         ship: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1v12zm0 0v7"></path></svg>'
+    };
+
+    const REGIMEN_TEMPLATES = {
+        'todo_incluido': `Todo incluido: Desayunos, almuerzos, cenas, snacks y bebidas ilimitadas.`,
+        'pension_completa': `Pensión Completa: Desayuno, almuerzo y cena.`,
+        'media_pension': `Media Pensión: Desayuno y cena.`,
+        'desayuno': `Alojamiento y Desayuno.`,
+        'solo_hotel': `Solo alojamiento.`
     };
 
     const TERMS_AND_CONDITIONS = {
@@ -441,11 +449,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 100); 
     }
 
-    // --- RENDERIZADO DEL PDF ---
+    // --- RENDERIZADO DEL PDF (RESTAURADO AL 100%) ---
     function formatCurrency(value, currency = 'COP') {
         const number = parseFloat(String(value).replace(/[^0-9.-]+/g, ""));
         if (isNaN(number)) return '';
         return number.toLocaleString(currency === 'COP' ? 'es-CO' : 'en-US', { style: 'currency', currency, minimumFractionDigits: 0 });
+    }
+
+    function formatDate(dateStr) {
+        if (!dateStr) return 'N/A';
+        const date = new Date(dateStr + 'T00:00:00');
+        return date.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
     }
 
     function populateQuote() {
@@ -481,10 +495,18 @@ document.addEventListener('DOMContentLoaded', () => {
         confirmationComponentsContainer.innerHTML = '';
         let dynamicTermsHTML = '';
 
+        // 1. RENDERIZAR HOTELES (RESTAURADO CON FECHAS Y RÉGIMEN)
         if(document.querySelectorAll('.hotel-form-wrapper').length > 0) dynamicTermsHTML += TERMS_AND_CONDITIONS.hotels;
         document.querySelectorAll('.hotel-form-wrapper').forEach((form, index) => {
             const num = form.id.match(/\d+/)[0];
             let galleryHTML =[1, 2, 3].map(i => pastedImages[`hotel-${num}-foto-${i}`] ? `<img src="${pastedImages[`hotel-${num}-foto-${i}`]}">` : '').join('');
+            
+            let hotelDetailsHTML = `
+                <div class="data-item">${ICONS.destination}<div class="data-item-content"><strong>Destino:</strong><p>${document.getElementById(`destino-${num}`).value}</p></div></div>
+                <div class="data-item">${ICONS.calendar}<div class="data-item-content"><strong>Fechas:</strong><p>${formatDate(document.getElementById(`fecha-viaje-${num}`).value)}</p></div></div>
+                <div class="data-item">${ICONS.moon}<div class="data-item-content"><strong>Noches:</strong><p>${document.getElementById(`cantidad-noches-${num}`).options[document.getElementById(`cantidad-noches-${num}`).selectedIndex].text}</p></div></div>
+                <div class="data-item">${ICONS.bed}<div class="data-item-content"><strong>Habitaciones:</strong><p>${document.getElementById(`cantidad-habitaciones-${num}`).options[document.getElementById(`cantidad-habitaciones-${num}`).selectedIndex].text}</p></div></div>`;
+
             confirmationComponentsContainer.innerHTML += `
                 <div class="quote-option-box">
                     <div class="option-header"><h3>Hotel ${index + 1}</h3><span class="option-price">${formatCurrency(document.getElementById(`valor-total-${num}`).value, document.getElementById(`moneda-${num}`).value)}</span></div>
@@ -492,13 +514,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         <h4>${document.getElementById(`hotel-${num}`).value}</h4>
                         <div class="photo-gallery">${galleryHTML}</div>
                         <div class="details-grid">
-                            <div class="data-item">${ICONS.destination}<div class="data-item-content"><strong>Destino:</strong><p>${document.getElementById(`destino-${num}`).value}</p></div></div>
-                            <div class="data-item">${ICONS.moon}<div class="data-item-content"><strong>Noches:</strong><p>${document.getElementById(`cantidad-noches-${num}`).value}</p></div></div>
+                            ${hotelDetailsHTML}
+                            <div class="data-item full-width">${ICONS.check}<div class="data-item-content"><strong>Plan Incluye:</strong><p>${REGIMEN_TEMPLATES[document.getElementById(`regimen-${num}`).value] || 'No especificado'}</p></div></div>
                         </div>
                     </div>
                 </div>`;
         });
 
+        // 2. RENDERIZAR CRUCEROS
         if(document.querySelectorAll('.cruises-form-wrapper').length > 0) dynamicTermsHTML += TERMS_AND_CONDITIONS.cruises;
         document.querySelectorAll('.cruises-form-wrapper').forEach((form, index) => {
             const num = form.id.match(/\d+/)[0];
@@ -518,7 +541,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         
                         <div class="cruise-specs-grid">
                             <div class="cruise-spec-item">${ICONS.destination} <div><strong>Embarque:</strong><span>${document.getElementById(`puerto-${num}`).value}</span></div></div>
-                            <div class="cruise-spec-item">${ICONS.calendar} <div><strong>Zarpe:</strong><span>${document.getElementById(`fecha-zarpe-${num}`).value}</span></div></div>
+                            <div class="cruise-spec-item">${ICONS.calendar} <div><strong>Zarpe:</strong><span>${formatDate(document.getElementById(`fecha-zarpe-${num}`).value)}</span></div></div>
                             <div class="cruise-spec-item">${ICONS.moon} <div><strong>Noches:</strong><span>${document.getElementById(`noches-crucero-${num}`).value}</span></div></div>
                             <div class="cruise-spec-item">${ICONS.bed} <div><strong>Cabina:</strong><span>${document.getElementById(`cabina-${num}`).value}</span></div></div>
                         </div>
@@ -536,14 +559,59 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>`;
         });
 
+        // 3. RENDERIZAR VUELOS (RESTAURADO CON OPCIONES Y PRECIOS)
         if (document.getElementById('flights-form-wrapper')) {
             dynamicTermsHTML += TERMS_AND_CONDITIONS.flights;
-            confirmationComponentsContainer.innerHTML += `<div class="component-section"><h3>Vuelos Sugeridos</h3><div class="option-body"><p>Desde: ${document.getElementById('ciudad-salida').value}</p></div></div>`;
-        }
-        if (document.getElementById('transfers-form-wrapper')) {
-            dynamicTermsHTML += TERMS_AND_CONDITIONS.transfers;
+            const departureCity = document.getElementById('ciudad-salida').value;
+            let optionsHTML = [1, 2].map(i => {
+                const wrapper = document.getElementById(`flight-${i}-form-wrapper`);
+                if ((i === 1 || (wrapper && wrapper.style.display !== 'none')) && document.getElementById(`flight-${i}-airline`)) {
+                    const airline = document.getElementById(`flight-${i}-airline`).value; 
+                    const price = document.getElementById(`flight-${i}-price`).value;
+                    if (airline && price) return `<div class="item-option"><strong>Opción ${i}:</strong> ${airline} <span class="item-price">Desde ${formatCurrency(price)}</span></div>`;
+                } 
+                return '';
+            }).join('');
+            
+            confirmationComponentsContainer.innerHTML += `
+                <div class="component-section">
+                    <div class="option-header"><h3>Vuelos Sugeridos</h3></div>
+                    <div class="option-body">
+                        ${pastedImages['flight-banner-preview'] ? `<div class="flight-banner"><img src="${pastedImages['flight-banner-preview']}"></div>` : ''}
+                        <div id="flight-options-confirm-container">
+                            <div class="data-item" style="margin-bottom: 15px;">${ICONS.plane}<div class="data-item-content"><strong>Desde:</strong><p>${departureCity}</p></div></div>
+                            ${optionsHTML}
+                        </div>
+                        <p style="font-size: 11px; color: var(--c-gray); margin-top: 10px;">*Valores por persona, sujetos a cambio.</p>
+                    </div>
+                </div>`;
         }
 
+        // 4. RENDERIZAR TOURS Y TRASLADOS (RESTAURADO CON FOTOS Y PRECIOS)
+        ['tours', 'transfers'].forEach(type => {
+            if (document.getElementById(`${type}-form-wrapper`)) {
+                if (type === 'transfers') dynamicTermsHTML += TERMS_AND_CONDITIONS.transfers;
+                
+                const imgHTML = pastedImages[`${type.slice(0, -1)}-main-photo`] ? `<div class="single-photo-container"><img src="${pastedImages[`${type.slice(0, -1)}-main-photo`]}"></div>` : '';
+                const nameKey = type === 'tours' ? 'name' : 'desc';
+                const desc = document.getElementById(`${type.slice(0, -1)}-1-${nameKey}`).value; 
+                const price = document.getElementById(`${type.slice(0, -1)}-1-price`).value;
+                
+                confirmationComponentsContainer.innerHTML += `
+                    <div class="component-section">
+                        <div class="option-header"><h3>${type === 'tours' ? 'Tours Opcionales' : 'Traslados'}</h3></div>
+                        <div class="option-body">
+                            ${imgHTML}
+                            <div class="item-option">
+                                <strong>${desc}</strong>
+                                <span class="item-price">Desde ${formatCurrency(price)}</span>
+                            </div>
+                        </div>
+                    </div>`;
+            }
+        });
+
+        // INYECCIÓN DE LA BARRA DE PAGOS
         document.getElementById('confirm-pago-reserva').textContent = formatCurrency(document.getElementById('pago-reserva').value);
         document.getElementById('confirm-pago-segundo').textContent = formatCurrency(document.getElementById('pago-segundo').value);
         document.getElementById('confirm-fecha-limite').textContent = document.getElementById('fecha-limite-pago').value;
@@ -565,8 +633,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const pdf = new window.jspdf.jsPDF({ orientation: 'p', unit: 'px', format:[canvas.width, canvas.height] });
             pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, canvas.width, canvas.height);
             
-            const scaleFactor = canvas.width / elementToPrint.offsetWidth;
-            ['advisor-whatsapp-btn', 'cta-reservar', 'cta-contactar'].forEach(id => {
+            const scaleFactor = canvas.width / elementToPrint.offsetWidth;['advisor-whatsapp-btn', 'cta-reservar', 'cta-contactar'].forEach(id => {
                 const element = document.getElementById(id);
                 if (!element || !element.href) return;
                 const rect = element.getBoundingClientRect();
