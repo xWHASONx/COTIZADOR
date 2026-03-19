@@ -1,5 +1,5 @@
 /* ==========================================
-   COTIZADOR PRO - CYAN TRAVEL (DISEÑO VENDEDOR + VISA + PAGOS)
+   COTIZADOR PRO - CYAN TRAVEL (DISEÑO VENDEDOR + VISA + PAGOS + CRUCEROS GRID)
    ========================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -494,7 +494,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>`;
         });
 
-        // Renderizar Cruceros
+        // Renderizar Cruceros (NUEVO DISEÑO GRID)
         if(document.querySelectorAll('.cruises-form-wrapper').length > 0) dynamicTermsHTML += TERMS_AND_CONDITIONS.cruises;
         document.querySelectorAll('.cruises-form-wrapper').forEach((form, index) => {
             const num = form.id.match(/\d+/)[0];
@@ -503,19 +503,31 @@ document.addEventListener('DOMContentLoaded', () => {
             
             confirmationComponentsContainer.innerHTML += `
                 <div class="quote-option-box">
-                    <div class="option-header" style="background-color: #005f73;"><h3>Crucero ${index + 1} - ${document.getElementById(`naviera-${num}`).value}</h3><span class="option-price">${formatCurrency(document.getElementById(`valor-crucero-${num}`).value, document.getElementById(`moneda-crucero-${num}`).value)}</span></div>
+                    <div class="option-header" style="background-color: var(--c-brand-dark-accent);">
+                        <h3>CRUCERO ${index + 1} - ${document.getElementById(`naviera-${num}`).value}</h3>
+                        <span class="option-price">${formatCurrency(document.getElementById(`valor-crucero-${num}`).value, document.getElementById(`moneda-crucero-${num}`).value)}</span>
+                    </div>
                     <div class="option-body">
-                        <h4>Barco: ${document.getElementById(`barco-${num}`).value}</h4>
+                        <h4 style="text-align: center; font-size: 24px; margin-bottom: 20px;">🚢 ${document.getElementById(`barco-${num}`).value}</h4>
                         ${mapHTML}
                         <div class="photo-gallery">${galleryHTML}</div>
-                        <div class="details-grid">
-                            <div class="data-item">${ICONS.ship}<div class="data-item-content"><strong>Embarque:</strong><p>${document.getElementById(`puerto-${num}`).value}</p></div></div>
-                            <div class="data-item">${ICONS.calendar}<div class="data-item-content"><strong>Zarpe:</strong><p>${document.getElementById(`fecha-zarpe-${num}`).value}</p></div></div>
-                            <div class="data-item">${ICONS.moon}<div class="data-item-content"><strong>Noches:</strong><p>${document.getElementById(`noches-crucero-${num}`).value}</p></div></div>
-                            <div class="data-item">${ICONS.bed}<div class="data-item-content"><strong>Cabina:</strong><p>${document.getElementById(`cabina-${num}`).value}</p></div></div>
-                            <div class="data-item full-width">${ICONS.check}<div class="data-item-content"><strong>Inclusiones:</strong><p>${document.getElementById(`inclusiones-${num}`).value} | Propinas: ${document.getElementById(`propinas-${num}`).value}</p></div></div>
+                        
+                        <div class="cruise-specs-grid">
+                            <div class="cruise-spec-item">${ICONS.destination} <div><strong>Embarque:</strong><span>${document.getElementById(`puerto-${num}`).value}</span></div></div>
+                            <div class="cruise-spec-item">${ICONS.calendar} <div><strong>Zarpe:</strong><span>${document.getElementById(`fecha-zarpe-${num}`).value}</span></div></div>
+                            <div class="cruise-spec-item">${ICONS.moon} <div><strong>Noches:</strong><span>${document.getElementById(`noches-crucero-${num}`).value}</span></div></div>
+                            <div class="cruise-spec-item">${ICONS.bed} <div><strong>Cabina:</strong><span>${document.getElementById(`cabina-${num}`).value}</span></div></div>
                         </div>
-                        <div class="data-item full-width" style="margin-top:15px;"><div class="data-item-content"><strong>Itinerario:</strong><p style="white-space: pre-wrap;">${document.getElementById(`itinerario-${num}`).value}</p></div></div>
+
+                        <div class="cruise-inclusions">
+                            <strong style="color: var(--c-brand-primary); display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">${ICONS.check} INCLUSIONES Y PROPINAS:</strong>
+                            <p style="margin: 0; font-size: 14px; color: var(--c-dark-blue); font-weight: 600;">${document.getElementById(`inclusiones-${num}`).value} | Propinas: ${document.getElementById(`propinas-${num}`).value}</p>
+                        </div>
+
+                        <div class="cruise-itinerary">
+                            <strong style="color: var(--c-dark-blue); display: block; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px;">📍 ITINERARIO DEL VIAJE:</strong>
+                            <p>${document.getElementById(`itinerario-${num}`).value}</p>
+                        </div>
                     </div>
                 </div>`;
         });
