@@ -1,17 +1,17 @@
 :root {
     /* === PALETA CYAN TRAVEL === */
     --c-brand-primary: #0088aa;       
-    --c-brand-dark-accent: #0088aa;   /* Todo lo que era azul oscuro ahora es Cyan */
+    --c-brand-dark-accent: #0088aa;   
     --c-bg-card: #ffffff;             
     --c-brand-yellow: #0088aa;        
     
     /* Neutros */
-    --c-dark-blue: #111111;           /* Textos oscuros para que se puedan leer */
+    --c-dark-blue: #111111;           
     --c-dark: #111111;      
     --c-gray: #666666;      
     --c-light-gray: #f4f6f8;          
     --c-white: #ffffff;
-    --c-success-green: #27ae60;       /* Verde Esmeralda para incitar al pago */
+    --c-success-green: #27ae60;       
 }
 
 body { margin: 0; padding: 0; font-family: 'Poppins', sans-serif; background-color: var(--c-light-gray); color: var(--c-dark); -webkit-font-smoothing: antialiased; }
@@ -70,14 +70,16 @@ input[readonly] { background-color: #e9ecef; cursor: not-allowed; color: var(--c
 .voucher-content { padding: 30px; text-align: center; }
 .confirmation-pill { background-color: var(--c-brand-primary); color: var(--c-white); padding: 12px 30px; border-radius: 50px; font-size: 20px; font-weight: 900; display: inline-flex; align-items: center; justify-content: center; gap: 10px; margin: 0 auto 25px auto; box-shadow: 0 4px 10px rgba(0,136,170,0.3); max-width: 90%; text-transform: uppercase; }
 
-.customer-data-box { background-color: var(--c-white); border: 1px solid #eee; padding: 20px; border-radius: 16px; margin-bottom: 15px; text-align: left; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
+/* CAJAS OSCURECIDAS SUTILMENTE */
+.customer-data-box { background-color: #f4f7f9; border: 1px solid #e2e8f0; padding: 20px; border-radius: 16px; margin-bottom: 15px; text-align: left; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
 .customer-data-box p { margin: 0 0 8px 0; font-size: 14px; color: var(--c-gray); }
 .customer-data-box strong { color: var(--c-brand-primary); font-weight: 700; font-size: 15px; }
 
 /* ALERTA DE VISA */
 .visa-alert { background-color: #fff3cd; color: #856404; padding: 12px 20px; border-radius: 8px; font-weight: 700; text-align: left; margin-bottom: 25px; border-left: 5px solid #ffeeba; font-size: 14px; display: none; }
 
-#advisor-box { display: flex; align-items: center; gap: 20px; background-color: #f0f8fa; border: 1px solid #cce7ee; padding: 20px; border-radius: 16px; text-align: left; }
+/* CAJA DEL ASESOR OSCURECIDA SUTILMENTE */
+#advisor-box { display: flex; align-items: center; gap: 20px; background-color: #e4f1f6; border: 1px solid #b8dbe5; padding: 20px; border-radius: 16px; text-align: left; }
 #advisor-photo { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 3px solid var(--c-white); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
 .advisor-info { flex-grow: 1; }
 .advisor-info p { margin: 0; font-size: 13px; color: var(--c-gray); }
@@ -102,14 +104,14 @@ input[readonly] { background-color: #e9ecef; cursor: not-allowed; color: var(--c
 .data-item-content strong { display: block; font-size: 12px; color: var(--c-gray); text-transform: uppercase; margin-bottom: 2px; }
 .data-item-content p { margin: 0; font-weight: 600; color: var(--c-dark); }
 
-/* ESTILOS PARA CRUCEROS (GRID Y CHULO ARREGLADO) */
+/* ESTILOS PARA CRUCEROS */
 .cruise-specs-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px; }
 .cruise-spec-item { display: flex; align-items: center; gap: 12px; background: #f4f6f8; padding: 15px; border-radius: 12px; border: 1px solid #e9ecef; }
 .cruise-spec-item svg { width: 24px; height: 24px; color: var(--c-brand-primary); }
 .cruise-spec-item strong { font-size: 12px; color: var(--c-gray); text-transform: uppercase; display: block; margin-bottom: 2px; }
 .cruise-spec-item span { font-size: 14px; font-weight: 700; color: var(--c-dark-blue); }
 .cruise-inclusions { background-color: #e0f7fa; border-left: 5px solid var(--c-brand-primary); padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; }
-.cruise-inclusions svg { width: 24px; height: 24px; flex-shrink: 0; } /* ESTO ARREGLA EL CHULO GIGANTE */
+.cruise-inclusions svg { width: 24px; height: 24px; flex-shrink: 0; } 
 .cruise-itinerary { background: var(--c-white); border: 1px solid #eee; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
 .cruise-itinerary p { white-space: pre-wrap; line-height: 1.6; margin: 0; font-size: 13px; color: var(--c-gray); }
 
