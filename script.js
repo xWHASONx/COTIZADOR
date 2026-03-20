@@ -594,8 +594,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function populateQuote() {
-        const clientNameEl = document.getElementById('nombre-completo');
-        const clientName = clientNameEl ? clientNameEl.value.trim() : '';
         const quoteNumber = document.getElementById('cotizacion-numero')?.value || '';
         
         const adults = document.getElementById('adultos')?.value || '0';
@@ -604,11 +602,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const introTextEl = document.getElementById('confirm-intro-text');
         if (introTextEl) {
-            if (clientName) {
-                introTextEl.textContent = `¡Hola ${clientName.split(' ')[0].toUpperCase()}! Te compartimos las mejores opciones que hemos encontrado para ti.`;
-            } else {
-                introTextEl.textContent = `¡Hola! Te compartimos las mejores opciones que hemos encontrado para ti.`;
-            }
+            introTextEl.textContent = `¡Hola! Te compartimos las mejores opciones que hemos encontrado para ti.`;
         }
 
         let paxString = `${adults} Adulto${adults > 1 ? 's' : ''}`;
@@ -618,7 +612,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const customerBox = document.getElementById('confirm-customer-data-box');
         if (customerBox) {
             customerBox.innerHTML = `
-                ${clientName ? `<p>Para: <strong>${clientName.toUpperCase()}</strong></p>` : ''}
                 <p>Pasajeros: <strong>${paxString}</strong></p>
                 <p>Nº Cotización: <strong>${quoteNumber}</strong> | Validez: <strong>${document.getElementById('validez-cupos')?.value || ''}</strong></p>
             `;
