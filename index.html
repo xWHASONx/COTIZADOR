@@ -60,17 +60,18 @@
                 <fieldset class="form-fieldset">
                     <legend>1. Datos del Cliente y Viaje</legend>
                     <div class="form-grid">
-                        <div class="form-group"><label for="asesor">Tu Nombre (Asesor)</label><select id="asesor" required></select></div>
-                        <div class="form-group"><label for="whatsapp-asesor">Tu WhatsApp (sin +)</label><input type="tel" id="whatsapp-asesor" placeholder="Ej: 573147294382" required></div>
-                        <div class="form-group full-width"><label for="nombre-completo">Nombre Completo del Cliente</label><input type="text" id="nombre-completo" placeholder="Escribe el nombre completo" required></div>
+                        <div class="form-group full-width switch-group">
+                            <label class="toggle-label">
+                                <input type="checkbox" id="mostrar-nombre-cliente" checked> 
+                                <span class="toggle-text">Mostrar nombre del cliente en el PDF</span>
+                            </label>
+                        </div>
+                        <div class="form-group full-width" id="campo-nombre-cliente"><label for="nombre-completo">Nombre Completo del Cliente</label><input type="text" id="nombre-completo" placeholder="Escribe el nombre completo"></div>
+                        
                         <div class="form-group"><label for="adultos">Adultos</label><select id="adultos"></select></div>
-                        <div class="form-group"><label for="ninos">Niños</label><select id="ninos"></select></div>
-                        <div class="form-group full-width"><label for="requiere-visa">¿Requiere Visa?</label><select id="requiere-visa">
-                            <option value="No requiere visa">No requiere visa</option>
-                            <option value="Requiere visa americana">Requiere visa americana</option>
-                            <option value="Requiere visa Schengen">Requiere visa Schengen</option>
-                            <option value="Solo pasaporte vigente">Solo pasaporte vigente</option>
-                        </select></div>
+                        <div class="form-group"><label for="jovenes">Jóvenes (12 a 17 años)</label><select id="jovenes"></select></div>
+                        <div class="form-group"><label for="ninos">Niños (0 a 12 años)</label><select id="ninos"></select></div>
+                        
                         <div class="form-group full-width"><label for="validez-cupos">Validez de la Oferta</label><input type="text" id="validez-cupos" required value="¡Últimos 3 cupos a este precio! Válido por 24 horas."></div>
                         <div class="form-group full-width"><label for="cotizacion-numero">Nº Cotización</label><input type="text" id="cotizacion-numero" readonly></div>
                     </div>
@@ -87,12 +88,16 @@
                     <div id="dynamic-components-container"></div>
                 </fieldset>
                 
-                <fieldset class="form-fieldset"><legend>3. Detalles Finales</legend>
+                <fieldset class="form-fieldset"><legend>3. Detalles Finales y Pagos</legend>
                     <div class="form-grid">
-                        <div class="form-group full-width"><label for="no-incluye">Lo que NO incluye el plan (además de los T&C)</label><textarea id="no-incluye" rows="3" placeholder="Ej: Tarjeta de asistencia médica...">Gastos o servicios no especificados en la cotización.</textarea></div>
-                        <div class="form-group"><label for="pago-reserva">Pago para Reservar</label><input type="text" id="pago-reserva" placeholder="Ej: 500000"></div>
-                        <div class="form-group"><label for="pago-segundo">Segundo Pago</label><input type="text" id="pago-segundo" placeholder="Ej: 1000000"></div>
-                        <div class="form-group full-width"><label for="fecha-limite-pago">Info. Adicional del Plan de Pagos</label><textarea id="fecha-limite-pago" rows="3">El saldo restante debe ser pagado 45 días antes de la fecha de viaje.</textarea></div>
+                        <div class="form-group full-width"><label for="no-incluye">Qué NO incluye el plan</label><textarea id="no-incluye" rows="3">Gastos o servicios no especificados en la cotización.</textarea></div>
+                        
+                        <div class="form-group full-width"><label for="info-pago-personalizada">Nota de Estimado en Pesos (Aparecerá debajo del precio total)</label><textarea id="info-pago-personalizada" rows="3">El valor en pesos es un estimado ya que el valor real puede variar dependiendo de la tasa de cambio el día del pago.</textarea></div>
+                        
+                        <div class="form-group"><label for="pago-reserva">Para reservar hoy (USD)</label><input type="text" id="pago-reserva" placeholder="Ej: 500"></div>
+                        <div class="form-group"><label for="fecha-limite-pago">Fecha límite de pago final</label><input type="date" id="fecha-limite-pago"></div>
+                        
+                        <div class="form-group full-width"><label for="valor-total-reserva">VALOR TOTAL RESERVA (Texto libre)</label><input type="text" id="valor-total-reserva" placeholder="Ej: USD 1.121,20 ~ COP 4.170.000" required></div>
                     </div>
                 </fieldset>
                 
@@ -114,27 +119,30 @@
                         <div class="form-group"><label for="fecha-viaje-PLACEHOLDER">Fecha de Check-in</label><input type="date" id="fecha-viaje-PLACEHOLDER" required></div>
                         <div class="form-group"><label for="cantidad-noches-PLACEHOLDER">Noches</label><select id="cantidad-noches-PLACEHOLDER"></select></div>
                         <div class="form-group"><label for="cantidad-habitaciones-PLACEHOLDER">Habitaciones</label><select id="cantidad-habitaciones-PLACEHOLDER"></select></div>
-                        <div class="form-group full-width"><label>Galería de Fotos (Pegar hasta 3)</label><div class="gallery-paste-areas">
-                            <div class="paste-area" data-img-id="hotel-PLACEHOLDER-foto-1"><p>Pegar Foto 1</p><img src="" style="display:none;"></div>
-                            <div class="paste-area" data-img-id="hotel-PLACEHOLDER-foto-2"><p>Pegar Foto 2</p><img src="" style="display:none;"></div>
-                            <div class="paste-area" data-img-id="hotel-PLACEHOLDER-foto-3"><p>Pegar Foto 3</p><img src="" style="display:none;"></div>
+                        <div class="form-group full-width"><label>Galería de Fotos (Clic o Pegar hasta 3)</label><div class="gallery-paste-areas">
+                            <div class="paste-area" data-img-id="hotel-PLACEHOLDER-foto-1"><p>Clic o Pegar Foto 1</p><img src="" style="display:none;"></div>
+                            <div class="paste-area" data-img-id="hotel-PLACEHOLDER-foto-2"><p>Clic o Pegar Foto 2</p><img src="" style="display:none;"></div>
+                            <div class="paste-area" data-img-id="hotel-PLACEHOLDER-foto-3"><p>Clic o Pegar Foto 3</p><img src="" style="display:none;"></div>
                         </div></div>
                     </div>
                     <button type="button" class="add-subsection-btn" data-section="hotel">+ Añadir Otro Hotel</button>
                 </fieldset>
             </div>
         </template>
+        
         <template id="template-cruises">
             <div id="cruises-form-wrapper-PLACEHOLDER" class="dynamic-section-wrapper cruises-form-wrapper">
                 <fieldset class="form-fieldset">
                     <button type="button" class="remove-section-btn" data-section="cruises-PLACEHOLDER">&times;</button>
                     <legend>Crucero (Opción PLACEHOLDER)</legend>
                     <div class="form-grid">
+                        <div class="form-group full-width"><label>Título Comercial del Crucero</label><input type="text" id="titulo-crucero-PLACEHOLDER" placeholder="Ej: CRUCERO 1 - CARIBE SIN VISA DESDE CARTAGENA" required></div>
+                        
                         <div class="form-group"><label>Naviera</label><select id="naviera-PLACEHOLDER" required>
                             <option value="" disabled selected>Selecciona una naviera</option>
                             <option value="Royal Caribbean">Royal Caribbean</option>
                             <option value="Carnival Cruise Line">Carnival Cruise Line</option>
-                            <option value="MSC Cruceros">MSC Cruceros</option>
+                            <option value="MSC Cruises">MSC Cruises</option>
                             <option value="Norwegian Cruise Line (NCL)">Norwegian Cruise Line (NCL)</option>
                             <option value="Princess Cruises">Princess Cruises</option>
                             <option value="Celebrity Cruises">Celebrity Cruises</option>
@@ -142,47 +150,73 @@
                             <option value="Holland America Line">Holland America Line</option>
                             <option value="Costa Cruceros">Costa Cruceros</option>
                             <option value="Virgin Voyages">Virgin Voyages</option>
+                            <option value="AmaWaterways">AmaWaterways</option>
                         </select></div>
-                        <div class="form-group"><label>Nombre del Barco</label><input type="text" id="barco-PLACEHOLDER" placeholder="Ej: Icon of the Seas" required></div>
-                        <div class="form-group"><label>Puerto de Embarque</label><input type="text" id="puerto-PLACEHOLDER" placeholder="Ej: Miami, FL" required></div>
-                        <div class="form-group"><label>Fecha de Zarpe</label><input type="date" id="fecha-zarpe-PLACEHOLDER" required></div>
+                        <div class="form-group"><label>Nombre del Barco</label><input type="text" id="barco-PLACEHOLDER" placeholder="Ej: MSC Opera" required></div>
+                        <div class="form-group"><label>Puerto de Embarque</label><input type="text" id="puerto-PLACEHOLDER" placeholder="Ej: Cartagena, Colombia" required></div>
+                        <div class="form-group"><label>Fecha de Embarque</label><input type="date" id="fecha-zarpe-PLACEHOLDER" required></div>
                         <div class="form-group"><label>Noches</label><select id="noches-crucero-PLACEHOLDER"></select></div>
-                        <div class="form-group"><label>Tipo de Cabina</label><select id="cabina-PLACEHOLDER">
-                            <option value="Interior">Interior</option>
-                            <option value="Vista al Mar (Exterior)">Vista al Mar (Exterior)</option>
-                            <option value="Balcón">Balcón</option>
-                            <option value="Suite">Suite</option>
-                        </select></div>
-                        <div class="form-group"><label>Inclusiones</label><select id="inclusiones-PLACEHOLDER">
-                            <option value="Pensión Completa Básica">Pensión Completa Básica</option>
-                            <option value="Paquete de Bebidas Clásico">Paquete de Bebidas Clásico</option>
-                            <option value="Paquete Premium (Bebidas + Wi-Fi)">Paquete Premium (Bebidas + Wi-Fi)</option>
-                        </select></div>
-                        <div class="form-group"><label>Propinas (Gratuities)</label><select id="propinas-PLACEHOLDER">
-                            <option value="Incluidas en el valor total">Incluidas en el valor total</option>
-                            <option value="Se pagan a bordo">Se pagan a bordo</option>
-                        </select></div>
-                        <div class="form-group full-width"><label>Itinerario (Puertos por día)</label><textarea id="itinerario-PLACEHOLDER" rows="4" placeholder="Día 1: Miami&#10;Día 2: Navegación&#10;Día 3: Bahamas..." required></textarea></div>
-                        <div class="form-group"><label>Valor Total</label><div class="currency-group"><input type="text" id="valor-crucero-PLACEHOLDER" inputmode="numeric" required><select id="moneda-crucero-PLACEHOLDER"><option>USD</option><option>COP</option></select></div></div>
-                        <div class="form-group"><label>TRM Aplicada (Si es USD)</label><input type="number" id="trm-crucero-PLACEHOLDER" placeholder="Cargando TRM..."></div>
+                        <div class="form-group full-width"><label>Qué incluye tu crucero</label><input type="text" id="inclusiones-PLACEHOLDER" value="Pensión Completa Básica | Propinas: Se pagan a bordo" required></div>
                         
-                        <div class="form-group full-width"><label>Mapa del Recorrido (Pegar 1 imagen)</label><div class="paste-area" data-img-id="crucero-PLACEHOLDER-mapa"><p>Pegar Mapa Aquí</p><img src="" style="display:none;"></div></div>
-                        <div class="form-group full-width"><label>Galería del Barco/Cabina (Pegar hasta 3)</label><div class="gallery-paste-areas">
-                            <div class="paste-area" data-img-id="crucero-PLACEHOLDER-foto-1"><p>Pegar Foto 1</p><img src="" style="display:none;"></div>
-                            <div class="paste-area" data-img-id="crucero-PLACEHOLDER-foto-2"><p>Pegar Foto 2</p><img src="" style="display:none;"></div>
-                            <div class="paste-area" data-img-id="crucero-PLACEHOLDER-foto-3"><p>Pegar Foto 3</p><img src="" style="display:none;"></div>
+                        <!-- SWITCHES DE DISEÑO -->
+                        <div class="form-group full-width switch-group" style="background: #f4f7f9; padding: 15px; border-radius: 8px;">
+                            <label class="toggle-label" style="margin-bottom: 10px; display: block;">
+                                <input type="checkbox" id="switch-mapa-PLACEHOLDER" checked> 
+                                <span class="toggle-text">Mostrar Imagen Banner (Mapa Grande)</span>
+                            </label>
+                            <label class="toggle-label">
+                                <input type="checkbox" id="switch-tabla-PLACEHOLDER" checked> 
+                                <span class="toggle-text">Mostrar Tabla de Itinerario + Imagen Pequeña</span>
+                            </label>
+                        </div>
+
+                        <!-- IMAGEN BANNER GRANDE -->
+                        <div class="form-group full-width" id="container-mapa-PLACEHOLDER"><label>Imagen Banner / Mapa Grande (Clic o Pegar)</label><div class="paste-area" data-img-id="crucero-PLACEHOLDER-mapa"><p>Clic o Pegar Imagen Aquí</p><img src="" style="display:none;"></div></div>
+                        
+                        <!-- TABLA DE ITINERARIO Y FOTO PEQUEÑA -->
+                        <div class="form-group full-width" id="container-tabla-PLACEHOLDER" style="border: 1px solid #eee; padding: 15px; border-radius: 8px;">
+                            <label>Imagen Pequeña (Izquierda)</label>
+                            <div class="paste-area" data-img-id="crucero-PLACEHOLDER-img-pequena" style="min-height: 80px; margin-bottom: 15px;"><p>Clic o Pegar Imagen</p><img src="" style="display:none;"></div>
+                            
+                            <label>Tabla de Itinerario (Editable)</label>
+                            <div class="table-responsive" style="overflow-x: auto;">
+                                <table id="tabla-itinerario-PLACEHOLDER" class="editable-table">
+                                    <thead><tr><th contenteditable="true">Día</th><th contenteditable="true">Puerto</th><th contenteditable="true">Llegada</th><th contenteditable="true">Salida</th></tr></thead>
+                                    <tbody>
+                                        <tr><td contenteditable="true">Día 1</td><td contenteditable="true">Cartagena</td><td contenteditable="true">-</td><td contenteditable="true">18:00</td></tr>
+                                        <tr><td contenteditable="true">Día 2</td><td contenteditable="true">Navegación</td><td contenteditable="true">-</td><td contenteditable="true">-</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div style="margin-top: 10px; display: flex; gap: 10px;">
+                                <button type="button" class="btn-secondary-small" onclick="addRow('tabla-itinerario-PLACEHOLDER')">+ Añadir Fila</button>
+                            </div>
+                        </div>
+
+                        <!-- CABINAS DINÁMICAS -->
+                        <div class="form-group full-width" style="background: #e0f7fa; padding: 15px; border-radius: 8px;">
+                            <label style="color: var(--c-brand-primary);">Cabinas a Cotizar en este Barco</label>
+                            <div id="cabinas-container-PLACEHOLDER" class="cabinas-container"></div>
+                            <button type="button" class="btn-secondary-small" onclick="addCabin('PLACEHOLDER')" style="margin-top: 10px; background: white; border: 1px solid var(--c-brand-primary); color: var(--c-brand-primary);">+ Añadir Cabina a este barco</button>
+                        </div>
+                        
+                        <div class="form-group full-width"><label>Galería del Barco (Clic o Pegar hasta 3)</label><div class="gallery-paste-areas">
+                            <div class="paste-area" data-img-id="crucero-PLACEHOLDER-foto-1"><p>Foto 1</p><img src="" style="display:none;"></div>
+                            <div class="paste-area" data-img-id="crucero-PLACEHOLDER-foto-2"><p>Foto 2</p><img src="" style="display:none;"></div>
+                            <div class="paste-area" data-img-id="crucero-PLACEHOLDER-foto-3"><p>Foto 3</p><img src="" style="display:none;"></div>
                         </div></div>
                     </div>
                     <button type="button" class="add-subsection-btn" data-section="cruises">+ Añadir Otra Opción de Crucero</button>
                 </fieldset>
             </div>
         </template>
+
         <template id="template-flights">
             <div id="flights-form-wrapper" class="dynamic-section-wrapper"><fieldset class="form-fieldset">
                 <button type="button" class="remove-section-btn" data-section="flights">&times;</button><legend>Vuelos</legend>
                 <div class="form-grid">
                     <div class="form-group full-width"><label for="ciudad-salida">Ciudad de Salida</label><input type="text" id="ciudad-salida" placeholder="Ej: Medellín" required></div>
-                    <div class="form-group full-width"><label>Imagen Banner (1030x200px)</label><div class="paste-area" data-img-id="flight-banner-preview"><p>Pegar imagen aquí</p><img src="" style="display:none;"></div></div>
+                    <div class="form-group full-width"><label>Imagen Banner (Clic o Pegar)</label><div class="paste-area" data-img-id="flight-banner-preview"><p>Clic o Pegar imagen aquí</p><img src="" style="display:none;"></div></div>
                     <div class="sub-fieldset full-width"><label>Opción de Vuelo 1</label><div class="form-grid small-gap">
                         <div class="form-group"><label for="flight-1-airline">Aerolínea / Ruta</label><input type="text" id="flight-1-airline" required></div>
                         <div class="form-group"><label for="flight-1-price">Precio por persona</label><input type="text" id="flight-1-price" inputmode="numeric" required></div>
@@ -198,7 +232,7 @@
         <template id="template-tours">
             <div id="tours-form-wrapper" class="dynamic-section-wrapper"><fieldset class="form-fieldset">
                 <button type="button" class="remove-section-btn" data-section="tours">&times;</button><legend>Tours</legend>
-                <div class="form-group full-width"><label>Imagen del Tour</label><div class="paste-area" data-img-id="tour-main-photo"><p>Pegar imagen aquí</p><img src="" style="display:none;"></div></div>
+                <div class="form-group full-width"><label>Imagen del Tour (Clic o Pegar)</label><div class="paste-area" data-img-id="tour-main-photo"><p>Clic o Pegar imagen aquí</p><img src="" style="display:none;"></div></div>
                 <div class="sub-fieldset full-width"><label>Opción de Tour 1</label><div class="form-grid small-gap">
                     <div class="form-group"><label for="tour-1-name">Nombre</label><input type="text" id="tour-1-name" required></div>
                     <div class="form-group"><label for="tour-1-price">Precio por persona</label><input type="text" id="tour-1-price" inputmode="numeric" required></div>
@@ -208,7 +242,7 @@
         <template id="template-transfers">
             <div id="transfers-form-wrapper" class="dynamic-section-wrapper"><fieldset class="form-fieldset">
                 <button type="button" class="remove-section-btn" data-section="transfers">&times;</button><legend>Traslados</legend>
-                <div class="form-group full-width"><label>Imagen</label><div class="paste-area" data-img-id="transfer-main-photo"><p>Pegar imagen aquí</p><img src="" style="display:none;"></div></div>
+                <div class="form-group full-width"><label>Imagen (Clic o Pegar)</label><div class="paste-area" data-img-id="transfer-main-photo"><p>Clic o Pegar imagen aquí</p><img src="" style="display:none;"></div></div>
                 <div class="sub-fieldset full-width"><label>Opción de Traslado 1</label><div class="form-grid small-gap">
                     <div class="form-group"><label for="transfer-1-desc">Descripción</label><input type="text" id="transfer-1-desc" required></div>
                     <div class="form-group"><label for="transfer-1-price">Precio por persona</label><input type="text" id="transfer-1-price" inputmode="numeric" required></div>
@@ -220,83 +254,48 @@
         <div id="confirmation-section" style="display: none;">
             <div id="voucher-to-print">
                 
-                <!-- HEADER CON FONDO DEL MAR Y LOGO CYAN VISIBLE -->
                 <header class="confirmation-header" style="background-image: url('https://i.imgur.com/UiJuout.png');">
-                    <img src="https://i.imgur.com/eEB6RKa.png" alt="Cyan Travel">
+                    <div class="header-logo-wrapper">
+                        <img src="https://i.imgur.com/eEB6RKa.png" alt="Cyan Travel">
+                    </div>
                 </header>
                 
                 <div class="voucher-content">
-                    
-                    <div class="confirmation-pill">
-                        COTIZACIÓN
-                    </div>
-
-                    <p class="intro-text" id="confirm-intro-text"></p>
+                    <p class="intro-text" id="confirm-intro-text" style="font-size: 20px; font-weight: 700; color: var(--c-brand-primary); margin-bottom: 20px;"></p>
                     
                     <div class="customer-data-box" id="confirm-customer-data-box"></div>
-                    
-                    <!-- ALERTA DE VISA -->
-                    <div id="pdf-visa-alert" class="visa-alert"></div>
 
-                    <div id="advisor-box">
-                        <img id="advisor-photo" src="" alt="Foto del Asesor"><div class="advisor-info">
-                            <p>Preparado por tu asesor de viajes:</p><h3 id="advisor-name"></h3>
-                        </div><div class="advisor-contact">
-                            <a id="advisor-whatsapp-btn" class="single-contact-btn" href="#" target="_blank">
-                                <span class="pulse-sticker">¡Haz clic aquí!</span>
-                                Contactar por WhatsApp
-                            </a>
-                        </div>
-                    </div>
-                    
                     <div id="confirmation-components-container"></div>
                     
                     <!-- BARRA DE PAGOS VERDE ESMERALDA -->
                     <div class="premium-payment-bar">
                         <div class="payment-step">
-                            <span>Para reservar hoy:</span>
+                            <span>Para reservar hoy (USD):</span>
                             <h3 id="confirm-pago-reserva"></h3>
                         </div>
                         <div class="payment-step">
-                            <span>Segundo pago:</span>
-                            <h3 id="confirm-pago-segundo"></h3>
+                            <span>Paga el restante antes de:</span>
+                            <h3 id="confirm-fecha-limite" style="font-size: 22px;"></h3>
                         </div>
-                        <div class="payment-info-text">
-                            <p id="confirm-fecha-limite"></p>
+                        <div class="payment-info-text" style="width: 100%; text-align: center; margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.3);">
+                            <span style="display: block; font-size: 16px; font-weight: 600; margin-bottom: 5px;">VALOR TOTAL RESERVA:</span>
+                            <h2 id="confirm-valor-total-reserva" style="font-size: 32px; margin: 0; color: white;"></h2>
+                            <p id="confirm-info-pago" style="font-size: 12px; margin-top: 10px; opacity: 0.9;"></p>
                         </div>
                     </div>
 
                     <div class="inclusions-box" style="margin-top: 20px;">
-                        <h4>El Plan NO Incluye</h4>
+                        <h4>Qué NO incluye tu plan</h4>
                         <p id="confirm-no-incluye"></p>
                     </div>
                     
-                    <div class="main-cta-container">
-                        <h3>¿Listo para tu próxima aventura?</h3>
-                        <a href="#" target="_blank" class="main-cta-button reserve" id="cta-reservar">
-                            <span class="pulse-sticker">¡Reserva Ya!</span>
-                            ¡Sí, Quiero Reservar!
-                        </a>
-                        <a href="#" target="_blank" class="main-cta-button contact" id="cta-contactar">Tengo una Pregunta</a>
-                    </div>
-                    
-                    <!-- FOOTER CYAN CON LOGOS DE PAGO -->
-                    <div class="premium-footer-banner">
-                        <div class="footer-info">
-                            <h4>CYAN TRAVEL</h4>
-                            <p>RNT: 264434 | Cel: +57 305 4466406</p>
-                            <p>📧 Reservas@cyantravel.co</p>
-                        </div>
-                        <div class="payment-logos">
-                            <img src="https://i.imgur.com/eh7rduE.png" alt="Breve">
-                            <img src="https://i.imgur.com/XKwZdOw.png" alt="Visa">
-                            <img src="https://i.imgur.com/sFdZBBM.png" alt="Mastercard">
-                            <img src="https://i.imgur.com/reZ1TIt.png" alt="Bold">
-                        </div>
+                    <!-- ESPACIO PARA EL BANNER DEL CLIENTE (1200x300) -->
+                    <div id="custom-footer-banner" style="margin-top: 40px; text-align: center;">
+                        <p style="color: #aaa; font-size: 12px; border: 2px dashed #eee; padding: 40px; border-radius: 12px;">[Espacio reservado para el Banner de Cyan Travel (1200x300px)]</p>
                     </div>
                     
                     <div id="terms-section-confirm" class="component-section" style="display: none;">
-                        <h3 style="background-color: var(--c-brand-primary);">Términos y Condiciones del Plan</h3>
+                        <h3 style="background-color: var(--c-dark);">Términos y Condiciones del Plan</h3>
                         <div id="confirm-terms-content" class="terms-content-body" style="padding: 20px; font-size: 11px; color: #555; text-align: justify;"></div>
                     </div>
                 </div>
