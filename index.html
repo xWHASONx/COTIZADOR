@@ -90,9 +90,7 @@
                 <fieldset class="form-fieldset"><legend>3. Detalles Finales y Pagos</legend>
                     <div class="form-grid">
                         <div class="form-group full-width"><label for="no-incluye">Qué NO incluye tu viaje</label><textarea id="no-incluye" rows="3">Gastos o servicios no especificados en la cotización. Vuelos (a menos que se especifique). Propinas no prepagadas.</textarea></div>
-                        <div class="form-group"><label for="pago-reserva">Para reservar hoy (USD)</label><input type="text" id="pago-reserva" placeholder="Ej: 500 USD"></div>
-                        <div class="form-group"><label for="fecha-limite-pago">Paga el restante antes de (Fecha)</label><input type="date" id="fecha-limite-pago"></div>
-                        <div class="form-group full-width"><label for="total-estimado-cop">Total Estimado en COP (Opcional)</label><input type="text" id="total-estimado-cop" placeholder="Ej: $8.500.000 COP (Valor aproximado sujeto a TRM)"></div>
+                        <div class="form-group full-width"><label for="fecha-limite-pago">Paga el restante antes de (Fecha o Texto)</label><input type="text" id="fecha-limite-pago" placeholder="Ej: 45 días antes del viaje"></div>
                     </div>
                 </fieldset>
                 
@@ -194,6 +192,7 @@
                     <div class="form-group full-width"><label>Qué incluye tu crucero</label><textarea id="inclusiones-cabina-CRUISEID-CABINID" rows="2" placeholder="Ej: Pensión completa, paquete de bebidas, propinas incluidas..." required></textarea></div>
                     <div class="form-group"><label>Precio Total Cabina (USD)</label><input type="text" id="precio-usd-CRUISEID-CABINID" placeholder="Ej: 1500" required></div>
                     <div class="form-group"><label>Reserva con (USD)</label><input type="text" id="reserva-usd-CRUISEID-CABINID" placeholder="Ej: 250"></div>
+                    <div class="form-group full-width"><label>Estimado en COP (Opcional)</label><input type="text" id="estimado-cop-CRUISEID-CABINID" placeholder="Ej: 6000000"></div>
                 </div>
             </div>
         </template>
