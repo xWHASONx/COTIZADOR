@@ -1,5 +1,5 @@
 /* ==========================================
-   COTIZADOR PRO - CYAN TRAVEL (VERSIÓN FINAL MILIMÉTRICA)
+   COTIZADOR PRO - CYAN TRAVEL (VERSIÓN FINAL A PRUEBA DE BALAS)
    ========================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -269,7 +269,6 @@ document.addEventListener('DOMContentLoaded', () => {
             populateSelect(`noches-crucero-${counter}`, 1, 30, 7, 'noche');
             document.getElementById(`trm-crucero-${counter}`).value = currentTRM;
             
-            // Lógica de los switches
             document.getElementById(`switch-mapa-${counter}`).addEventListener('change', (e) => {
                 document.getElementById(`container-mapa-${counter}`).style.display = e.target.checked ? 'flex' : 'none';
             });
@@ -291,6 +290,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function populateSelect(id, min, max, defaultVal, singular, plural = singular + 's') {
         const select = document.getElementById(id);
         if(!select) return;
+        select.innerHTML = ''; // Limpia las opciones previas para evitar duplicados
         for (let i = min; i <= max; i++) {
             const option = new Option(`${i} ${i === 1 ? singular : plural}`, i);
             if (i === defaultVal) option.selected = true;
@@ -298,7 +298,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Funciones globales para la tabla y cabinas
     window.addRow = function(tableId) {
         const tbody = document.querySelector(`#${tableId} tbody`);
         const cols = tbody.rows[0].cells.length;
@@ -378,7 +377,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- CARGA DE IMÁGENES (CLIC O PEGAR) ---
+    // --- CARGA DE IMÁGENES ---
     let currentUploadArea = null;
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
@@ -456,26 +455,30 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!form.checkValidity()) { form.reportValidity(); return; }
         if (dynamicComponentsContainer.children.length === 0) { alert('Añade al menos un componente.'); return; }
         
-        // Extraer datos de las tablas editables antes de serializar
         document.querySelectorAll('.editable-table').forEach(table => {
             const id = table.id;
             const html = table.innerHTML;
-            const hiddenInput = document.createElement('input');
-            hiddenInput.type = 'hidden';
-            hiddenInput.id = `html-${id}`;
+            let hiddenInput = document.getElementById(`html-${id}`);
+            if(!hiddenInput) {
+                hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.id = `html-${id}`;
+                form.appendChild(hiddenInput);
+            }
             hiddenInput.value = html;
-            form.appendChild(hiddenInput);
         });
 
-        // Extraer datos de las cabinas dinámicas
         document.querySelectorAll('.cabin-row').forEach(row => {
             const id = row.id;
             const html = row.innerHTML;
-            const hiddenInput = document.createElement('input');
-            hiddenInput.type = 'hidden';
-            hiddenInput.id = `html-${id}`;
+            let hiddenInput = document.getElementById(`html-${id}`);
+            if(!hiddenInput) {
+                hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.id = `html-${id}`;
+                form.appendChild(hiddenInput);
+            }
             hiddenInput.value = html;
-            form.appendChild(hiddenInput);
         });
 
         const quoteData = {
@@ -550,7 +553,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            // Restaurar tablas y cabinas
             keys.filter(k => k.startsWith('html-tabla-itinerario-')).forEach(k => {
                 const tableId = k.replace('html-', '');
                 const table = document.getElementById(tableId);
@@ -568,7 +570,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     div.innerHTML = data.formData[k];
                     container.appendChild(div);
                     
-                    // Restaurar valores de los inputs dentro de la cabina
                     div.querySelectorAll('input, select').forEach(input => {
                         if(data.formData[input.id]) input.value = data.formData[input.id];
                     });
@@ -625,7 +626,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const advisor = ADVISORS[advisorSelect.value];
-        const whatsappLink = `https://wa.me/${advisorWhatsappInput.value}`;['advisor-whatsapp-btn', 'cta-reservar', 'cta-contactar'].forEach(id => {
+        const whatsappLink = `https://wa.me/${advisorWhatsappInput.value}`;
+        
+        const btnIds = ['advisor-whatsapp-btn', 'cta-reservar', 'cta-contactar'];
+        btnIds.forEach(id => {
             const el = document.getElementById(id);
             if(el) {
                 const baseText = id === 'cta-reservar' ? `¡Hola ${advisor.name}! Estoy listo para reservar según la cotización *${quoteNumber}*.` : `Hola ${advisor.name}, tengo una pregunta sobre la cotización *${quoteNumber}*.`;
@@ -697,7 +701,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
             }
 
-            // Cabinas
             const cabinContainer = document.getElementById(`cabinas-container-${num}`);
             let cabinsHTML = '';
             if(cabinContainer) {
@@ -757,7 +760,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (document.getElementById('flights-form-wrapper')) {
             dynamicTermsHTML += TERMS_AND_CONDITIONS.flights;
             const departureCity = document.getElementById('ciudad-salida').value;
-            let optionsHTML = [1, 2].map(i => {
+            let optionsHTML =[1, 2].map(i => {
                 const wrapper = document.getElementById(`flight-${i}-form-wrapper`);
                 if ((i === 1 || (wrapper && wrapper.style.display !== 'none')) && document.getElementById(`flight-${i}-airline`)) {
                     const airline = document.getElementById(`flight-${i}-airline`).value; 
@@ -781,8 +784,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>`;
         }
 
-        // 4. RENDERIZAR TOURS Y TRASLADOS
-        ['tours', 'transfers'].forEach(type => {
+        // 4. RENDERIZAR TOURS Y TRASLADOS['tours', 'transfers'].forEach(type => {
             if (document.getElementById(`${type}-form-wrapper`)) {
                 if (type === 'transfers') dynamicTermsHTML += TERMS_AND_CONDITIONS.transfers;
                 
@@ -828,7 +830,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const pdf = new window.jspdf.jsPDF({ orientation: 'p', unit: 'px', format:[canvas.width, canvas.height] });
             pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, canvas.width, canvas.height);
             
-            const scaleFactor = canvas.width / elementToPrint.offsetWidth;['advisor-whatsapp-btn', 'cta-reservar', 'cta-contactar'].forEach(id => {
+            const scaleFactor = canvas.width / elementToPrint.offsetWidth;
+            const pdfBtns = ['advisor-whatsapp-btn', 'cta-reservar', 'cta-contactar'];
+            pdfBtns.forEach(id => {
                 const element = document.getElementById(id);
                 if (!element || !element.href) return;
                 const rect = element.getBoundingClientRect();
