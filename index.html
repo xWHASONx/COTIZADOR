@@ -154,11 +154,11 @@
                             <div id="itinerary-container-PLACEHOLDER" class="itinerary-table-container"></div>
                         </div>
                         
-                        <div class="form-group full-width"><label>Mapa del Recorrido (Opcional)</label><div class="paste-area" data-img-id="crucero-PLACEHOLDER-mapa"><input type="file" accept="image/*" class="file-upload-input"><p>Pegar o Subir Mapa Aquí</p><img src="" style="display:none;"></div></div>
-                        <div class="form-group full-width"><label>Galería del Barco (Pegar o Subir hasta 3)</label><div class="gallery-paste-areas">
-                            <div class="paste-area" data-img-id="crucero-PLACEHOLDER-foto-1"><input type="file" accept="image/*" class="file-upload-input"><p>Foto 1</p><img src="" style="display:none;"></div>
-                            <div class="paste-area" data-img-id="crucero-PLACEHOLDER-foto-2"><input type="file" accept="image/*" class="file-upload-input"><p>Foto 2</p><img src="" style="display:none;"></div>
-                            <div class="paste-area" data-img-id="crucero-PLACEHOLDER-foto-3"><input type="file" accept="image/*" class="file-upload-input"><p>Foto 3</p><img src="" style="display:none;"></div>
+                        <div class="form-group full-width"><label>Mapa del Recorrido (Opcional)</label><div class="paste-area" data-img-id="crucero-PLACEHOLDER-mapa"><p>Pegar Mapa Aquí</p><img src="" style="display:none;"></div></div>
+                        <div class="form-group full-width"><label>Galería del Barco (Pegar hasta 3)</label><div class="gallery-paste-areas">
+                            <div class="paste-area" data-img-id="crucero-PLACEHOLDER-foto-1"><p>Pegar Foto 1</p><img src="" style="display:none;"></div>
+                            <div class="paste-area" data-img-id="crucero-PLACEHOLDER-foto-2"><p>Pegar Foto 2</p><img src="" style="display:none;"></div>
+                            <div class="paste-area" data-img-id="crucero-PLACEHOLDER-foto-3"><p>Pegar Foto 3</p><img src="" style="display:none;"></div>
                         </div></div>
                     </div>
 
@@ -202,7 +202,7 @@
                 <button type="button" class="remove-section-btn" data-section="flights">&times;</button><legend>Vuelos</legend>
                 <div class="form-grid">
                     <div class="form-group full-width"><label for="ciudad-salida">Ciudad de Salida</label><input type="text" id="ciudad-salida" placeholder="Ej: Medellín" required></div>
-                    <div class="form-group full-width"><label>Imagen Banner (1030x200px)</label><div class="paste-area" data-img-id="flight-banner-preview"><input type="file" accept="image/*" class="file-upload-input"><p>Pegar o Subir imagen aquí</p><img src="" style="display:none;"></div></div>
+                    <div class="form-group full-width"><label>Imagen Banner (1030x200px)</label><div class="paste-area" data-img-id="flight-banner-preview"><p>Pegar imagen aquí</p><img src="" style="display:none;"></div></div>
                     <div class="sub-fieldset full-width"><label>Opción de Vuelo 1</label><div class="form-grid small-gap">
                         <div class="form-group"><label for="flight-1-airline">Aerolínea / Ruta</label><input type="text" id="flight-1-airline" required></div>
                         <div class="form-group"><label for="flight-1-price">Precio por persona</label><input type="text" id="flight-1-price" inputmode="numeric" required></div>
@@ -218,7 +218,7 @@
         <template id="template-tours">
             <div id="tours-form-wrapper" class="dynamic-section-wrapper"><fieldset class="form-fieldset">
                 <button type="button" class="remove-section-btn" data-section="tours">&times;</button><legend>Tours</legend>
-                <div class="form-group full-width"><label>Imagen del Tour</label><div class="paste-area" data-img-id="tour-main-photo"><input type="file" accept="image/*" class="file-upload-input"><p>Pegar o Subir imagen aquí</p><img src="" style="display:none;"></div></div>
+                <div class="form-group full-width"><label>Imagen del Tour</label><div class="paste-area" data-img-id="tour-main-photo"><p>Pegar imagen aquí</p><img src="" style="display:none;"></div></div>
                 <div class="sub-fieldset full-width"><label>Opción de Tour 1</label><div class="form-grid small-gap">
                     <div class="form-group"><label for="tour-1-name">Nombre</label><input type="text" id="tour-1-name" required></div>
                     <div class="form-group"><label for="tour-1-price">Precio por persona</label><input type="text" id="tour-1-price" inputmode="numeric" required></div>
@@ -228,7 +228,7 @@
         <template id="template-transfers">
             <div id="transfers-form-wrapper" class="dynamic-section-wrapper"><fieldset class="form-fieldset">
                 <button type="button" class="remove-section-btn" data-section="transfers">&times;</button><legend>Traslados</legend>
-                <div class="form-group full-width"><label>Imagen</label><div class="paste-area" data-img-id="transfer-main-photo"><input type="file" accept="image/*" class="file-upload-input"><p>Pegar o Subir imagen aquí</p><img src="" style="display:none;"></div></div>
+                <div class="form-group full-width"><label>Imagen</label><div class="paste-area" data-img-id="transfer-main-photo"><p>Pegar imagen aquí</p><img src="" style="display:none;"></div></div>
                 <div class="sub-fieldset full-width"><label>Opción de Traslado 1</label><div class="form-grid small-gap">
                     <div class="form-group"><label for="transfer-1-desc">Descripción</label><input type="text" id="transfer-1-desc" required></div>
                     <div class="form-group"><label for="transfer-1-price">Precio por persona</label><input type="text" id="transfer-1-price" inputmode="numeric" required></div>
@@ -240,8 +240,6 @@
         <div id="confirmation-section" style="display: none;">
             <div id="voucher-to-print">
                 
-                <!-- HEADER CON FONDO DEL MAR Y LOGO CYAN VISIBLE -->
-                <!-- HEADER CON NUEVO BANNER -->
                 <!-- HEADER CON NUEVO BANNER (SIN CAJA BLANCA) -->
                 <header class="confirmation-header" style="padding: 0; background: none; height: auto; display: block; border-bottom: none;">
                     <img src="https://i.imgur.com/WmKBjRk.jpeg" alt="Cyan Travel Banner" style="width: 100%; max-width: 100%; height: auto; display: block; border-radius: 24px 24px 0 0; background-color: transparent; padding: 0; box-shadow: none;">
@@ -255,19 +253,7 @@
                     <div id="confirmation-components-container"></div>
                     
                     <!-- BARRA DE PAGOS VERDE ESMERALDA -->
-                    <div class="premium-payment-bar">
-                        <div class="payment-step">
-                            <span>Para reservar hoy:</span>
-                            <h3 id="confirm-pago-reserva"></h3>
-                        </div>
-                        <div class="payment-step">
-                            <span id="confirm-fecha-limite-label">Paga el restante antes de:</span>
-                            <h3 id="confirm-fecha-limite"></h3>
-                        </div>
-                        <div class="payment-info-text" id="confirm-total-estimado-container" style="display: none;">
-                            <p id="confirm-total-estimado" style="font-size: 16px; font-weight: bold; margin: 0;"></p>
-                        </div>
-                    </div>
+                    <div class="premium-payment-bar" style="display: none;"></div>
 
                     <div class="inclusions-box" style="margin-top: 20px;">
                         <h4>Qué NO incluye tu viaje</h4>
@@ -281,21 +267,6 @@
                             ¡Sí, Quiero Reservar!
                         </a>
                         <a href="#" target="_blank" class="main-cta-button contact" id="cta-contactar">Tengo una Pregunta</a>
-                    </div>
-                    
-                    <!-- FOOTER CYAN CON LOGOS DE PAGO -->
-                    <div class="premium-footer-banner">
-                        <div class="footer-info">
-                            <h4>CYAN TRAVEL</h4>
-                            <p>RNT: 264434 | Cel: +57 305 4466406</p>
-                            <p>📧 Reservas@cyantravel.co</p>
-                        </div>
-                        <div class="payment-logos">
-                            <img src="https://i.imgur.com/eh7rduE.png" alt="Breve">
-                            <img src="https://i.imgur.com/XKwZdOw.png" alt="Visa">
-                            <img src="https://i.imgur.com/sFdZBBM.png" alt="Mastercard">
-                            <img src="https://i.imgur.com/reZ1TIt.png" alt="Bold">
-                        </div>
                     </div>
                     
                     <div id="terms-section-confirm" class="component-section" style="display: none;">
