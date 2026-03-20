@@ -43,8 +43,14 @@
                 <h2>Mis Cotizaciones</h2>
                 <button id="btn-create-new" class="action-button download">+ Nueva Cotización</button>
             </div>
-            <div class="dashboard-controls">
-                <input type="text" id="search-quote" placeholder="🔍 Buscar por cliente o número...">
+            <div class="dashboard-controls" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
+                <input type="text" id="search-quote" placeholder="🔍 Buscar por número..." style="flex-grow: 1; padding: 15px; border-radius: 12px; border: 1px solid #ddd; font-size: 16px;">
+                <select id="filter-status" style="padding: 15px; border-radius: 12px; border: 1px solid #ddd; font-size: 16px; background: white; cursor: pointer;">
+                    <option value="Todos">🚦 Todos los estados</option>
+                    <option value="Pendiente">🟡 Pendientes</option>
+                    <option value="Vendida">🟢 Vendidas</option>
+                    <option value="Rechazada">🔴 Rechazadas</option>
+                </select>
             </div>
             <div id="quotes-list" class="quotes-grid"></div>
         </section>
@@ -62,7 +68,6 @@
                     <div class="form-grid">
                         <div class="form-group"><label for="asesor">Tu Nombre (Asesor)</label><select id="asesor" required></select></div>
                         <div class="form-group"><label for="whatsapp-asesor">Tu WhatsApp (sin +)</label><input type="tel" id="whatsapp-asesor" placeholder="Ej: 573147294382" required></div>
-                        <div class="form-group full-width"><label for="nombre-completo">Nombre del Cliente (Opcional)</label><input type="text" id="nombre-completo" placeholder="Deja en blanco para un saludo general"></div>
                         <div class="form-group"><label for="adultos">Adultos</label><select id="adultos"></select></div>
                         <div class="form-group"><label for="jovenes">Jóvenes (12-17)</label><select id="jovenes"></select></div>
                         <div class="form-group"><label for="ninos">Niños (0-11)</label><select id="ninos"></select></div>
@@ -238,8 +243,9 @@
                 
                 <!-- HEADER CON FONDO DEL MAR Y LOGO CYAN VISIBLE -->
                 <!-- HEADER CON NUEVO BANNER -->
-                <header class="confirmation-header" style="padding: 0; background: none;">
-                    <img src="https://i.imgur.com/WmKBjRk.jpeg" alt="Cyan Travel Banner" style="width: 100%; height: auto; display: block; border-radius: 24px 24px 0 0;">
+                <!-- HEADER CON NUEVO BANNER (SIN CAJA BLANCA) -->
+                <header class="confirmation-header" style="padding: 0; background: none; height: auto; display: block; border-bottom: none;">
+                    <img src="https://i.imgur.com/WmKBjRk.jpeg" alt="Cyan Travel Banner" style="width: 100%; max-width: 100%; height: auto; display: block; border-radius: 24px 24px 0 0; background-color: transparent; padding: 0; box-shadow: none;">
                 </header>
                 
                 <div class="voucher-content">
