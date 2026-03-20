@@ -546,10 +546,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- RENDERIZADO DEL PDF (SEGURO Y ESTRICTO) ---
     const NAVIERA_LOGOS = {
-        'Royal Caribbean': 'https://i.imgur.com/1X8X8X8.png', // Reemplaza con URLs reales
-        'MSC Cruises': 'https://i.imgur.com/2Y9Y9Y9.png',
-        'Norwegian Cruise Line (NCL)': 'https://i.imgur.com/3Z0Z0Z0.png'
-        // Añade más según necesites
+        'Royal Caribbean': 'https://i.imgur.com/vLgm4WP.png',
+        'Carnival Cruise Line': 'https://i.imgur.com/3jRznTz.png',
+        'MSC Cruises': 'https://i.imgur.com/N7GB1Pj.png',
+        'Norwegian Cruise Line (NCL)': 'https://i.imgur.com/umtaXo7.png',
+        'Princess Cruises': 'https://i.imgur.com/W2ytAT5.png',
+        'Celebrity Cruises': 'https://i.imgur.com/lyLHd2L.png',
+        'Disney Cruise Line': 'https://i.imgur.com/6hd8679.png',
+        'AmaWaterways': 'https://i.imgur.com/JT7LBaX.png',
+        'Costa Cruceros': 'https://i.imgur.com/sQaeAwI.png',
+        'Virgin Voyages': 'https://i.imgur.com/Q9J5tx5.png'
     };
 
     function formatCurrency(value, currency = 'COP') {
@@ -694,12 +700,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 const pax = document.getElementById(`pax-cabina-${num}-${cId}`)?.value || '';
                 const inclusiones = document.getElementById(`inclusiones-cabina-${num}-${cId}`)?.value || '';
                 const precioUSD = document.getElementById(`precio-usd-${num}-${cId}`)?.value || '';
+                const reservaUSD = document.getElementById(`reserva-usd-${num}-${cId}`)?.value || '';
 
                 cabinsHTML += `
                     <div class="cabin-card">
                         <div class="cabin-card-header">
                             <h5>Cabina: ${tipo}</h5>
-                            <span class="cabin-price-tag">Total: ${formatCurrency(precioUSD, 'USD')}</span>
+                            <div style="text-align: right;">
+                                <span class="cabin-price-tag">Total: ${formatCurrency(precioUSD, 'USD')}</span>
+                                ${reservaUSD ? `<div style="margin-top: 8px; font-size: 14px; color: var(--c-brand-primary); font-weight: 900;">Reserva con: ${formatCurrency(reservaUSD, 'USD')}</div>` : ''}
+                            </div>
                         </div>
                         <div class="cabin-details">
                             <p><strong>Número:</strong> ${numCabina}</p>
