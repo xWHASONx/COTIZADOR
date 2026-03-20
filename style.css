@@ -185,3 +185,33 @@ input[readonly] { background-color: #e9ecef; cursor: not-allowed; color: var(--c
     #advisor-box { flex-direction: column; text-align: center; }
     .premium-payment-bar { flex-direction: column; text-align: center; }
 }
+/* === ACTUALIZACIÓN CRUCEROS Y PDF === */
+.option-header, .component-section h3 { background-color: var(--c-dark); }
+
+/* Tabla de Itinerario */
+.itinerary-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; text-align: left; }
+.itinerary-table th { background-color: var(--c-brand-primary); color: white; padding: 10px; font-weight: 600; }
+.itinerary-table td { border: 1px solid #eee; padding: 8px; }
+.itinerary-table input { width: 100%; border: none; background: transparent; font-family: inherit; font-size: 13px; padding: 5px; }
+.itinerary-table input:focus { outline: 1px solid var(--c-brand-primary); background: #fff; }
+
+/* PDF Itinerario Renderizado */
+.pdf-itinerary-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 12px; }
+.pdf-itinerary-table th { background-color: #f4f6f8; color: var(--c-dark-blue); padding: 8px; border-bottom: 2px solid var(--c-brand-primary); }
+.pdf-itinerary-table td { padding: 8px; border-bottom: 1px solid #eee; color: var(--c-gray); }
+
+/* Tarjetas de Cabina en PDF */
+.cabin-card { background: #fdfdfd; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 15px; position: relative; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+.cabin-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+.cabin-card-header h5 { margin: 0; font-size: 18px; color: var(--c-brand-primary); }
+.cabin-price-tag { background: var(--c-dark); color: white; padding: 6px 15px; border-radius: 8px; font-weight: 900; font-size: 16px; }
+.cabin-details { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 13px; }
+.cabin-details p { margin: 0; color: var(--c-gray); }
+.cabin-details strong { color: var(--c-dark-blue); }
+.cabin-inclusions { grid-column: 1 / -1; background: #e0f7fa; padding: 10px 15px; border-radius: 8px; margin-top: 10px; color: var(--c-dark-blue); font-weight: 600; }
+
+/* Logo Naviera */
+.naviera-logo { position: absolute; top: 15px; right: 25px; max-height: 40px; max-width: 120px; object-fit: contain; background: white; padding: 5px 10px; border-radius: 8px; }
+
+/* File Upload Overlay */
+.file-upload-input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 5; }
