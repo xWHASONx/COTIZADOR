@@ -4,7 +4,7 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    const ACCESS_PASSWORD = 'HOLA';
+    const ACCESS_PASSWORD = '3054466406*';
 
     // --- CONFIGURACIÓN FIREBASE ---
     const firebaseConfig = {
