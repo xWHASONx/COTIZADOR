@@ -141,26 +141,34 @@ document.addEventListener('DOMContentLoaded', () => {
         showView('dashboard');
         quotesList.innerHTML = '<p>Cargando cotizaciones...</p>';
         try {
-            const snapshot = await db.collection('cotizaciones').orderBy('createdAt', 'desc').limit(30).get();
-            renderQuotes(snapshot.docs);
+            const snapshot = await db.collection('cotizaciones').orderBy('createdAt', 'desc').limit(50).get();
+            let allDocs = snapshot.docs;
+            renderQuotes(allDocs);
             
-            searchQuoteInput.addEventListener('input', (e) => {
-                const term = e.target.value.toLowerCase();
-                const filtered = snapshot.docs.filter(doc => {
+            const filterData = () => {
+                const term = searchQuoteInput.value.toLowerCase();
+                const status = document.getElementById('filter-status').value;
+                
+                const filtered = allDocs.filter(doc => {
                     const data = doc.data();
-                    return data.clientName.toLowerCase().includes(term) || data.quoteNumber.toLowerCase().includes(term);
+                    const matchSearch = data.quoteNumber.toLowerCase().includes(term);
+                    const matchStatus = status === 'Todos' || (data.status || 'Pendiente') === status;
+                    return matchSearch && matchStatus;
                 });
                 renderQuotes(filtered);
-            });
+            };
+
+            searchQuoteInput.addEventListener('input', filterData);
+            document.getElementById('filter-status').addEventListener('change', filterData);
         } catch (error) {
-            quotesList.innerHTML = '<p style="color:red;">Error al cargar datos. Por favor, desactiva tu bloqueador de anuncios (AdBlock/Brave Shields) para que la base de datos funcione.</p>';
+            quotesList.innerHTML = '<p style="color:red;">Error al cargar datos. Por favor, desactiva tu bloqueador de anuncios.</p>';
             console.error(error);
         }
     }
 
     function renderQuotes(docs) {
         quotesList.innerHTML = '';
-        if (docs.length === 0) { quotesList.innerHTML = '<p>No hay cotizaciones aún.</p>'; return; }
+        if (docs.length === 0) { quotesList.innerHTML = '<p>No hay cotizaciones que coincidan.</p>'; return; }
         
         const statusColors = { 'Pendiente': '#f39c12', 'Vendida': '#27ae60', 'Rechazada': '#c0392b' };
 
@@ -173,7 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
             card.className = 'quote-card';
             card.innerHTML = `
                 <span class="quote-badge">${data.quoteNumber}</span>
-                <h3>${data.clientName}</h3>
+                <h3 style="margin-top: 15px;">Cotización</h3>
                 <p>Asesor: ${data.advisorName}</p>
                 <span class="quote-date">Creada: ${date}</span>
                 
@@ -183,7 +191,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     <option value="Rechazada" ${currentStatus === 'Rechazada' ? 'selected' : ''}>🔴 Rechazada</option>
                 </select>
 
-                <button class="btn-duplicate" data-id="${doc.id}">Duplicar Cotización</button>
+                <button class="btn-duplicate" data-id="${doc.id}">📄 Duplicar Cotización</button>
+                <button class="btn-delete" data-id="${doc.id}" style="background: #ffeaea; border: 1px solid #ffccc7; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: bold; color: #ff4d4f; margin-top: 10px; width: 100%; transition: background 0.2s;">🗑️ Eliminar Cotización</button>
             `;
             
             card.querySelector('.status-select').addEventListener('change', async (e) => {
@@ -197,12 +206,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
+            card.querySelector('.btn-delete').addEventListener('click', async (e) => {
+                e.stopPropagation(); 
+                if(confirm("⚠️ ¿Estás seguro de eliminar esta cotización? Esta acción es irreversible.")) {
+                    try {
+                        await db.collection('cotizaciones').doc(doc.id).delete();
+                        card.remove();
+                    } catch (error) {
+                        alert("Error al eliminar la cotización.");
+                    }
+                }
+            });
+
             card.addEventListener('click', (e) => {
-                if(e.target.classList.contains('btn-duplicate') || e.target.classList.contains('status-select')) return; 
+                if(e.target.classList.contains('btn-duplicate') || e.target.classList.contains('status-select') || e.target.classList.contains('btn-delete')) return; 
                 loadQuoteIntoForm(doc.id, data);
             });
 
-            card.querySelector('.btn-duplicate').addEventListener('click', () => {
+            card.querySelector('.btn-duplicate').addEventListener('click', (e) => {
+                e.stopPropagation();
                 const duplicatedData = { ...data, quoteNumber: generateQuoteNumber(), status: 'Pendiente' };
                 loadQuoteIntoForm(null, duplicatedData); 
             });
