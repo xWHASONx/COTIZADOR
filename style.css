@@ -1,9 +1,11 @@
 :root {
+    /* === PALETA CYAN TRAVEL === */
     --c-brand-primary: #0088aa;       
     --c-brand-dark-accent: #0088aa;   
     --c-bg-card: #ffffff;             
     --c-brand-yellow: #0088aa;        
     
+    /* Neutros */
     --c-dark-blue: #111111;           
     --c-dark: #111111;      
     --c-gray: #666666;      
@@ -52,37 +54,37 @@ input[readonly] { background-color: #e9ecef; cursor: not-allowed; color: var(--c
 
 .paste-area { border: 2px dashed #ccc; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; background-color: #fdfdfd; min-height: 100px; display: flex; justify-content: center; align-items: center; position: relative; overflow: hidden; transition: border-color 0.2s; }
 .paste-area:hover { border-color: var(--c-brand-primary); background-color: #f0f8fa; }
-.paste-area p { color: #aaa; font-weight: 500; margin: 0; font-size: 13px; pointer-events: none; }
-.paste-area img { max-width: 100%; max-height: 150px; border-radius: 8px; object-fit: cover; pointer-events: none; }
+.paste-area p { color: #aaa; font-weight: 500; margin: 0; font-size: 13px; }
+.paste-area img { max-width: 100%; max-height: 150px; border-radius: 8px; object-fit: cover; }
 .gallery-paste-areas { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
 .gallery-paste-areas .paste-area { min-height: 120px; }
 .gallery-paste-areas img { width: 100%; height: 100%; }
 
-/* TABLA EDITABLE */
-.editable-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
-.editable-table th, .editable-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-.editable-table th { background-color: var(--c-brand-primary); color: white; font-weight: 600; }
-.editable-table td[contenteditable="true"]:hover { background-color: #f0f8fa; cursor: text; }
-.btn-secondary-small { background: #eee; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: 600; color: var(--c-dark); }
-.btn-secondary-small:hover { background: #ddd; }
-
-/* CABINAS DINÁMICAS */
-.cabin-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; background: white; padding: 10px; border-radius: 8px; border: 1px solid #ddd; flex-wrap: wrap; }
-.cabin-row select, .cabin-row input { padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; flex: 1; min-width: 120px; }
-.cabin-row .remove-cabin-btn { background: #ff4d4f; color: white; border: none; border-radius: 5px; cursor: pointer; padding: 8px 12px; font-weight: bold; }
-
 /* DISEÑO DEL PDF */
 #confirmation-section { padding-bottom: 40px; }
 
+/* HEADER CON FONDO DEL MAR Y LOGO VISIBLE */
 .confirmation-header { background-size: cover; background-position: center; width: 100%; height: 220px; border-radius: 24px 24px 0 0; display: flex; justify-content: center; align-items: center; position: relative; }
-.header-logo-wrapper { background-color: rgba(255, 255, 255, 0.9); padding: 15px 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); z-index: 2; }
-.header-logo-wrapper img { max-width: 280px; height: auto; display: block; }
+.confirmation-header img { max-width: 280px; height: auto; position: relative; z-index: 2; background-color: rgba(255, 255, 255, 0.85); padding: 15px 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
 
 .voucher-content { padding: 30px; text-align: center; }
+.confirmation-pill { background-color: var(--c-brand-primary); color: var(--c-white); padding: 12px 30px; border-radius: 50px; font-size: 20px; font-weight: 900; display: inline-flex; align-items: center; justify-content: center; gap: 10px; margin: 0 auto 25px auto; box-shadow: 0 4px 10px rgba(0,136,170,0.3); max-width: 90%; text-transform: uppercase; }
 
+/* CAJAS OSCURECIDAS SUTILMENTE */
 .customer-data-box { background-color: #f4f7f9; border: 1px solid #e2e8f0; padding: 20px; border-radius: 16px; margin-bottom: 15px; text-align: left; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
 .customer-data-box p { margin: 0 0 8px 0; font-size: 14px; color: var(--c-gray); }
 .customer-data-box strong { color: var(--c-brand-primary); font-weight: 700; font-size: 15px; }
+
+/* ALERTA DE VISA */
+.visa-alert { background-color: #fff3cd; color: #856404; padding: 12px 20px; border-radius: 8px; font-weight: 700; text-align: left; margin-bottom: 25px; border-left: 5px solid #ffeeba; font-size: 14px; display: none; }
+
+/* CAJA DEL ASESOR OSCURECIDA SUTILMENTE */
+#advisor-box { display: flex; align-items: center; gap: 20px; background-color: #e4f1f6; border: 1px solid #b8dbe5; padding: 20px; border-radius: 16px; text-align: left; }
+#advisor-photo { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 3px solid var(--c-white); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+.advisor-info { flex-grow: 1; }
+.advisor-info p { margin: 0; font-size: 13px; color: var(--c-gray); }
+.advisor-info h3 { font-size: 20px; color: var(--c-dark-blue); margin: 3px 0 0 0; }
+.single-contact-btn { background-color: var(--c-brand-primary); color: var(--c-white); padding: 10px 20px; text-decoration: none; font-weight: 700; border-radius: 50px; font-size: 13px; display: inline-block; transition: background-color 0.2s; position: relative; }
 
 .quote-option-box, .component-section { border: none; border-radius: 16px; margin-top: 25px; overflow: hidden; text-align: left; box-shadow: 0 4px 20px rgba(0,0,0,0.05); background-color: var(--c-white); }
 .option-header, .component-section h3 { background-color: var(--c-brand-dark-accent); color: var(--c-white); padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; }
@@ -103,41 +105,22 @@ input[readonly] { background-color: #e9ecef; cursor: not-allowed; color: var(--c
 .data-item-content p { margin: 0; font-weight: 600; color: var(--c-dark); }
 
 /* ESTILOS PARA CRUCEROS */
-.cruise-custom-title { background-color: var(--c-white); border: 2px solid var(--c-brand-primary); color: var(--c-brand-primary); padding: 12px 20px; border-radius: 8px; text-align: center; font-size: 20px; font-weight: 900; text-transform: uppercase; margin-bottom: 20px; }
-.cruise-header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-.naviera-logo-img { max-height: 40px; max-width: 150px; object-fit: contain; }
-
 .cruise-specs-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px; }
 .cruise-spec-item { display: flex; align-items: center; gap: 12px; background: #f4f6f8; padding: 15px; border-radius: 12px; border: 1px solid #e9ecef; }
 .cruise-spec-item svg { width: 24px; height: 24px; color: var(--c-brand-primary); }
 .cruise-spec-item strong { font-size: 12px; color: var(--c-gray); text-transform: uppercase; display: block; margin-bottom: 2px; }
 .cruise-spec-item span { font-size: 14px; font-weight: 700; color: var(--c-dark-blue); }
-
 .cruise-inclusions { background-color: #e0f7fa; border-left: 5px solid var(--c-brand-primary); padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; }
 .cruise-inclusions svg { width: 24px; height: 24px; flex-shrink: 0; } 
-
-.cruise-layout-split { display: flex; gap: 20px; margin-bottom: 20px; align-items: flex-start; }
-.cruise-layout-left { flex: 0 0 35%; }
-.cruise-layout-left img { width: 100%; border-radius: 12px; object-fit: cover; }
-.cruise-layout-right { flex: 1; overflow-x: auto; }
-
-/* TABLA PDF */
-.pdf-table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: left; }
-.pdf-table th { background-color: var(--c-brand-primary); color: white; padding: 8px; font-weight: 600; }
-.pdf-table td { border-bottom: 1px solid #eee; padding: 8px; color: var(--c-dark); }
-.pdf-table tr:nth-child(even) { background-color: #f9f9f9; }
-
-/* LISTA DE CABINAS PDF */
-.pdf-cabins-list { margin-top: 20px; border-top: 2px dashed #eee; padding-top: 20px; }
-.pdf-cabin-item { display: flex; justify-content: space-between; align-items: center; background: #f4f7f9; padding: 12px 20px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid var(--c-brand-primary); }
-.pdf-cabin-item .cabin-info { font-size: 14px; color: var(--c-dark-blue); }
-.pdf-cabin-item .cabin-price { font-size: 16px; font-weight: 900; color: var(--c-brand-primary); }
+.cruise-itinerary { background: var(--c-white); border: 1px solid #eee; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+.cruise-itinerary p { white-space: pre-wrap; line-height: 1.6; margin: 0; font-size: 13px; color: var(--c-gray); }
 
 /* BARRA DE PAGOS VERDE ESMERALDA */
 .premium-payment-bar { background: linear-gradient(135deg, #27ae60, #2ecc71); color: var(--c-white); border-radius: 16px; padding: 25px; margin-top: 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 25px rgba(39, 174, 96, 0.3); text-align: left; flex-wrap: wrap; gap: 15px; }
 .payment-step { flex: 1; min-width: 200px; }
 .payment-step span { display: block; font-size: 14px; text-transform: uppercase; font-weight: 600; opacity: 0.9; margin-bottom: 5px; }
 .payment-step h3 { font-size: 28px; font-weight: 900; margin: 0; color: var(--c-white); }
+.payment-info-text { width: 100%; border-top: 1px solid rgba(255,255,255,0.3); padding-top: 15px; margin-top: 5px; font-size: 13px; opacity: 0.9; }
 
 .inclusions-box { background-color: #f4f6f8; border: 1px solid #eee; padding: 20px; border-radius: 16px; text-align: left; } 
 .inclusions-box h4 { font-size: 16px; color: var(--c-dark-blue); margin-bottom: 10px; font-weight: 800; }
@@ -150,8 +133,16 @@ input[readonly] { background-color: #e9ecef; cursor: not-allowed; color: var(--c
 .main-cta-button.reserve:hover { transform: scale(1.02); }
 .main-cta-button.contact { background-color: var(--c-dark-blue); font-size: 15px; padding: 12px; }
 
+/* STICKERS ANIMADOS */
 .pulse-sticker { position: absolute; top: -15px; right: 10px; background-color: #ff3b30; color: white; font-size: 11px; font-weight: 900; padding: 4px 10px; border-radius: 12px; text-transform: uppercase; box-shadow: 0 4px 10px rgba(255, 59, 48, 0.4); animation: pulse 1.5s infinite; z-index: 10; }
 @keyframes pulse { 0% { transform: scale(1) rotate(5deg); } 50% { transform: scale(1.15) rotate(5deg); } 100% { transform: scale(1) rotate(5deg); } }
+
+/* FOOTER CYAN CON LOGOS DE PAGO */
+.premium-footer-banner { background-color: var(--c-brand-primary); color: var(--c-white); padding: 40px 20px; border-radius: 16px; margin-top: 40px; text-align: center; box-shadow: 0 10px 30px rgba(0,136,170,0.2); }
+.premium-footer-banner h4 { font-size: 22px; color: var(--c-white); margin-bottom: 10px; letter-spacing: 1px; }
+.premium-footer-banner p { font-size: 14px; color: #e0f7fa; margin: 5px 0; }
+.payment-logos { display: flex; justify-content: center; align-items: center; gap: 25px; margin-top: 25px; flex-wrap: wrap; }
+.payment-logos img { max-height: 40px; width: auto; object-fit: contain; } 
 
 .action-buttons { margin-top: 40px; display: flex; gap: 15px; justify-content: center; padding: 0 20px; }
 .action-button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 16px 30px; border-radius: 12px; font-size: 18px; font-weight: 700; border: none; cursor: pointer; transition: all 0.2s; flex-grow: 1; }
@@ -171,6 +162,7 @@ input[readonly] { background-color: #e9ecef; cursor: not-allowed; color: var(--c
 #login-form input { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid transparent; background-color: var(--c-white); font-family: 'Poppins', sans-serif; font-size: 16px; text-align: center; margin-bottom: 15px; }
 #login-form button { width: 100%; background-color: var(--c-brand-primary); color: var(--c-white); padding: 14px; border-radius: 12px; font-size: 16px; font-weight: 700; border: none; cursor: pointer; transition: background-color 0.2s; }
 
+/* DASHBOARD */
 .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 .dashboard-header h2 { color: var(--c-brand-primary); }
 .dashboard-controls { margin-bottom: 20px; }
@@ -190,6 +182,6 @@ input[readonly] { background-color: #e9ecef; cursor: not-allowed; color: var(--c
     .section, .voucher-content { padding: 20px; }
     .form-grid, .gallery-paste-areas, .details-section, .details-grid, .cruise-specs-grid { grid-template-columns: 1fr; }
     .action-buttons { flex-direction: column; }
+    #advisor-box { flex-direction: column; text-align: center; }
     .premium-payment-bar { flex-direction: column; text-align: center; }
-    .cruise-layout-split { flex-direction: column; }
 }
