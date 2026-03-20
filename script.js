@@ -1,5 +1,5 @@
 /* ==========================================
-   COTIZADOR PRO - CYAN TRAVEL (VERSIÓN FINAL A PRUEBA DE BALAS)
+   COTIZADOR PRO - CYAN TRAVEL (VERSIÓN FINAL CORREGIDA)
    ========================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -290,7 +290,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function populateSelect(id, min, max, defaultVal, singular, plural = singular + 's') {
         const select = document.getElementById(id);
         if(!select) return;
-        select.innerHTML = ''; // Limpia las opciones previas para evitar duplicados
+        select.innerHTML = ''; 
         for (let i = min; i <= max; i++) {
             const option = new Option(`${i} ${i === 1 ? singular : plural}`, i);
             if (i === defaultVal) option.selected = true;
@@ -760,15 +760,19 @@ document.addEventListener('DOMContentLoaded', () => {
         if (document.getElementById('flights-form-wrapper')) {
             dynamicTermsHTML += TERMS_AND_CONDITIONS.flights;
             const departureCity = document.getElementById('ciudad-salida').value;
-            let optionsHTML =[1, 2].map(i => {
-                const wrapper = document.getElementById(`flight-${i}-form-wrapper`);
-                if ((i === 1 || (wrapper && wrapper.style.display !== 'none')) && document.getElementById(`flight-${i}-airline`)) {
-                    const airline = document.getElementById(`flight-${i}-airline`).value; 
-                    const price = document.getElementById(`flight-${i}-price`).value;
-                    if (airline && price) return `<div class="item-option"><strong>Opción ${i}:</strong> ${airline} <span class="item-price">Desde ${formatCurrency(price)}</span></div>`;
-                } 
-                return '';
-            }).join('');
+            
+            const extras = ['flight-1', 'flight-2'];
+            let optionsHTML = '';
+            extras.forEach(id => {
+                const wrapper = document.getElementById(`${id}-form-wrapper`);
+                if ((id === 'flight-1' || (wrapper && wrapper.style.display !== 'none')) && document.getElementById(`${id}-airline`)) {
+                    const airline = document.getElementById(`${id}-airline`).value; 
+                    const price = document.getElementById(`${id}-price`).value;
+                    if (airline && price) {
+                        optionsHTML += `<div class="item-option"><strong>Opción ${id.split('-')[1]}:</strong> ${airline} <span class="item-price">Desde ${formatCurrency(price)}</span></div>`;
+                    }
+                }
+            });
             
             confirmationComponentsContainer.innerHTML += `
                 <div class="component-section">
@@ -784,7 +788,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>`;
         }
 
-        // 4. RENDERIZAR TOURS Y TRASLADOS['tours', 'transfers'].forEach(type => {
+        // 4. RENDERIZAR TOURS Y TRASLADOS
+        const extras = ['tours', 'transfers'];
+        extras.forEach(type => {
             if (document.getElementById(`${type}-form-wrapper`)) {
                 if (type === 'transfers') dynamicTermsHTML += TERMS_AND_CONDITIONS.transfers;
                 
@@ -831,7 +837,7 @@ document.addEventListener('DOMContentLoaded', () => {
             pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, canvas.width, canvas.height);
             
             const scaleFactor = canvas.width / elementToPrint.offsetWidth;
-            const pdfBtns = ['advisor-whatsapp-btn', 'cta-reservar', 'cta-contactar'];
+            const pdfBtns =['advisor-whatsapp-btn', 'cta-reservar', 'cta-contactar'];
             pdfBtns.forEach(id => {
                 const element = document.getElementById(id);
                 if (!element || !element.href) return;
