@@ -81,6 +81,20 @@ document.addEventListener('DOMContentLoaded', () => {
     <h3>Políticas de Cancelación, Cambios y Reembolsos</h3>
     <p>1) Política general: Todas las solicitudes de cancelación, cambios, reembolsos, reemisiones, cambios de nombre/fecha o correcciones están sujetas a las políticas y condiciones del proveedor y al tipo de tarifa adquirida. 2) Tarifas administrativas no reembolsables: Independientemente del resultado ante el proveedor, las tarifas administrativas de la Agencia no son reembolsables. 3) Penalidades, retenciones y diferencias tarifarias: En caso de que el proveedor permita cambios o reembolsos, el Cliente podrá asumir penalidades por cambio/cancelación, diferencia de tarifa, impuestos no reembolsables. 4) No show (no presentación): Si el Cliente no se presenta a tiempo, aplicarán políticas de no show del proveedor, que suelen implicar pérdida total del valor pagado. 5) Tiempos de reembolso: Cuando un reembolso sea aprobado por el proveedor, los tiempos de devolución dependen del proveedor y/o entidad financiera. La Agencia no controla estos plazos. 6) Cancelaciones o cambios del proveedor: Si el proveedor cancela o modifica el servicio, se aplicarán sus políticas. 7) Recomendación de seguro de viaje: Se recomienda adquirir seguro de asistencia/seguro de cancelación para cubrir imprevistos médicos, interrupciones del viaje o cancelaciones por causas justificadas.</p>`;
 
+    const NAVIERA_LOGOS = {
+        'Royal Caribbean': 'https://logo.clearbit.com/royalcaribbean.com',
+        'Carnival Cruise Line': 'https://logo.clearbit.com/carnival.com',
+        'MSC Cruises': 'https://logo.clearbit.com/msccruises.com',
+        'Norwegian Cruise Line (NCL)': 'https://logo.clearbit.com/ncl.com',
+        'Princess Cruises': 'https://logo.clearbit.com/princess.com',
+        'Celebrity Cruises': 'https://logo.clearbit.com/celebritycruises.com',
+        'Disney Cruise Line': 'https://logo.clearbit.com/disneycruise.disney.go.com',
+        'Holland America Line': 'https://logo.clearbit.com/hollandamerica.com',
+        'Costa Cruceros': 'https://logo.clearbit.com/costacruises.com',
+        'Virgin Voyages': 'https://logo.clearbit.com/virginvoyages.com',
+        'AmaWaterways': 'https://logo.clearbit.com/amawaterways.com'
+    };
+
     // --- OBTENER TRM OFICIAL ---
     async function fetchTRM() {
         try {
@@ -97,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- COMPRESIÓN SÚPER AGRESIVA (PREVENCIÓN DE LÍMITE 1MB) ---
+    // --- COMPRESIÓN SÚPER AGRESIVA ---
     function compressImage(base64Str, maxWidth = 500, quality = 0.4) {
         return new Promise((resolve) => {
             let img = new Image();
@@ -173,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
             card.className = 'quote-card';
             card.innerHTML = `
                 <span class="quote-badge">${data.quoteNumber}</span>
-                <h3>${data.clientName}</h3>
+                <h3>${data.clientName || 'Cliente sin nombre'}</h3>
                 <p>Asesor: ${data.advisorName}</p>
                 <span class="quote-date">Creada: ${date}</span>
                 
@@ -223,6 +237,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- LÓGICA DEL FORMULARIO ---
+    document.getElementById('mostrar-nombre-cliente').addEventListener('change', (e) => {
+        document.getElementById('campo-nombre-cliente').style.display = e.target.checked ? 'flex' : 'none';
+    });
+
     function addSection(sectionKey) {
         let templateId = `template-${sectionKey}`;
         let counter = 0;
@@ -250,6 +268,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (sectionKey === 'cruises') {
             populateSelect(`noches-crucero-${counter}`, 1, 30, 7, 'noche');
             document.getElementById(`trm-crucero-${counter}`).value = currentTRM;
+            
+            // Lógica de los switches
+            document.getElementById(`switch-mapa-${counter}`).addEventListener('change', (e) => {
+                document.getElementById(`container-mapa-${counter}`).style.display = e.target.checked ? 'flex' : 'none';
+            });
+            document.getElementById(`switch-tabla-${counter}`).addEventListener('change', (e) => {
+                document.getElementById(`container-tabla-${counter}`).style.display = e.target.checked ? 'block' : 'none';
+            });
+
             if (counter === 1) document.querySelector(`.add-section-btn[data-section="cruises"]`).style.display = 'none';
             if (counter > 1) document.querySelector(`#cruises-form-wrapper-${counter - 1} .add-subsection-btn`).style.display = 'none';
         }
@@ -270,6 +297,41 @@ document.addEventListener('DOMContentLoaded', () => {
             select.add(option);
         }
     }
+
+    // Funciones globales para la tabla y cabinas
+    window.addRow = function(tableId) {
+        const tbody = document.querySelector(`#${tableId} tbody`);
+        const cols = tbody.rows[0].cells.length;
+        let html = '<tr>';
+        for(let i=0; i<cols; i++) html += '<td contenteditable="true">-</td>';
+        html += '</tr>';
+        tbody.insertAdjacentHTML('beforeend', html);
+    };
+
+    window.addCabin = function(cruiseId) {
+        const container = document.getElementById(`cabinas-container-${cruiseId}`);
+        const cabinCount = container.children.length + 1;
+        const cabinId = `${cruiseId}-${cabinCount}`;
+        const html = `
+            <div class="cabin-row" id="cabin-row-${cabinId}">
+                <select id="cabina-tipo-${cabinId}">
+                    <option value="Interior">Interior</option>
+                    <option value="Vista al Mar (Exterior)">Vista al Mar (Exterior)</option>
+                    <option value="Balcón">Balcón</option>
+                    <option value="Balcón (vista al mar)">Balcón (vista al mar)</option>
+                    <option value="Balcón vista interna">Balcón vista interna</option>
+                    <option value="Vista al mar obstruida">Vista al mar obstruida</option>
+                    <option value="Suite">Suite</option>
+                </select>
+                <input type="text" id="cabina-num-${cabinId}" placeholder="Nº Cabina (Ej: Por asignar)">
+                <input type="text" id="cabina-pax-${cabinId}" placeholder="Pasajeros (Ej: 2 Adultos)">
+                <input type="text" id="cabina-precio-usd-${cabinId}" placeholder="Precio USD">
+                <input type="text" id="cabina-precio-cop-${cabinId}" placeholder="Estimado COP (Opcional)">
+                <button type="button" class="remove-cabin-btn" onclick="this.parentElement.remove()">X</button>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', html);
+    };
 
     function removeSection(sectionKey) {
         if (sectionKey.startsWith('hotel-') || sectionKey.startsWith('cruises-')) {
@@ -316,6 +378,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // --- CARGA DE IMÁGENES (CLIC O PEGAR) ---
+    let currentUploadArea = null;
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+    fileInput.onchange = async (e) => {
+        const file = e.target.files[0];
+        if(!file || !currentUploadArea) return;
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            const base64 = event.target.result;
+            const compressed = await compressImage(base64);
+            const imgId = currentUploadArea.dataset.imgId;
+            pastedImages[imgId] = compressed;
+            currentUploadArea.querySelector('img').src = compressed;
+            currentUploadArea.querySelector('img').style.display = 'block';
+            currentUploadArea.querySelector('p').style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+    };
+
     async function handlePaste(e) {
         e.preventDefault();
         const pasteArea = e.currentTarget; const imageId = pasteArea.dataset.imgId;
@@ -336,7 +419,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function addEventListenersToSection(sectionElement) {
-        sectionElement.querySelectorAll('.paste-area').forEach(area => area.addEventListener('paste', handlePaste));
+        sectionElement.querySelectorAll('.paste-area').forEach(area => {
+            area.addEventListener('paste', handlePaste);
+            area.addEventListener('click', (e) => {
+                currentUploadArea = e.currentTarget;
+                fileInput.click();
+            });
+        });
     }
 
     function initializeForm() {
@@ -350,6 +439,7 @@ document.addEventListener('DOMContentLoaded', () => {
         advisorSelect.innerHTML = '<option value="" disabled selected>Selecciona tu nombre</option>' + Object.keys(ADVISORS).map(id => `<option value="${id}">${ADVISORS[id].name}</option>`).join('');
         
         populateSelect('adultos', 1, 20, 2, 'Adulto');
+        populateSelect('jovenes', 0, 10, 0, 'Joven', 'Jóvenes');
         populateSelect('ninos', 0, 10, 0, 'Niño');
         
         document.getElementById('cotizacion-numero').value = generateQuoteNumber();
@@ -366,6 +456,28 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!form.checkValidity()) { form.reportValidity(); return; }
         if (dynamicComponentsContainer.children.length === 0) { alert('Añade al menos un componente.'); return; }
         
+        // Extraer datos de las tablas editables antes de serializar
+        document.querySelectorAll('.editable-table').forEach(table => {
+            const id = table.id;
+            const html = table.innerHTML;
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.id = `html-${id}`;
+            hiddenInput.value = html;
+            form.appendChild(hiddenInput);
+        });
+
+        // Extraer datos de las cabinas dinámicas
+        document.querySelectorAll('.cabin-row').forEach(row => {
+            const id = row.id;
+            const html = row.innerHTML;
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.id = `html-${id}`;
+            hiddenInput.value = html;
+            form.appendChild(hiddenInput);
+        });
+
         const quoteData = {
             quoteNumber: document.getElementById('cotizacion-numero').value,
             clientName: document.getElementById('nombre-completo').value,
@@ -377,7 +489,6 @@ document.addEventListener('DOMContentLoaded', () => {
             images: pastedImages
         };
 
-        // SEGURO CONTRA LÍMITE DE 1MB
         const payloadSize = JSON.stringify(quoteData).length;
         if (payloadSize > 1000000) {
             alert("⚠️ La cotización tiene demasiadas imágenes o son muy pesadas. Por favor, elimina algunas fotos e intenta de nuevo.");
@@ -433,7 +544,35 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
             keys.forEach(key => {
                 const el = document.getElementById(key);
-                if(el) el.value = data.formData[key];
+                if(el) {
+                    if(el.type === 'checkbox') el.checked = data.formData[key] === 'on' || data.formData[key] === true;
+                    else el.value = data.formData[key];
+                }
+            });
+
+            // Restaurar tablas y cabinas
+            keys.filter(k => k.startsWith('html-tabla-itinerario-')).forEach(k => {
+                const tableId = k.replace('html-', '');
+                const table = document.getElementById(tableId);
+                if(table) table.innerHTML = data.formData[k];
+            });
+
+            keys.filter(k => k.startsWith('html-cabin-row-')).forEach(k => {
+                const rowId = k.replace('html-', '');
+                const cruiseId = rowId.split('-')[2];
+                const container = document.getElementById(`cabinas-container-${cruiseId}`);
+                if(container) {
+                    const div = document.createElement('div');
+                    div.className = 'cabin-row';
+                    div.id = rowId;
+                    div.innerHTML = data.formData[k];
+                    container.appendChild(div);
+                    
+                    // Restaurar valores de los inputs dentro de la cabina
+                    div.querySelectorAll('input, select').forEach(input => {
+                        if(data.formData[input.id]) input.value = data.formData[input.id];
+                    });
+                }
             });
             
             Object.keys(pastedImages).forEach(imgId => {
@@ -449,7 +588,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 100); 
     }
 
-    // --- RENDERIZADO DEL PDF (RESTAURADO AL 100%) ---
+    // --- RENDERIZADO DEL PDF ---
     function formatCurrency(value, currency = 'COP') {
         const number = parseFloat(String(value).replace(/[^0-9.-]+/g, ""));
         if (isNaN(number)) return '';
@@ -463,39 +602,41 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function populateQuote() {
+        const showName = document.getElementById('mostrar-nombre-cliente').checked;
         const clientName = document.getElementById('nombre-completo').value;
         const quoteNumber = document.getElementById('cotizacion-numero').value;
-        const adults = document.getElementById('adultos').value;
-        const children = document.getElementById('ninos').value;
+        const adultos = document.getElementById('adultos').value;
+        const jovenes = document.getElementById('jovenes').value;
+        const ninos = document.getElementById('ninos').value;
         
-        document.getElementById('confirm-intro-text').textContent = `¡Hola, ${clientName.split(' ')[0].toUpperCase()}! He preparado estas opciones para tu próximo viaje.`;
+        if(showName && clientName) {
+            document.getElementById('confirm-intro-text').textContent = `¡Hola, ${clientName.split(' ')[0].toUpperCase()}! Te compartimos las mejores opciones que encontramos para ti.`;
+            
+            let paxText = `${adultos} Adulto${adultos > 1 ? 's' : ''}`;
+            if(jovenes > 0) paxText += `, ${jovenes} Joven${jovenes > 1 ? 'es' : ''}`;
+            if(ninos > 0) paxText += ` y ${ninos} Niño${ninos > 1 ? 's' : ''}`;
 
-        const visaStatus = document.getElementById('requiere-visa').value;
-        const visaAlert = document.getElementById('pdf-visa-alert');
-        if(visaStatus !== 'No requiere visa') {
-            visaAlert.style.display = 'block';
-            visaAlert.innerHTML = `🛂 <strong>Requisito Migratorio:</strong> ${visaStatus}`;
+            const customerBox = document.getElementById('confirm-customer-data-box');
+            customerBox.innerHTML = `<p>Para: <strong>${clientName.toUpperCase()}</strong></p><p>Pasajeros: <strong>${paxText}</strong></p><p>Nº Cotización: <strong>${quoteNumber}</strong> | Validez: <strong>${document.getElementById('validez-cupos').value}</strong></p>`;
+            customerBox.style.display = 'block';
         } else {
-            visaAlert.style.display = 'none';
+            document.getElementById('confirm-intro-text').textContent = `¡Hola! Te compartimos las mejores opciones que encontramos para ti.`;
+            document.getElementById('confirm-customer-data-box').style.display = 'none';
         }
 
-        const customerBox = document.getElementById('confirm-customer-data-box');
-        customerBox.innerHTML = `<p>Para: <strong>${clientName.toUpperCase()}</strong></p><p>Pasajeros: <strong>${adults} Adulto${adults > 1 ? 's' : ''}${children > 0 ? ` y ${children} Niño${children > 1 ? 's' : ''}` : ''}</strong></p><p>Nº Cotización: <strong>${quoteNumber}</strong> | Validez: <strong>${document.getElementById('validez-cupos').value}</strong></p>`;
-
         const advisor = ADVISORS[advisorSelect.value];
-        document.getElementById('advisor-photo').src = advisor.photoUrl;
-        document.getElementById('advisor-name').textContent = advisor.name;
-
         const whatsappLink = `https://wa.me/${advisorWhatsappInput.value}`;['advisor-whatsapp-btn', 'cta-reservar', 'cta-contactar'].forEach(id => {
             const el = document.getElementById(id);
-            const baseText = id === 'cta-reservar' ? `¡Hola ${advisor.name}! Estoy listo para reservar según la cotización *${quoteNumber}*.` : `Hola ${advisor.name}, tengo una pregunta sobre la cotización *${quoteNumber}*.`;
-            el.href = `${whatsappLink}?text=${encodeURIComponent(baseText)}`;
+            if(el) {
+                const baseText = id === 'cta-reservar' ? `¡Hola ${advisor.name}! Estoy listo para reservar según la cotización *${quoteNumber}*.` : `Hola ${advisor.name}, tengo una pregunta sobre la cotización *${quoteNumber}*.`;
+                el.href = `${whatsappLink}?text=${encodeURIComponent(baseText)}`;
+            }
         });
 
         confirmationComponentsContainer.innerHTML = '';
         let dynamicTermsHTML = '';
 
-        // 1. RENDERIZAR HOTELES (RESTAURADO CON FECHAS Y RÉGIMEN)
+        // 1. RENDERIZAR HOTELES
         if(document.querySelectorAll('.hotel-form-wrapper').length > 0) dynamicTermsHTML += TERMS_AND_CONDITIONS.hotels;
         document.querySelectorAll('.hotel-form-wrapper').forEach((form, index) => {
             const num = form.id.match(/\d+/)[0];
@@ -525,41 +666,94 @@ document.addEventListener('DOMContentLoaded', () => {
         if(document.querySelectorAll('.cruises-form-wrapper').length > 0) dynamicTermsHTML += TERMS_AND_CONDITIONS.cruises;
         document.querySelectorAll('.cruises-form-wrapper').forEach((form, index) => {
             const num = form.id.match(/\d+/)[0];
-            let galleryHTML =[1, 2, 3].map(i => pastedImages[`crucero-${num}-foto-${i}`] ? `<img src="${pastedImages[`crucero-${num}-foto-${i}`]}">` : '').join('');
-            let mapHTML = pastedImages[`crucero-${num}-mapa`] ? `<div class="single-photo-container"><img src="${pastedImages[`crucero-${num}-mapa`]}"></div>` : '';
             
+            const naviera = document.getElementById(`naviera-${num}`).value;
+            const logoUrl = NAVIERA_LOGOS[naviera] || '';
+            const logoHTML = logoUrl ? `<img src="${logoUrl}" class="naviera-logo-img" alt="${naviera}">` : `<span style="color:white; font-weight:bold;">${naviera}</span>`;
+
+            let galleryHTML =[1, 2, 3].map(i => pastedImages[`crucero-${num}-foto-${i}`] ? `<img src="${pastedImages[`crucero-${num}-foto-${i}`]}">` : '').join('');
+            
+            const showMap = document.getElementById(`switch-mapa-${num}`).checked;
+            const showTable = document.getElementById(`switch-tabla-${num}`).checked;
+            
+            let mapHTML = '';
+            if(showMap && pastedImages[`crucero-${num}-mapa`]) {
+                mapHTML = `<div class="single-photo-container"><img src="${pastedImages[`crucero-${num}-mapa`]}"></div>`;
+            }
+
+            let tableHTML = '';
+            if(showTable) {
+                const tableNode = document.getElementById(`tabla-itinerario-${num}`).cloneNode(true);
+                tableNode.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
+                tableNode.className = 'pdf-table';
+                
+                const imgPeq = pastedImages[`crucero-${num}-img-pequena`] ? `<img src="${pastedImages[`crucero-${num}-img-pequena`]}">` : '';
+                
+                tableHTML = `
+                    <div class="cruise-layout-split">
+                        ${imgPeq ? `<div class="cruise-layout-left">${imgPeq}</div>` : ''}
+                        <div class="cruise-layout-right">${tableNode.outerHTML}</div>
+                    </div>
+                `;
+            }
+
+            // Cabinas
+            const cabinContainer = document.getElementById(`cabinas-container-${num}`);
+            let cabinsHTML = '';
+            if(cabinContainer) {
+                cabinContainer.querySelectorAll('.cabin-row').forEach(row => {
+                    const id = row.id.replace('cabin-row-', '');
+                    const tipo = document.getElementById(`cabina-tipo-${id}`).value;
+                    const numCab = document.getElementById(`cabina-num-${id}`).value;
+                    const pax = document.getElementById(`cabina-pax-${id}`).value;
+                    const pUsd = document.getElementById(`cabina-precio-usd-${id}`).value;
+                    const pCop = document.getElementById(`cabina-precio-cop-${id}`).value;
+                    
+                    cabinsHTML += `
+                        <div class="pdf-cabin-item">
+                            <div class="cabin-info">
+                                <strong>${tipo}</strong> | Cabina: ${numCab} | Para: ${pax}
+                            </div>
+                            <div class="cabin-price">
+                                USD ${pUsd} ${pCop ? `<br><span style="font-size:11px; color:#666; font-weight:normal;">~ COP ${pCop}</span>` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
             confirmationComponentsContainer.innerHTML += `
                 <div class="quote-option-box">
+                    <div class="cruise-custom-title">${document.getElementById(`titulo-crucero-${num}`).value}</div>
                     <div class="option-header" style="background-color: var(--c-brand-dark-accent);">
-                        <h3>CRUCERO ${index + 1} - ${document.getElementById(`naviera-${num}`).value}</h3>
-                        <span class="option-price">${formatCurrency(document.getElementById(`valor-crucero-${num}`).value, document.getElementById(`moneda-crucero-${num}`).value)}</span>
+                        <h3>CRUCERO ${index + 1}</h3>
+                        ${logoHTML}
                     </div>
                     <div class="option-body">
                         <h4 style="text-align: center; font-size: 24px; margin-bottom: 20px;">🚢 ${document.getElementById(`barco-${num}`).value}</h4>
+                        
                         ${mapHTML}
+                        ${tableHTML}
+                        
                         <div class="photo-gallery">${galleryHTML}</div>
                         
                         <div class="cruise-specs-grid">
-                            <div class="cruise-spec-item">${ICONS.destination} <div><strong>Embarque:</strong><span>${document.getElementById(`puerto-${num}`).value}</span></div></div>
-                            <div class="cruise-spec-item">${ICONS.calendar} <div><strong>Zarpe:</strong><span>${formatDate(document.getElementById(`fecha-zarpe-${num}`).value)}</span></div></div>
+                            <div class="cruise-spec-item">${ICONS.destination} <div><strong>Puerto de Embarque:</strong><span>${document.getElementById(`puerto-${num}`).value}</span></div></div>
+                            <div class="cruise-spec-item">${ICONS.calendar} <div><strong>Fecha de Embarque:</strong><span>${formatDate(document.getElementById(`fecha-zarpe-${num}`).value)}</span></div></div>
                             <div class="cruise-spec-item">${ICONS.moon} <div><strong>Noches:</strong><span>${document.getElementById(`noches-crucero-${num}`).value}</span></div></div>
-                            <div class="cruise-spec-item">${ICONS.bed} <div><strong>Cabina:</strong><span>${document.getElementById(`cabina-${num}`).value}</span></div></div>
                         </div>
 
                         <div class="cruise-inclusions">
-                            <strong style="color: var(--c-brand-primary); display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">${ICONS.check} INCLUSIONES Y PROPINAS:</strong>
-                            <p style="margin: 0; font-size: 14px; color: var(--c-dark-blue); font-weight: 600;">${document.getElementById(`inclusiones-${num}`).value} | Propinas: ${document.getElementById(`propinas-${num}`).value}</p>
+                            <strong style="color: var(--c-brand-primary); display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">${ICONS.check} QUÉ INCLUYE TU CRUCERO:</strong>
+                            <p style="margin: 0; font-size: 14px; color: var(--c-dark-blue); font-weight: 600;">${document.getElementById(`inclusiones-${num}`).value}</p>
                         </div>
 
-                        <div class="cruise-itinerary">
-                            <strong style="color: var(--c-dark-blue); display: block; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px;">📍 ITINERARIO DEL VIAJE:</strong>
-                            <p>${document.getElementById(`itinerario-${num}`).value}</p>
-                        </div>
+                        ${cabinsHTML ? `<div class="pdf-cabins-list">${cabinsHTML}</div>` : ''}
                     </div>
                 </div>`;
         });
 
-        // 3. RENDERIZAR VUELOS (RESTAURADO CON OPCIONES Y PRECIOS)
+        // 3. RENDERIZAR VUELOS
         if (document.getElementById('flights-form-wrapper')) {
             dynamicTermsHTML += TERMS_AND_CONDITIONS.flights;
             const departureCity = document.getElementById('ciudad-salida').value;
@@ -587,7 +781,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>`;
         }
 
-        // 4. RENDERIZAR TOURS Y TRASLADOS (RESTAURADO CON FOTOS Y PRECIOS)
+        // 4. RENDERIZAR TOURS Y TRASLADOS
         ['tours', 'transfers'].forEach(type => {
             if (document.getElementById(`${type}-form-wrapper`)) {
                 if (type === 'transfers') dynamicTermsHTML += TERMS_AND_CONDITIONS.transfers;
@@ -612,9 +806,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // INYECCIÓN DE LA BARRA DE PAGOS
-        document.getElementById('confirm-pago-reserva').textContent = formatCurrency(document.getElementById('pago-reserva').value);
-        document.getElementById('confirm-pago-segundo').textContent = formatCurrency(document.getElementById('pago-segundo').value);
-        document.getElementById('confirm-fecha-limite').textContent = document.getElementById('fecha-limite-pago').value;
+        document.getElementById('confirm-pago-reserva').textContent = formatCurrency(document.getElementById('pago-reserva').value, 'USD');
+        document.getElementById('confirm-fecha-limite').textContent = formatDate(document.getElementById('fecha-limite-pago').value);
+        document.getElementById('confirm-valor-total-reserva').textContent = document.getElementById('valor-total-reserva').value;
+        document.getElementById('confirm-info-pago').textContent = document.getElementById('info-pago-personalizada').value;
         document.getElementById('confirm-no-incluye').textContent = document.getElementById('no-incluye').value;
 
         document.getElementById('confirm-terms-content').innerHTML = dynamicTermsHTML + GENERAL_TERMS;
