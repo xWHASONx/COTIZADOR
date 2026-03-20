@@ -1,5 +1,5 @@
 /* ==========================================
-   COTIZADOR PRO - CYAN TRAVEL (VERSIÓN FINAL CORREGIDA)
+   COTIZADOR PRO - CYAN TRAVEL (VERSIÓN DEFINITIVA Y DEPURADA)
    ========================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -15,7 +15,11 @@ document.addEventListener('DOMContentLoaded', () => {
         messagingSenderId: "267039635379",
         appId: "1:267039635379:web:3cce7223ae64e84738bdc6"
     };
-    firebase.initializeApp(firebaseConfig);
+    
+    // Initialize Firebase safely
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
     const db = firebase.firestore();
 
     // --- VARIABLES GLOBALES ---
@@ -129,43 +133,49 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- LÓGICA DE LOGIN ---
-    loginForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        if (passwordInput.value.trim() === ACCESS_PASSWORD) {
-            loginOverlay.style.display = 'none';
-            mainWrapper.style.display = 'block';
-            await fetchTRM();
-            loadDashboard();
-        } else {
-            document.getElementById('login-error').style.display = 'block';
-            passwordInput.value = '';
-        }
-    });
+    if(loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (passwordInput.value.trim() === ACCESS_PASSWORD) {
+                loginOverlay.style.display = 'none';
+                mainWrapper.style.display = 'block';
+                await fetchTRM();
+                loadDashboard();
+            } else {
+                document.getElementById('login-error').style.display = 'block';
+                passwordInput.value = '';
+            }
+        });
+    }
 
     // --- DASHBOARD Y FIREBASE ---
     function showView(view) {
-        dashboardSection.style.display = view === 'dashboard' ? 'block' : 'none';
-        formTitleSection.style.display = view === 'form' ? 'block' : 'none';
-        formSection.style.display = view === 'form' ? 'block' : 'none';
-        confirmationSection.style.display = view === 'pdf' ? 'block' : 'none';
+        if(dashboardSection) dashboardSection.style.display = view === 'dashboard' ? 'block' : 'none';
+        if(formTitleSection) formTitleSection.style.display = view === 'form' ? 'block' : 'none';
+        if(formSection) formSection.style.display = view === 'form' ? 'block' : 'none';
+        if(confirmationSection) confirmationSection.style.display = view === 'pdf' ? 'block' : 'none';
         window.scrollTo(0, 0);
     }
 
     async function loadDashboard() {
         showView('dashboard');
+        if(!quotesList) return;
         quotesList.innerHTML = '<p>Cargando cotizaciones...</p>';
         try {
             const snapshot = await db.collection('cotizaciones').orderBy('createdAt', 'desc').limit(30).get();
             renderQuotes(snapshot.docs);
             
-            searchQuoteInput.addEventListener('input', (e) => {
-                const term = e.target.value.toLowerCase();
-                const filtered = snapshot.docs.filter(doc => {
-                    const data = doc.data();
-                    return data.clientName.toLowerCase().includes(term) || data.quoteNumber.toLowerCase().includes(term);
+            if(searchQuoteInput) {
+                searchQuoteInput.addEventListener('input', (e) => {
+                    const term = e.target.value.toLowerCase();
+                    const filtered = snapshot.docs.filter(doc => {
+                        const data = doc.data();
+                        return (data.clientName && data.clientName.toLowerCase().includes(term)) || 
+                               (data.quoteNumber && data.quoteNumber.toLowerCase().includes(term));
+                    });
+                    renderQuotes(filtered);
                 });
-                renderQuotes(filtered);
-            });
+            }
         } catch (error) {
             quotesList.innerHTML = '<p style="color:red;">Error al cargar datos. Por favor, desactiva tu bloqueador de anuncios (AdBlock/Brave Shields) para que la base de datos funcione.</p>';
             console.error(error);
@@ -173,6 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderQuotes(docs) {
+        if(!quotesList) return;
         quotesList.innerHTML = '';
         if (docs.length === 0) { quotesList.innerHTML = '<p>No hay cotizaciones aún.</p>'; return; }
         
@@ -186,9 +197,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const card = document.createElement('div');
             card.className = 'quote-card';
             card.innerHTML = `
-                <span class="quote-badge">${data.quoteNumber}</span>
+                <span class="quote-badge">${data.quoteNumber || 'N/A'}</span>
                 <h3>${data.clientName || 'Cliente sin nombre'}</h3>
-                <p>Asesor: ${data.advisorName}</p>
+                <p>Asesor: ${data.advisorName || 'N/A'}</p>
                 <span class="quote-date">Creada: ${date}</span>
                 
                 <select class="status-select" data-id="${doc.id}" style="width: 100%; margin-top: 10px; padding: 8px; border-radius: 8px; border: none; color: white; font-weight: bold; background-color: ${statusColors[currentStatus]}; cursor: pointer;">
@@ -200,36 +211,44 @@ document.addEventListener('DOMContentLoaded', () => {
                 <button class="btn-duplicate" data-id="${doc.id}">Duplicar Cotización</button>
             `;
             
-            card.querySelector('.status-select').addEventListener('change', async (e) => {
-                const newStatus = e.target.value;
-                e.target.style.backgroundColor = statusColors[newStatus];
-                try {
-                    await db.collection('cotizaciones').doc(doc.id).update({ status: newStatus });
-                } catch (error) {
-                    console.error("Error actualizando estado:", error);
-                    alert("No se pudo actualizar el estado.");
-                }
-            });
+            const statusSelect = card.querySelector('.status-select');
+            if(statusSelect) {
+                statusSelect.addEventListener('change', async (e) => {
+                    const newStatus = e.target.value;
+                    e.target.style.backgroundColor = statusColors[newStatus];
+                    try {
+                        await db.collection('cotizaciones').doc(doc.id).update({ status: newStatus });
+                    } catch (error) {
+                        console.error("Error actualizando estado:", error);
+                        alert("No se pudo actualizar el estado.");
+                    }
+                });
+            }
 
             card.addEventListener('click', (e) => {
                 if(e.target.classList.contains('btn-duplicate') || e.target.classList.contains('status-select')) return; 
                 loadQuoteIntoForm(doc.id, data);
             });
 
-            card.querySelector('.btn-duplicate').addEventListener('click', () => {
-                const duplicatedData = { ...data, quoteNumber: generateQuoteNumber(), status: 'Pendiente' };
-                loadQuoteIntoForm(null, duplicatedData); 
-            });
+            const btnDuplicate = card.querySelector('.btn-duplicate');
+            if(btnDuplicate) {
+                btnDuplicate.addEventListener('click', () => {
+                    const duplicatedData = { ...data, quoteNumber: generateQuoteNumber(), status: 'Pendiente' };
+                    loadQuoteIntoForm(null, duplicatedData); 
+                });
+            }
 
             quotesList.appendChild(card);
         });
     }
 
-    btnCreateNew.addEventListener('click', () => {
-        currentQuoteId = null;
-        initializeForm();
-        showView('form');
-    });
+    if(btnCreateNew) {
+        btnCreateNew.addEventListener('click', () => {
+            currentQuoteId = null;
+            initializeForm();
+            showView('form');
+        });
+    }
 
     function generateQuoteNumber() {
         const now = new Date();
@@ -237,9 +256,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- LÓGICA DEL FORMULARIO ---
-    document.getElementById('mostrar-nombre-cliente').addEventListener('change', (e) => {
-        document.getElementById('campo-nombre-cliente').style.display = e.target.checked ? 'flex' : 'none';
-    });
+    const toggleNombreCliente = document.getElementById('mostrar-nombre-cliente');
+    if(toggleNombreCliente) {
+        toggleNombreCliente.addEventListener('change', (e) => {
+            const campo = document.getElementById('campo-nombre-cliente');
+            if(campo) campo.style.display = e.target.checked ? 'flex' : 'none';
+        });
+    }
 
     function addSection(sectionKey) {
         let templateId = `template-${sectionKey}`;
@@ -256,32 +279,53 @@ document.addEventListener('DOMContentLoaded', () => {
         tempDiv.innerHTML = cloneHtml;
         const cloneNode = tempDiv.firstElementChild;
 
-        dynamicComponentsContainer.appendChild(cloneNode);
+        if(dynamicComponentsContainer) {
+            dynamicComponentsContainer.appendChild(cloneNode);
+        }
 
         if (sectionKey === 'hotel') {
             populateSelect(`cantidad-noches-${counter}`, 1, 30, 4, 'noche');
             populateSelect(`cantidad-habitaciones-${counter}`, 1, 10, 1, 'habitación', 'habitaciones');
-            if (counter === 1) document.querySelector(`.add-section-btn[data-section="hotel"]`).style.display = 'none';
-            if (counter > 1) document.querySelector(`#hotel-form-wrapper-${counter - 1} .add-subsection-btn`).style.display = 'none';
+            const btnAdd = document.querySelector(`.add-section-btn[data-section="hotel"]`);
+            if (counter === 1 && btnAdd) btnAdd.style.display = 'none';
+            if (counter > 1) {
+                const prevBtn = document.querySelector(`#hotel-form-wrapper-${counter - 1} .add-subsection-btn`);
+                if(prevBtn) prevBtn.style.display = 'none';
+            }
         }
         
         if (sectionKey === 'cruises') {
             populateSelect(`noches-crucero-${counter}`, 1, 30, 7, 'noche');
-            document.getElementById(`trm-crucero-${counter}`).value = currentTRM;
+            const trmInput = document.getElementById(`trm-crucero-${counter}`);
+            if(trmInput) trmInput.value = currentTRM;
             
-            document.getElementById(`switch-mapa-${counter}`).addEventListener('change', (e) => {
-                document.getElementById(`container-mapa-${counter}`).style.display = e.target.checked ? 'flex' : 'none';
-            });
-            document.getElementById(`switch-tabla-${counter}`).addEventListener('change', (e) => {
-                document.getElementById(`container-tabla-${counter}`).style.display = e.target.checked ? 'block' : 'none';
-            });
+            const switchMapa = document.getElementById(`switch-mapa-${counter}`);
+            if(switchMapa) {
+                switchMapa.addEventListener('change', (e) => {
+                    const container = document.getElementById(`container-mapa-${counter}`);
+                    if(container) container.style.display = e.target.checked ? 'flex' : 'none';
+                });
+            }
+            
+            const switchTabla = document.getElementById(`switch-tabla-${counter}`);
+            if(switchTabla) {
+                switchTabla.addEventListener('change', (e) => {
+                    const container = document.getElementById(`container-tabla-${counter}`);
+                    if(container) container.style.display = e.target.checked ? 'block' : 'none';
+                });
+            }
 
-            if (counter === 1) document.querySelector(`.add-section-btn[data-section="cruises"]`).style.display = 'none';
-            if (counter > 1) document.querySelector(`#cruises-form-wrapper-${counter - 1} .add-subsection-btn`).style.display = 'none';
+            const btnAdd = document.querySelector(`.add-section-btn[data-section="cruises"]`);
+            if (counter === 1 && btnAdd) btnAdd.style.display = 'none';
+            if (counter > 1) {
+                const prevBtn = document.querySelector(`#cruises-form-wrapper-${counter - 1} .add-subsection-btn`);
+                if(prevBtn) prevBtn.style.display = 'none';
+            }
         }
 
         if (['flights', 'tours', 'transfers'].includes(sectionKey)) {
-            document.querySelector(`.add-section-btn[data-section="${sectionKey}"]`).style.display = 'none';
+            const btnAdd = document.querySelector(`.add-section-btn[data-section="${sectionKey}"]`);
+            if(btnAdd) btnAdd.style.display = 'none';
         }
 
         addEventListenersToSection(cloneNode);
@@ -300,7 +344,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.addRow = function(tableId) {
         const tbody = document.querySelector(`#${tableId} tbody`);
-        const cols = tbody.rows[0].cells.length;
+        if(!tbody) return;
+        const cols = tbody.rows[0] ? tbody.rows[0].cells.length : 4;
         let html = '<tr>';
         for(let i=0; i<cols; i++) html += '<td contenteditable="true">-</td>';
         html += '</tr>';
@@ -309,6 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.addCabin = function(cruiseId) {
         const container = document.getElementById(`cabinas-container-${cruiseId}`);
+        if(!container) return;
         const cabinCount = container.children.length + 1;
         const cabinId = `${cruiseId}-${cabinCount}`;
         const html = `
@@ -340,42 +386,49 @@ document.addEventListener('DOMContentLoaded', () => {
             if (wrapper) wrapper.remove();
             
             if (document.querySelectorAll(`.${type}-form-wrapper`).length === 0) {
-                document.querySelector(`.add-section-btn[data-section="${type === 'hotel' ? 'hotel' : 'cruises'}"]`).style.display = 'block';
+                const btnAdd = document.querySelector(`.add-section-btn[data-section="${type === 'hotel' ? 'hotel' : 'cruises'}"]`);
+                if(btnAdd) btnAdd.style.display = 'block';
                 if(type === 'hotel') hotelCounter = 0;
                 if(type === 'cruises') cruiseCounter = 0;
             } else {
                 const lastItem = Array.from(document.querySelectorAll(`.${type}-form-wrapper`)).pop();
-                lastItem.querySelector('.add-subsection-btn').style.display = 'block';
+                if(lastItem) {
+                    const btnSub = lastItem.querySelector('.add-subsection-btn');
+                    if(btnSub) btnSub.style.display = 'block';
+                }
             }
         } else {
             const wrapper = document.getElementById(`${sectionKey}-form-wrapper`);
             if (wrapper) {
                 wrapper.remove();
-                document.querySelector(`.add-section-btn[data-section="${sectionKey}"]`).style.display = 'block';
+                const btnAdd = document.querySelector(`.add-section-btn[data-section="${sectionKey}"]`);
+                if(btnAdd) btnAdd.style.display = 'block';
             }
         }
     }
 
-    form.addEventListener('click', e => {
-        const { target } = e;
-        const { section, subsection } = target.dataset;
-        if (target.matches('.add-section-btn')) addSection(section);
-        if (target.matches('.remove-section-btn')) {
-            if (target.dataset.subsection) {
-                const wrapper = document.getElementById(`${target.dataset.subsection}-form-wrapper`);
-                if(wrapper) { wrapper.style.display = 'none'; target.style.display = 'block'; }
-            } else {
-                removeSection(section);
+    if(form) {
+        form.addEventListener('click', e => {
+            const { target } = e;
+            const { section, subsection } = target.dataset;
+            if (target.matches('.add-section-btn')) addSection(section);
+            if (target.matches('.remove-section-btn')) {
+                if (target.dataset.subsection) {
+                    const wrapper = document.getElementById(`${target.dataset.subsection}-form-wrapper`);
+                    if(wrapper) { wrapper.style.display = 'none'; target.style.display = 'block'; }
+                } else {
+                    removeSection(section);
+                }
             }
-        }
-        if (target.matches('.add-subsection-btn')) {
-            if(section === 'hotel' || section === 'cruises') addSection(section);
-            else {
-                const wrapper = document.getElementById(`${subsection}-form-wrapper`);
-                if(wrapper) { wrapper.style.display = 'block'; target.style.display = 'none'; }
+            if (target.matches('.add-subsection-btn')) {
+                if(section === 'hotel' || section === 'cruises') addSection(section);
+                else {
+                    const wrapper = document.getElementById(`${subsection}-form-wrapper`);
+                    if(wrapper) { wrapper.style.display = 'block'; target.style.display = 'none'; }
+                }
             }
-        }
-    });
+        });
+    }
 
     // --- CARGA DE IMÁGENES ---
     let currentUploadArea = null;
@@ -391,16 +444,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const compressed = await compressImage(base64);
             const imgId = currentUploadArea.dataset.imgId;
             pastedImages[imgId] = compressed;
-            currentUploadArea.querySelector('img').src = compressed;
-            currentUploadArea.querySelector('img').style.display = 'block';
-            currentUploadArea.querySelector('p').style.display = 'none';
+            const imgEl = currentUploadArea.querySelector('img');
+            const pEl = currentUploadArea.querySelector('p');
+            if(imgEl) { imgEl.src = compressed; imgEl.style.display = 'block'; }
+            if(pEl) pEl.style.display = 'none';
         };
         reader.readAsDataURL(file);
     };
 
     async function handlePaste(e) {
         e.preventDefault();
-        const pasteArea = e.currentTarget; const imageId = pasteArea.dataset.imgId;
+        const pasteArea = e.currentTarget; 
+        const imageId = pasteArea.dataset.imgId;
         const item = Array.from(e.clipboardData.items).find(i => i.type.startsWith('image/'));
         if (item) {
             const reader = new FileReader();
@@ -408,9 +463,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const base64Image = event.target.result;
                 const compressedImage = await compressImage(base64Image); 
                 const previewImg = pasteArea.querySelector('img');
-                previewImg.src = compressedImage;
-                previewImg.style.display = 'block';
-                pasteArea.querySelector('p').style.display = 'none';
+                const pEl = pasteArea.querySelector('p');
+                if(previewImg) { previewImg.src = compressedImage; previewImg.style.display = 'block'; }
+                if(pEl) pEl.style.display = 'none';
                 pastedImages[imageId] = compressedImage;
             };
             reader.readAsDataURL(item.getAsFile());
@@ -428,98 +483,113 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function initializeForm() {
-        form.reset();
+        if(form) form.reset();
         pastedImages = {};
         hotelCounter = 0;
         cruiseCounter = 0;
-        dynamicComponentsContainer.innerHTML = '';
+        if(dynamicComponentsContainer) dynamicComponentsContainer.innerHTML = '';
         document.querySelectorAll('.add-section-btn').forEach(btn => btn.style.display = 'block');
         
-        advisorSelect.innerHTML = '<option value="" disabled selected>Selecciona tu nombre</option>' + Object.keys(ADVISORS).map(id => `<option value="${id}">${ADVISORS[id].name}</option>`).join('');
+        if(advisorSelect) {
+            advisorSelect.innerHTML = '<option value="" disabled selected>Selecciona tu nombre</option>' + Object.keys(ADVISORS).map(id => `<option value="${id}">${ADVISORS[id].name}</option>`).join('');
+        }
         
         populateSelect('adultos', 1, 20, 2, 'Adulto');
         populateSelect('jovenes', 0, 10, 0, 'Joven', 'Jóvenes');
         populateSelect('ninos', 0, 10, 0, 'Niño');
         
-        document.getElementById('cotizacion-numero').value = generateQuoteNumber();
+        const quoteNumInput = document.getElementById('cotizacion-numero');
+        if(quoteNumInput) quoteNumInput.value = generateQuoteNumber();
     }
 
-    advisorSelect.addEventListener('change', () => {
-        const selectedAdvisor = ADVISORS[advisorSelect.value];
-        if (selectedAdvisor) advisorWhatsappInput.value = selectedAdvisor.defaultWhatsapp;
-    });
+    if(advisorSelect) {
+        advisorSelect.addEventListener('change', () => {
+            const selectedAdvisor = ADVISORS[advisorSelect.value];
+            if (selectedAdvisor && advisorWhatsappInput) {
+                advisorWhatsappInput.value = selectedAdvisor.defaultWhatsapp;
+            }
+        });
+    }
 
     // --- GUARDAR EN FIREBASE Y GENERAR PDF ---
-    form.addEventListener('submit', async e => { 
-        e.preventDefault(); 
-        if (!form.checkValidity()) { form.reportValidity(); return; }
-        if (dynamicComponentsContainer.children.length === 0) { alert('Añade al menos un componente.'); return; }
-        
-        document.querySelectorAll('.editable-table').forEach(table => {
-            const id = table.id;
-            const html = table.innerHTML;
-            let hiddenInput = document.getElementById(`html-${id}`);
-            if(!hiddenInput) {
-                hiddenInput = document.createElement('input');
-                hiddenInput.type = 'hidden';
-                hiddenInput.id = `html-${id}`;
-                form.appendChild(hiddenInput);
-            }
-            hiddenInput.value = html;
-        });
-
-        document.querySelectorAll('.cabin-row').forEach(row => {
-            const id = row.id;
-            const html = row.innerHTML;
-            let hiddenInput = document.getElementById(`html-${id}`);
-            if(!hiddenInput) {
-                hiddenInput = document.createElement('input');
-                hiddenInput.type = 'hidden';
-                hiddenInput.id = `html-${id}`;
-                form.appendChild(hiddenInput);
-            }
-            hiddenInput.value = html;
-        });
-
-        const quoteData = {
-            quoteNumber: document.getElementById('cotizacion-numero').value,
-            clientName: document.getElementById('nombre-completo').value,
-            advisorId: advisorSelect.value,
-            advisorName: ADVISORS[advisorSelect.value].name,
-            status: 'Pendiente', 
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            formData: serializeForm(form),
-            images: pastedImages
-        };
-
-        const payloadSize = JSON.stringify(quoteData).length;
-        if (payloadSize > 1000000) {
-            alert("⚠️ La cotización tiene demasiadas imágenes o son muy pesadas. Por favor, elimina algunas fotos e intenta de nuevo.");
-            return;
-        }
-
-        try {
-            document.getElementById('loader-overlay').style.display = 'flex';
-            document.getElementById('loader-text').textContent = "Guardando en la nube...";
-            
-            if (currentQuoteId) {
-                delete quoteData.createdAt; 
-                delete quoteData.status; 
-                await db.collection('cotizaciones').doc(currentQuoteId).update(quoteData);
-            } else {
-                const docRef = await db.collection('cotizaciones').add(quoteData);
-                currentQuoteId = docRef.id;
+    if(form) {
+        form.addEventListener('submit', async e => { 
+            e.preventDefault(); 
+            if (!form.checkValidity()) { form.reportValidity(); return; }
+            if (dynamicComponentsContainer && dynamicComponentsContainer.children.length === 0) { 
+                alert('Añade al menos un componente.'); 
+                return; 
             }
             
-            populateQuote(); 
-            showView('pdf');
-        } catch (error) {
-            console.error("Error guardando:", error);
-            alert("Hubo un error guardando la cotización. Revisa tu conexión y asegúrate de no tener bloqueadores de anuncios activos.");
-        } finally {
-            document.getElementById('loader-overlay').style.display = 'none';
-        }
-    });
+            document.querySelectorAll('.editable-table').forEach(table => {
+                const id = table.id;
+                const html = table.innerHTML;
+                let hiddenInput = document.getElementById(`html-${id}`);
+                if(!hiddenInput) {
+                    hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.id = `html-${id}`;
+                    form.appendChild(hiddenInput);
+                }
+                hiddenInput.value = html;
+            });
+
+            document.querySelectorAll('.cabin-row').forEach(row => {
+                const id = row.id;
+                const html = row.innerHTML;
+                let hiddenInput = document.getElementById(`html-${id}`);
+                if(!hiddenInput) {
+                    hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.id = `html-${id}`;
+                    form.appendChild(hiddenInput);
+                }
+                hiddenInput.value = html;
+            });
+
+            const quoteData = {
+                quoteNumber: document.getElementById('cotizacion-numero') ? document.getElementById('cotizacion-numero').value : '',
+                clientName: document.getElementById('nombre-completo') ? document.getElementById('nombre-completo').value : '',
+                advisorId: advisorSelect ? advisorSelect.value : '',
+                advisorName: (advisorSelect && ADVISORS[advisorSelect.value]) ? ADVISORS[advisorSelect.value].name : '',
+                status: 'Pendiente', 
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                formData: serializeForm(form),
+                images: pastedImages
+            };
+
+            const payloadSize = JSON.stringify(quoteData).length;
+            if (payloadSize > 1000000) {
+                alert("⚠️ La cotización tiene demasiadas imágenes o son muy pesadas. Por favor, elimina algunas fotos e intenta de nuevo.");
+                return;
+            }
+
+            try {
+                const loader = document.getElementById('loader-overlay');
+                const loaderText = document.getElementById('loader-text');
+                if(loader) loader.style.display = 'flex';
+                if(loaderText) loaderText.textContent = "Guardando en la nube...";
+                
+                if (currentQuoteId) {
+                    delete quoteData.createdAt; 
+                    delete quoteData.status; 
+                    await db.collection('cotizaciones').doc(currentQuoteId).update(quoteData);
+                } else {
+                    const docRef = await db.collection('cotizaciones').add(quoteData);
+                    currentQuoteId = docRef.id;
+                }
+                
+                populateQuote(); 
+                showView('pdf');
+            } catch (error) {
+                console.error("Error guardando:", error);
+                alert("Hubo un error guardando la cotización. Revisa tu conexión y asegúrate de no tener bloqueadores de anuncios activos.");
+            } finally {
+                const loader = document.getElementById('loader-overlay');
+                if(loader) loader.style.display = 'none';
+            }
+        });
+    }
 
     function serializeForm(formNode) {
         const obj = {};
@@ -579,9 +649,10 @@ document.addEventListener('DOMContentLoaded', () => {
             Object.keys(pastedImages).forEach(imgId => {
                 const pasteArea = document.querySelector(`[data-img-id="${imgId}"]`);
                 if(pasteArea) {
-                    pasteArea.querySelector('img').src = pastedImages[imgId];
-                    pasteArea.querySelector('img').style.display = 'block';
-                    pasteArea.querySelector('p').style.display = 'none';
+                    const imgEl = pasteArea.querySelector('img');
+                    const pEl = pasteArea.querySelector('p');
+                    if(imgEl) { imgEl.src = pastedImages[imgId]; imgEl.style.display = 'block'; }
+                    if(pEl) pEl.style.display = 'none';
                 }
             });
             
@@ -591,6 +662,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- RENDERIZADO DEL PDF ---
     function formatCurrency(value, currency = 'COP') {
+        if(!value) return '';
         const number = parseFloat(String(value).replace(/[^0-9.-]+/g, ""));
         if (isNaN(number)) return '';
         return number.toLocaleString(currency === 'COP' ? 'es-CO' : 'en-US', { style: 'currency', currency, minimumFractionDigits: 0 });
@@ -603,30 +675,42 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function populateQuote() {
-        const showName = document.getElementById('mostrar-nombre-cliente').checked;
-        const clientName = document.getElementById('nombre-completo').value;
-        const quoteNumber = document.getElementById('cotizacion-numero').value;
-        const adultos = document.getElementById('adultos').value;
-        const jovenes = document.getElementById('jovenes').value;
-        const ninos = document.getElementById('ninos').value;
+        const showNameEl = document.getElementById('mostrar-nombre-cliente');
+        const showName = showNameEl ? showNameEl.checked : true;
+        const clientName = document.getElementById('nombre-completo') ? document.getElementById('nombre-completo').value : '';
+        const quoteNumber = document.getElementById('cotizacion-numero') ? document.getElementById('cotizacion-numero').value : '';
+        const adultos = document.getElementById('adultos') ? document.getElementById('adultos').value : '0';
+        const jovenes = document.getElementById('jovenes') ? document.getElementById('jovenes').value : '0';
+        const ninos = document.getElementById('ninos') ? document.getElementById('ninos').value : '0';
         
+        const introTextEl = document.getElementById('confirm-intro-text');
+        const customerBox = document.getElementById('confirm-customer-data-box');
+
         if(showName && clientName) {
-            document.getElementById('confirm-intro-text').textContent = `¡Hola, ${clientName.split(' ')[0].toUpperCase()}! Te compartimos las mejores opciones que encontramos para ti.`;
+            if(introTextEl) introTextEl.textContent = `¡Hola, ${clientName.split(' ')[0].toUpperCase()}! Te compartimos las mejores opciones que encontramos para ti.`;
             
             let paxText = `${adultos} Adulto${adultos > 1 ? 's' : ''}`;
             if(jovenes > 0) paxText += `, ${jovenes} Joven${jovenes > 1 ? 'es' : ''}`;
             if(ninos > 0) paxText += ` y ${ninos} Niño${ninos > 1 ? 's' : ''}`;
 
-            const customerBox = document.getElementById('confirm-customer-data-box');
-            customerBox.innerHTML = `<p>Para: <strong>${clientName.toUpperCase()}</strong></p><p>Pasajeros: <strong>${paxText}</strong></p><p>Nº Cotización: <strong>${quoteNumber}</strong> | Validez: <strong>${document.getElementById('validez-cupos').value}</strong></p>`;
-            customerBox.style.display = 'block';
+            const validez = document.getElementById('validez-cupos') ? document.getElementById('validez-cupos').value : '';
+            if(customerBox) {
+                customerBox.innerHTML = `<p>Para: <strong>${clientName.toUpperCase()}</strong></p><p>Pasajeros: <strong>${paxText}</strong></p><p>Nº Cotización: <strong>${quoteNumber}</strong> | Validez: <strong>${validez}</strong></p>`;
+                customerBox.style.display = 'block';
+            }
         } else {
-            document.getElementById('confirm-intro-text').textContent = `¡Hola! Te compartimos las mejores opciones que encontramos para ti.`;
-            document.getElementById('confirm-customer-data-box').style.display = 'none';
+            if(introTextEl) introTextEl.textContent = `¡Hola! Te compartimos las mejores opciones que encontramos para ti.`;
+            if(customerBox) customerBox.style.display = 'none';
         }
 
-        const advisor = ADVISORS[advisorSelect.value];
-        const whatsappLink = `https://wa.me/${advisorWhatsappInput.value}`;
+        const advisor = (advisorSelect && ADVISORS[advisorSelect.value]) ? ADVISORS[advisorSelect.value] : {name: '', photoUrl: ''};
+        const advisorPhoto = document.getElementById('advisor-photo');
+        const advisorNameEl = document.getElementById('advisor-name');
+        if(advisorPhoto) advisorPhoto.src = advisor.photoUrl;
+        if(advisorNameEl) advisorNameEl.textContent = advisor.name;
+
+        const wppInput = document.getElementById('whatsapp-asesor');
+        const whatsappLink = wppInput ? `https://wa.me/${wppInput.value}` : '#';
         
         const btnIds = ['advisor-whatsapp-btn', 'cta-reservar', 'cta-contactar'];
         btnIds.forEach(id => {
@@ -637,48 +721,64 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        confirmationComponentsContainer.innerHTML = '';
+        if(confirmationComponentsContainer) confirmationComponentsContainer.innerHTML = '';
         let dynamicTermsHTML = '';
 
         // 1. RENDERIZAR HOTELES
-        if(document.querySelectorAll('.hotel-form-wrapper').length > 0) dynamicTermsHTML += TERMS_AND_CONDITIONS.hotels;
-        document.querySelectorAll('.hotel-form-wrapper').forEach((form, index) => {
+        const hotelForms = document.querySelectorAll('.hotel-form-wrapper');
+        if(hotelForms.length > 0) dynamicTermsHTML += TERMS_AND_CONDITIONS.hotels;
+        hotelForms.forEach((form, index) => {
             const num = form.id.match(/\d+/)[0];
             let galleryHTML =[1, 2, 3].map(i => pastedImages[`hotel-${num}-foto-${i}`] ? `<img src="${pastedImages[`hotel-${num}-foto-${i}`]}">` : '').join('');
             
+            const destino = document.getElementById(`destino-${num}`) ? document.getElementById(`destino-${num}`).value : '';
+            const fechaViaje = document.getElementById(`fecha-viaje-${num}`) ? document.getElementById(`fecha-viaje-${num}`).value : '';
+            const nochesSel = document.getElementById(`cantidad-noches-${num}`);
+            const noches = nochesSel ? nochesSel.options[nochesSel.selectedIndex].text : '';
+            const habSel = document.getElementById(`cantidad-habitaciones-${num}`);
+            const habitaciones = habSel ? habSel.options[habSel.selectedIndex].text : '';
+            const regimen = document.getElementById(`regimen-${num}`) ? document.getElementById(`regimen-${num}`).value : '';
+            const hotelName = document.getElementById(`hotel-${num}`) ? document.getElementById(`hotel-${num}`).value : '';
+            const valorTotal = document.getElementById(`valor-total-${num}`) ? document.getElementById(`valor-total-${num}`).value : '';
+            const moneda = document.getElementById(`moneda-${num}`) ? document.getElementById(`moneda-${num}`).value : '';
+
             let hotelDetailsHTML = `
-                <div class="data-item">${ICONS.destination}<div class="data-item-content"><strong>Destino:</strong><p>${document.getElementById(`destino-${num}`).value}</p></div></div>
-                <div class="data-item">${ICONS.calendar}<div class="data-item-content"><strong>Fechas:</strong><p>${formatDate(document.getElementById(`fecha-viaje-${num}`).value)}</p></div></div>
-                <div class="data-item">${ICONS.moon}<div class="data-item-content"><strong>Noches:</strong><p>${document.getElementById(`cantidad-noches-${num}`).options[document.getElementById(`cantidad-noches-${num}`).selectedIndex].text}</p></div></div>
-                <div class="data-item">${ICONS.bed}<div class="data-item-content"><strong>Habitaciones:</strong><p>${document.getElementById(`cantidad-habitaciones-${num}`).options[document.getElementById(`cantidad-habitaciones-${num}`).selectedIndex].text}</p></div></div>`;
+                <div class="data-item">${ICONS.destination}<div class="data-item-content"><strong>Destino:</strong><p>${destino}</p></div></div>
+                <div class="data-item">${ICONS.calendar}<div class="data-item-content"><strong>Fechas:</strong><p>${formatDate(fechaViaje)}</p></div></div>
+                <div class="data-item">${ICONS.moon}<div class="data-item-content"><strong>Noches:</strong><p>${noches}</p></div></div>
+                <div class="data-item">${ICONS.bed}<div class="data-item-content"><strong>Habitaciones:</strong><p>${habitaciones}</p></div></div>`;
 
             confirmationComponentsContainer.innerHTML += `
                 <div class="quote-option-box">
-                    <div class="option-header"><h3>Hotel ${index + 1}</h3><span class="option-price">${formatCurrency(document.getElementById(`valor-total-${num}`).value, document.getElementById(`moneda-${num}`).value)}</span></div>
+                    <div class="option-header"><h3>Hotel ${index + 1}</h3><span class="option-price">${formatCurrency(valorTotal, moneda)}</span></div>
                     <div class="option-body">
-                        <h4>${document.getElementById(`hotel-${num}`).value}</h4>
+                        <h4>${hotelName}</h4>
                         <div class="photo-gallery">${galleryHTML}</div>
                         <div class="details-grid">
                             ${hotelDetailsHTML}
-                            <div class="data-item full-width">${ICONS.check}<div class="data-item-content"><strong>Plan Incluye:</strong><p>${REGIMEN_TEMPLATES[document.getElementById(`regimen-${num}`).value] || 'No especificado'}</p></div></div>
+                            <div class="data-item full-width">${ICONS.check}<div class="data-item-content"><strong>Plan Incluye:</strong><p>${REGIMEN_TEMPLATES[regimen] || 'No especificado'}</p></div></div>
                         </div>
                     </div>
                 </div>`;
         });
 
         // 2. RENDERIZAR CRUCEROS
-        if(document.querySelectorAll('.cruises-form-wrapper').length > 0) dynamicTermsHTML += TERMS_AND_CONDITIONS.cruises;
-        document.querySelectorAll('.cruises-form-wrapper').forEach((form, index) => {
+        const cruiseForms = document.querySelectorAll('.cruises-form-wrapper');
+        if(cruiseForms.length > 0) dynamicTermsHTML += TERMS_AND_CONDITIONS.cruises;
+        cruiseForms.forEach((form, index) => {
             const num = form.id.match(/\d+/)[0];
             
-            const naviera = document.getElementById(`naviera-${num}`).value;
+            const navieraEl = document.getElementById(`naviera-${num}`);
+            const naviera = navieraEl ? navieraEl.value : '';
             const logoUrl = NAVIERA_LOGOS[naviera] || '';
             const logoHTML = logoUrl ? `<img src="${logoUrl}" class="naviera-logo-img" alt="${naviera}">` : `<span style="color:white; font-weight:bold;">${naviera}</span>`;
 
-            let galleryHTML =[1, 2, 3].map(i => pastedImages[`crucero-${num}-foto-${i}`] ? `<img src="${pastedImages[`crucero-${num}-foto-${i}`]}">` : '').join('');
+            let galleryHTML = [1, 2, 3].map(i => pastedImages[`crucero-${num}-foto-${i}`] ? `<img src="${pastedImages[`crucero-${num}-foto-${i}`]}">` : '').join('');
             
-            const showMap = document.getElementById(`switch-mapa-${num}`).checked;
-            const showTable = document.getElementById(`switch-tabla-${num}`).checked;
+            const switchMapaEl = document.getElementById(`switch-mapa-${num}`);
+            const showMap = switchMapaEl ? switchMapaEl.checked : false;
+            const switchTablaEl = document.getElementById(`switch-tabla-${num}`);
+            const showTable = switchTablaEl ? switchTablaEl.checked : false;
             
             let mapHTML = '';
             if(showMap && pastedImages[`crucero-${num}-mapa`]) {
@@ -687,18 +787,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let tableHTML = '';
             if(showTable) {
-                const tableNode = document.getElementById(`tabla-itinerario-${num}`).cloneNode(true);
-                tableNode.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
-                tableNode.className = 'pdf-table';
-                
-                const imgPeq = pastedImages[`crucero-${num}-img-pequena`] ? `<img src="${pastedImages[`crucero-${num}-img-pequena`]}">` : '';
-                
-                tableHTML = `
-                    <div class="cruise-layout-split">
-                        ${imgPeq ? `<div class="cruise-layout-left">${imgPeq}</div>` : ''}
-                        <div class="cruise-layout-right">${tableNode.outerHTML}</div>
-                    </div>
-                `;
+                const tableNodeOriginal = document.getElementById(`tabla-itinerario-${num}`);
+                if(tableNodeOriginal) {
+                    const tableNode = tableNodeOriginal.cloneNode(true);
+                    tableNode.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
+                    tableNode.className = 'pdf-table';
+                    
+                    const imgPeq = pastedImages[`crucero-${num}-img-pequena`] ? `<img src="${pastedImages[`crucero-${num}-img-pequena`]}">` : '';
+                    
+                    tableHTML = `
+                        <div class="cruise-layout-split">
+                            ${imgPeq ? `<div class="cruise-layout-left">${imgPeq}</div>` : ''}
+                            <div class="cruise-layout-right">${tableNode.outerHTML}</div>
+                        </div>
+                    `;
+                }
             }
 
             const cabinContainer = document.getElementById(`cabinas-container-${num}`);
@@ -706,11 +809,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if(cabinContainer) {
                 cabinContainer.querySelectorAll('.cabin-row').forEach(row => {
                     const id = row.id.replace('cabin-row-', '');
-                    const tipo = document.getElementById(`cabina-tipo-${id}`).value;
-                    const numCab = document.getElementById(`cabina-num-${id}`).value;
-                    const pax = document.getElementById(`cabina-pax-${id}`).value;
-                    const pUsd = document.getElementById(`cabina-precio-usd-${id}`).value;
-                    const pCop = document.getElementById(`cabina-precio-cop-${id}`).value;
+                    const tipo = document.getElementById(`cabina-tipo-${id}`) ? document.getElementById(`cabina-tipo-${id}`).value : '';
+                    const numCab = document.getElementById(`cabina-num-${id}`) ? document.getElementById(`cabina-num-${id}`).value : '';
+                    const pax = document.getElementById(`cabina-pax-${id}`) ? document.getElementById(`cabina-pax-${id}`).value : '';
+                    const pUsd = document.getElementById(`cabina-precio-usd-${id}`) ? document.getElementById(`cabina-precio-usd-${id}`).value : '';
+                    const pCop = document.getElementById(`cabina-precio-cop-${id}`) ? document.getElementById(`cabina-precio-cop-${id}`).value : '';
                     
                     cabinsHTML += `
                         <div class="pdf-cabin-item">
@@ -725,15 +828,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
 
+            const tituloCrucero = document.getElementById(`titulo-crucero-${num}`) ? document.getElementById(`titulo-crucero-${num}`).value : '';
+            const barco = document.getElementById(`barco-${num}`) ? document.getElementById(`barco-${num}`).value : '';
+            const puerto = document.getElementById(`puerto-${num}`) ? document.getElementById(`puerto-${num}`).value : '';
+            const fechaZarpe = document.getElementById(`fecha-zarpe-${num}`) ? document.getElementById(`fecha-zarpe-${num}`).value : '';
+            const nochesCrucero = document.getElementById(`noches-crucero-${num}`) ? document.getElementById(`noches-crucero-${num}`).value : '';
+            const inclusiones = document.getElementById(`inclusiones-${num}`) ? document.getElementById(`inclusiones-${num}`).value : '';
+
             confirmationComponentsContainer.innerHTML += `
                 <div class="quote-option-box">
-                    <div class="cruise-custom-title">${document.getElementById(`titulo-crucero-${num}`).value}</div>
+                    <div class="cruise-custom-title">${tituloCrucero}</div>
                     <div class="option-header" style="background-color: var(--c-brand-dark-accent);">
                         <h3>CRUCERO ${index + 1}</h3>
                         ${logoHTML}
                     </div>
                     <div class="option-body">
-                        <h4 style="text-align: center; font-size: 24px; margin-bottom: 20px;">🚢 ${document.getElementById(`barco-${num}`).value}</h4>
+                        <h4 style="text-align: center; font-size: 24px; margin-bottom: 20px;">🚢 ${barco}</h4>
                         
                         ${mapHTML}
                         ${tableHTML}
@@ -741,14 +851,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="photo-gallery">${galleryHTML}</div>
                         
                         <div class="cruise-specs-grid">
-                            <div class="cruise-spec-item">${ICONS.destination} <div><strong>Puerto de Embarque:</strong><span>${document.getElementById(`puerto-${num}`).value}</span></div></div>
-                            <div class="cruise-spec-item">${ICONS.calendar} <div><strong>Fecha de Embarque:</strong><span>${formatDate(document.getElementById(`fecha-zarpe-${num}`).value)}</span></div></div>
-                            <div class="cruise-spec-item">${ICONS.moon} <div><strong>Noches:</strong><span>${document.getElementById(`noches-crucero-${num}`).value}</span></div></div>
+                            <div class="cruise-spec-item">${ICONS.destination} <div><strong>Puerto de Embarque:</strong><span>${puerto}</span></div></div>
+                            <div class="cruise-spec-item">${ICONS.calendar} <div><strong>Fecha de Embarque:</strong><span>${formatDate(fechaZarpe)}</span></div></div>
+                            <div class="cruise-spec-item">${ICONS.moon} <div><strong>Noches:</strong><span>${nochesCrucero}</span></div></div>
                         </div>
 
                         <div class="cruise-inclusions">
                             <strong style="color: var(--c-brand-primary); display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">${ICONS.check} QUÉ INCLUYE TU CRUCERO:</strong>
-                            <p style="margin: 0; font-size: 14px; color: var(--c-dark-blue); font-weight: 600;">${document.getElementById(`inclusiones-${num}`).value}</p>
+                            <p style="margin: 0; font-size: 14px; color: var(--c-dark-blue); font-weight: 600;">${inclusiones}</p>
                         </div>
 
                         ${cabinsHTML ? `<div class="pdf-cabins-list">${cabinsHTML}</div>` : ''}
@@ -759,9 +869,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // 3. RENDERIZAR VUELOS
         if (document.getElementById('flights-form-wrapper')) {
             dynamicTermsHTML += TERMS_AND_CONDITIONS.flights;
-            const departureCity = document.getElementById('ciudad-salida').value;
+            const departureCity = document.getElementById('ciudad-salida') ? document.getElementById('ciudad-salida').value : '';
             
-            const extras = ['flight-1', 'flight-2'];
+            const extras =['flight-1', 'flight-2'];
             let optionsHTML = '';
             extras.forEach(id => {
                 const wrapper = document.getElementById(`${id}-form-wrapper`);
@@ -789,15 +899,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // 4. RENDERIZAR TOURS Y TRASLADOS
-        const extras = ['tours', 'transfers'];
-        extras.forEach(type => {
+        const extrasTours = ['tours', 'transfers'];
+        extrasTours.forEach(type => {
             if (document.getElementById(`${type}-form-wrapper`)) {
                 if (type === 'transfers') dynamicTermsHTML += TERMS_AND_CONDITIONS.transfers;
                 
                 const imgHTML = pastedImages[`${type.slice(0, -1)}-main-photo`] ? `<div class="single-photo-container"><img src="${pastedImages[`${type.slice(0, -1)}-main-photo`]}"></div>` : '';
                 const nameKey = type === 'tours' ? 'name' : 'desc';
-                const desc = document.getElementById(`${type.slice(0, -1)}-1-${nameKey}`).value; 
-                const price = document.getElementById(`${type.slice(0, -1)}-1-price`).value;
+                const descEl = document.getElementById(`${type.slice(0, -1)}-1-${nameKey}`);
+                const priceEl = document.getElementById(`${type.slice(0, -1)}-1-price`);
+                const desc = descEl ? descEl.value : ''; 
+                const price = priceEl ? priceEl.value : '';
                 
                 confirmationComponentsContainer.innerHTML += `
                     <div class="component-section">
@@ -814,47 +926,70 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // INYECCIÓN DE LA BARRA DE PAGOS
-        document.getElementById('confirm-pago-reserva').textContent = formatCurrency(document.getElementById('pago-reserva').value, 'USD');
-        document.getElementById('confirm-fecha-limite').textContent = formatDate(document.getElementById('fecha-limite-pago').value);
-        document.getElementById('confirm-valor-total-reserva').textContent = document.getElementById('valor-total-reserva').value;
-        document.getElementById('confirm-info-pago').textContent = document.getElementById('info-pago-personalizada').value;
-        document.getElementById('confirm-no-incluye').textContent = document.getElementById('no-incluye').value;
+        const pagoReservaEl = document.getElementById('confirm-pago-reserva');
+        const fechaLimiteEl = document.getElementById('confirm-fecha-limite');
+        const valorTotalEl = document.getElementById('confirm-valor-total-reserva');
+        const infoPagoEl = document.getElementById('confirm-info-pago');
+        const noIncluyeEl = document.getElementById('confirm-no-incluye');
+        const termsContentEl = document.getElementById('confirm-terms-content');
+        const termsSectionEl = document.getElementById('terms-section-confirm');
 
-        document.getElementById('confirm-terms-content').innerHTML = dynamicTermsHTML + GENERAL_TERMS;
-        document.getElementById('terms-section-confirm').style.display = 'block';
+        if(pagoReservaEl) pagoReservaEl.textContent = formatCurrency(document.getElementById('pago-reserva') ? document.getElementById('pago-reserva').value : '', 'USD');
+        if(fechaLimiteEl) fechaLimiteEl.textContent = formatDate(document.getElementById('fecha-limite-pago') ? document.getElementById('fecha-limite-pago').value : '');
+        if(valorTotalEl) valorTotalEl.textContent = document.getElementById('valor-total-reserva') ? document.getElementById('valor-total-reserva').value : '';
+        if(infoPagoEl) infoPagoEl.textContent = document.getElementById('info-pago-personalizada') ? document.getElementById('info-pago-personalizada').value : '';
+        if(noIncluyeEl) noIncluyeEl.textContent = document.getElementById('no-incluye') ? document.getElementById('no-incluye').value : '';
+
+        if(termsContentEl) termsContentEl.innerHTML = dynamicTermsHTML + GENERAL_TERMS;
+        if(termsSectionEl) termsSectionEl.style.display = 'block';
     }
 
-    document.getElementById('edit-quote-btn').addEventListener('click', () => showView('form'));
-    document.getElementById('new-quote-btn').addEventListener('click', () => loadDashboard());
+    const editBtn = document.getElementById('edit-quote-btn');
+    if(editBtn) editBtn.addEventListener('click', () => showView('form'));
     
-    document.getElementById('process-quote-btn').addEventListener('click', async () => {
-        document.getElementById('loader-overlay').style.display = 'flex';
-        document.getElementById('loader-text').textContent = "Generando PDF...";
-        try {
-            const elementToPrint = document.getElementById('voucher-to-print');
-            const canvas = await html2canvas(elementToPrint, { scale: 2, useCORS: true });
-            const pdf = new window.jspdf.jsPDF({ orientation: 'p', unit: 'px', format:[canvas.width, canvas.height] });
-            pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, canvas.width, canvas.height);
-            
-            const scaleFactor = canvas.width / elementToPrint.offsetWidth;
-            const pdfBtns =['advisor-whatsapp-btn', 'cta-reservar', 'cta-contactar'];
-            pdfBtns.forEach(id => {
-                const element = document.getElementById(id);
-                if (!element || !element.href) return;
-                const rect = element.getBoundingClientRect();
-                const containerRect = elementToPrint.getBoundingClientRect();
-                pdf.link(
-                    (rect.left - containerRect.left) * scaleFactor,
-                    (rect.top - containerRect.top) * scaleFactor,
-                    rect.width * scaleFactor,
-                    rect.height * scaleFactor,
-                    { url: element.href }
-                );
-            });
+    const newBtn = document.getElementById('new-quote-btn');
+    if(newBtn) newBtn.addEventListener('click', () => loadDashboard());
+    
+    const processBtn = document.getElementById('process-quote-btn');
+    if(processBtn) {
+        processBtn.addEventListener('click', async () => {
+            const loader = document.getElementById('loader-overlay');
+            const loaderText = document.getElementById('loader-text');
+            if(loader) loader.style.display = 'flex';
+            if(loaderText) loaderText.textContent = "Generando PDF...";
+            try {
+                const elementToPrint = document.getElementById('voucher-to-print');
+                if(!elementToPrint) throw new Error("No se encontró el contenedor del PDF");
+                
+                const canvas = await html2canvas(elementToPrint, { scale: 2, useCORS: true });
+                const pdf = new window.jspdf.jsPDF({ orientation: 'p', unit: 'px', format:[canvas.width, canvas.height] });
+                pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, canvas.width, canvas.height);
+                
+                const scaleFactor = canvas.width / elementToPrint.offsetWidth;
+                const pdfBtns =['advisor-whatsapp-btn', 'cta-reservar', 'cta-contactar'];
+                pdfBtns.forEach(id => {
+                    const element = document.getElementById(id);
+                    if (!element || !element.href) return;
+                    const rect = element.getBoundingClientRect();
+                    const containerRect = elementToPrint.getBoundingClientRect();
+                    pdf.link(
+                        (rect.left - containerRect.left) * scaleFactor,
+                        (rect.top - containerRect.top) * scaleFactor,
+                        rect.width * scaleFactor,
+                        rect.height * scaleFactor,
+                        { url: element.href }
+                    );
+                });
 
-            pdf.save(`${document.getElementById('cotizacion-numero').value}.pdf`);
-        } catch (error) { alert("Error generando PDF"); } 
-        finally { document.getElementById('loader-overlay').style.display = 'none'; }
-    });
+                const quoteNum = document.getElementById('cotizacion-numero') ? document.getElementById('cotizacion-numero').value : 'Cotizacion';
+                pdf.save(`${quoteNum}.pdf`);
+            } catch (error) { 
+                console.error(error);
+                alert("Error generando PDF"); 
+            } finally { 
+                if(loader) loader.style.display = 'none'; 
+            }
+        });
+    }
 
 });
