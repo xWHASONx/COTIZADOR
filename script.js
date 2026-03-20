@@ -316,11 +316,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Delegación de eventos para botones dinámicos internos
     form.addEventListener('click', e => {
         const { target } = e;
         const { section, subsection } = target.dataset;
+        
         if (target.matches('.add-section-btn')) addSection(section);
-        if (target.matches('.remove-section-btn')) {
+        
+        // Eliminar módulos principales (Ignorando el botón de eliminar cabinas)
+        if (target.matches('.remove-section-btn') && !target.matches('.remove-cabin-btn')) {
             if (target.dataset.subsection) {
                 const wrapper = document.getElementById(`${target.dataset.subsection}-form-wrapper`);
                 if(wrapper) { wrapper.style.display = 'none'; target.style.display = 'block'; }
@@ -328,12 +332,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 removeSection(section);
             }
         }
-        if (target.matches('.add-subsection-btn')) {
+        
+        // Añadir sub-módulos (Ignorando el botón de añadir cabinas)
+        if (target.matches('.add-subsection-btn') && !target.matches('.add-cabin-btn')) {
             if(section === 'hotel' || section === 'cruises') addSection(section);
             else {
                 const wrapper = document.getElementById(`${subsection}-form-wrapper`);
                 if(wrapper) { wrapper.style.display = 'block'; target.style.display = 'none'; }
             }
+        }
+
+        // Lógica exclusiva de Cabinas e Itinerarios
+        if (target.matches('.add-cabin-btn')) {
+            addCabinToCruise(target.dataset.cruise);
+        }
+        if (target.matches('.remove-cabin-btn')) {
+            const targetId = target.dataset.target;
+            const el = document.getElementById(targetId);
+            if (el) el.remove();
+        }
+        if (target.matches('.generate-itinerary-btn')) {
+            generateItineraryTable(target.dataset.target);
         }
     });
 
@@ -424,57 +443,17 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById(`itinerary-container-${cruiseId}`).innerHTML = html;
     }
 
-    // Delegación de eventos para botones dinámicos internos
-    form.addEventListener('click', e => {
-        if (e.target.matches('.add-cabin-btn')) {
-            addCabinToCruise(e.target.dataset.cruise);
-        }
-        if (e.target.matches('.remove-cabin-btn')) {
-            const targetId = e.target.dataset.target;
-            const el = document.getElementById(targetId);
-            if (el) el.remove();
-        }
-        if (e.target.matches('.generate-itinerary-btn')) {
-            generateItineraryTable(e.target.dataset.target);
-        }
-    });
-
-    // --- MANEJO DE IMÁGENES (PEGAR Y SUBIR) ---
-    async function processImageFile(file, imageId, pasteArea) {
-        const reader = new FileReader();
-        reader.onload = async event => {
-            const base64Image = event.target.result;
-            const compressedImage = await compressImage(base64Image); 
-            const previewImg = pasteArea.querySelector('img');
-            previewImg.src = compressedImage;
-            previewImg.style.display = 'block';
-            const pTag = pasteArea.querySelector('p');
-            if(pTag) pTag.style.display = 'none';
-            pastedImages[imageId] = compressedImage;
-        };
-        reader.readAsDataURL(file);
-    }
-
-    form.addEventListener('change', e => {
-        if (e.target.matches('.file-upload-input')) {
-            const file = e.target.files[0];
-            if (file) {
-                const pasteArea = e.target.closest('.paste-area');
-                const imageId = pasteArea.dataset.imgId;
-                processImageFile(file, imageId, pasteArea);
-            }
-        }
-    });
-
     // --- GUARDAR EN FIREBASE ---
     form.addEventListener('submit', async e => { 
         e.preventDefault(); 
         if (!form.checkValidity()) { form.reportValidity(); return; }
         if (dynamicComponentsContainer.children.length === 0) { alert('Añade al menos un componente.'); return; }
         
+        const clientNameEl = document.getElementById('nombre-completo');
+        
         const quoteData = {
             quoteNumber: document.getElementById('cotizacion-numero').value,
-            clientName: document.getElementById('nombre-completo').value || 'Cliente',
+            clientName: clientNameEl ? clientNameEl.value : 'Cliente',
             advisorId: advisorSelect.value,
             advisorName: ADVISORS[advisorSelect.value].name,
             status: 'Pendiente', 
@@ -869,8 +848,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const pdf = new window.jspdf.jsPDF({ orientation: 'p', unit: 'px', format:[canvas.width, canvas.height] });
             pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, canvas.width, canvas.height);
             
-            const scaleFactor = canvas.width / elementToPrint.offsetWidth;
-            ['cta-reservar', 'cta-contactar'].forEach(id => {
+            const scaleFactor = canvas.width / elementToPrint.offsetWidth;['cta-reservar', 'cta-contactar'].forEach(id => {
                 const element = document.getElementById(id);
                 if (!element || !element.href) return;
                 const rect = element.getBoundingClientRect();
