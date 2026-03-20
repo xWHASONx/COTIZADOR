@@ -350,6 +350,7 @@ document.addEventListener('DOMContentLoaded', () => {
         advisorSelect.innerHTML = '<option value="" disabled selected>Selecciona tu nombre</option>' + Object.keys(ADVISORS).map(id => `<option value="${id}">${ADVISORS[id].name}</option>`).join('');
         
         populateSelect('adultos', 1, 20, 2, 'Adulto');
+        populateSelect('jovenes', 0, 10, 0, 'Joven', 'Jóvenes');
         populateSelect('ninos', 0, 10, 0, 'Niño');
         
         document.getElementById('cotizacion-numero').value = generateQuoteNumber();
@@ -360,7 +361,91 @@ document.addEventListener('DOMContentLoaded', () => {
         if (selectedAdvisor) advisorWhatsappInput.value = selectedAdvisor.defaultWhatsapp;
     });
 
-    // --- GUARDAR EN FIREBASE Y GENERAR PDF ---
+    // --- LÓGICA DE SUB-MÓDULOS (CABINAS E ITINERARIO) ---
+    function addCabinToCruise(cruiseId) {
+        const container = document.getElementById(`cabins-container-${cruiseId}`);
+        if (!container) return;
+        const cabinCount = container.children.length + 1;
+        const template = document.getElementById('template-cabin').innerHTML;
+        const html = template.replace(/CRUISEID/g, cruiseId).replace(/CABINID/g, cabinCount);
+        
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        container.appendChild(tempDiv.firstElementChild);
+    }
+
+    function generateItineraryTable(cruiseId) {
+        const startDateInput = document.getElementById(`fecha-zarpe-${cruiseId}`);
+        const nightsInput = document.getElementById(`noches-crucero-${cruiseId}`);
+        
+        if (!startDateInput?.value || !nightsInput?.value) {
+            alert("Por favor, ingresa la Fecha de Embarque y las Noches primero.");
+            return;
+        }
+
+        const startDate = new Date(startDateInput.value + 'T12:00:00');
+        const nights = parseInt(nightsInput.value);
+        
+        let html = '<table class="itinerary-table"><tr><th>Día</th><th>Fecha</th><th>Puerto</th><th>Llegada</th><th>Salida</th></tr>';
+        
+        for(let i = 0; i <= nights; i++) {
+            let dateStr = startDate.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+            html += `<tr>
+                <td>${i + 1}</td>
+                <td>${dateStr}</td>
+                <td><input type="text" id="itin-port-${cruiseId}-${i}" placeholder="Ej: Miami"></td>
+                <td><input type="text" id="itin-arr-${cruiseId}-${i}" placeholder="08:00 AM"></td>
+                <td><input type="text" id="itin-dep-${cruiseId}-${i}" placeholder="05:00 PM"></td>
+            </tr>`;
+            startDate.setDate(startDate.getDate() + 1);
+        }
+        html += '</table>';
+        document.getElementById(`itinerary-container-${cruiseId}`).innerHTML = html;
+    }
+
+    // Delegación de eventos para botones dinámicos internos
+    form.addEventListener('click', e => {
+        if (e.target.matches('.add-cabin-btn')) {
+            addCabinToCruise(e.target.dataset.cruise);
+        }
+        if (e.target.matches('.remove-cabin-btn')) {
+            const targetId = e.target.dataset.target;
+            const el = document.getElementById(targetId);
+            if (el) el.remove();
+        }
+        if (e.target.matches('.generate-itinerary-btn')) {
+            generateItineraryTable(e.target.dataset.target);
+        }
+    });
+
+    // --- MANEJO DE IMÁGENES (PEGAR Y SUBIR) ---
+    async function processImageFile(file, imageId, pasteArea) {
+        const reader = new FileReader();
+        reader.onload = async event => {
+            const base64Image = event.target.result;
+            const compressedImage = await compressImage(base64Image); 
+            const previewImg = pasteArea.querySelector('img');
+            previewImg.src = compressedImage;
+            previewImg.style.display = 'block';
+            const pTag = pasteArea.querySelector('p');
+            if(pTag) pTag.style.display = 'none';
+            pastedImages[imageId] = compressedImage;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    form.addEventListener('change', e => {
+        if (e.target.matches('.file-upload-input')) {
+            const file = e.target.files[0];
+            if (file) {
+                const pasteArea = e.target.closest('.paste-area');
+                const imageId = pasteArea.dataset.imgId;
+                processImageFile(file, imageId, pasteArea);
+            }
+        }
+    });
+
+    // --- GUARDAR EN FIREBASE ---
     form.addEventListener('submit', async e => { 
         e.preventDefault(); 
         if (!form.checkValidity()) { form.reportValidity(); return; }
@@ -368,7 +453,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const quoteData = {
             quoteNumber: document.getElementById('cotizacion-numero').value,
-            clientName: document.getElementById('nombre-completo').value,
+            clientName: document.getElementById('nombre-completo').value || 'Cliente',
             advisorId: advisorSelect.value,
             advisorName: ADVISORS[advisorSelect.value].name,
             status: 'Pendiente', 
@@ -377,7 +462,6 @@ document.addEventListener('DOMContentLoaded', () => {
             images: pastedImages
         };
 
-        // SEGURO CONTRA LÍMITE DE 1MB
         const payloadSize = JSON.stringify(quoteData).length;
         if (payloadSize > 1000000) {
             alert("⚠️ La cotización tiene demasiadas imágenes o son muy pesadas. Por favor, elimina algunas fotos e intenta de nuevo.");
@@ -401,7 +485,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showView('pdf');
         } catch (error) {
             console.error("Error guardando:", error);
-            alert("Hubo un error guardando la cotización. Revisa tu conexión y asegúrate de no tener bloqueadores de anuncios activos.");
+            alert("Hubo un error guardando la cotización. Revisa tu conexión.");
         } finally {
             document.getElementById('loader-overlay').style.display = 'none';
         }
@@ -425,7 +509,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const cruiseIds = new Set(keys.filter(k => k.startsWith('barco-')).map(k => k.split('-')[1]));
         
         hotelIds.forEach(() => addSection('hotel'));
-        cruiseIds.forEach(() => addSection('cruises'));
+        cruiseIds.forEach(cId => {
+            addSection('cruises');
+            // Reconstruir cabinas
+            const cabinKeys = keys.filter(k => k.startsWith(`tipo-cabina-${cId}-`));
+            cabinKeys.forEach((_, index) => addCabinToCruise(cId));
+            // Reconstruir tabla si hay datos
+            if(keys.some(k => k.startsWith(`itin-port-${cId}-`))) {
+                setTimeout(() => generateItineraryTable(cId), 50);
+            }
+        });
+        
         if(keys.includes('ciudad-salida')) addSection('flights');
         if(keys.includes('tour-1-name')) addSection('tours');
         if(keys.includes('transfer-1-desc')) addSection('transfers');
@@ -441,134 +535,222 @@ document.addEventListener('DOMContentLoaded', () => {
                 if(pasteArea) {
                     pasteArea.querySelector('img').src = pastedImages[imgId];
                     pasteArea.querySelector('img').style.display = 'block';
-                    pasteArea.querySelector('p').style.display = 'none';
+                    const pTag = pasteArea.querySelector('p');
+                    if(pTag) pTag.style.display = 'none';
                 }
             });
             
             showView('form');
-        }, 100); 
+        }, 200); 
     }
 
-    // --- RENDERIZADO DEL PDF (RESTAURADO AL 100%) ---
+    // --- RENDERIZADO DEL PDF (SEGURO Y ESTRICTO) ---
+    const NAVIERA_LOGOS = {
+        'Royal Caribbean': 'https://i.imgur.com/1X8X8X8.png', // Reemplaza con URLs reales
+        'MSC Cruises': 'https://i.imgur.com/2Y9Y9Y9.png',
+        'Norwegian Cruise Line (NCL)': 'https://i.imgur.com/3Z0Z0Z0.png'
+        // Añade más según necesites
+    };
+
     function formatCurrency(value, currency = 'COP') {
+        if (!value) return '';
         const number = parseFloat(String(value).replace(/[^0-9.-]+/g, ""));
-        if (isNaN(number)) return '';
+        if (isNaN(number)) return value; // Si escriben texto manual, lo retorna tal cual
         return number.toLocaleString(currency === 'COP' ? 'es-CO' : 'en-US', { style: 'currency', currency, minimumFractionDigits: 0 });
     }
 
     function formatDate(dateStr) {
         if (!dateStr) return 'N/A';
-        const date = new Date(dateStr + 'T00:00:00');
+        const date = new Date(dateStr + 'T12:00:00');
         return date.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
     }
 
     function populateQuote() {
-        const clientName = document.getElementById('nombre-completo').value;
-        const quoteNumber = document.getElementById('cotizacion-numero').value;
-        const adults = document.getElementById('adultos').value;
-        const children = document.getElementById('ninos').value;
+        const clientNameEl = document.getElementById('nombre-completo');
+        const clientName = clientNameEl ? clientNameEl.value.trim() : '';
+        const quoteNumber = document.getElementById('cotizacion-numero')?.value || '';
         
-        document.getElementById('confirm-intro-text').textContent = `¡Hola, ${clientName.split(' ')[0].toUpperCase()}! He preparado estas opciones para tu próximo viaje.`;
-
-        const visaStatus = document.getElementById('requiere-visa').value;
-        const visaAlert = document.getElementById('pdf-visa-alert');
-        if(visaStatus !== 'No requiere visa') {
-            visaAlert.style.display = 'block';
-            visaAlert.innerHTML = `🛂 <strong>Requisito Migratorio:</strong> ${visaStatus}`;
-        } else {
-            visaAlert.style.display = 'none';
+        const adults = document.getElementById('adultos')?.value || '0';
+        const youths = document.getElementById('jovenes')?.value || '0';
+        const children = document.getElementById('ninos')?.value || '0';
+        
+        const introTextEl = document.getElementById('confirm-intro-text');
+        if (introTextEl) {
+            if (clientName) {
+                introTextEl.textContent = `¡Hola ${clientName.split(' ')[0].toUpperCase()}! Te compartimos las mejores opciones que hemos encontrado para ti.`;
+            } else {
+                introTextEl.textContent = `¡Hola! Te compartimos las mejores opciones que hemos encontrado para ti.`;
+            }
         }
 
+        let paxString = `${adults} Adulto${adults > 1 ? 's' : ''}`;
+        if (parseInt(youths) > 0) paxString += `, ${youths} Joven${youths > 1 ? 'es' : ''}`;
+        if (parseInt(children) > 0) paxString += `, ${children} Niño${children > 1 ? 's' : ''}`;
+
         const customerBox = document.getElementById('confirm-customer-data-box');
-        customerBox.innerHTML = `<p>Para: <strong>${clientName.toUpperCase()}</strong></p><p>Pasajeros: <strong>${adults} Adulto${adults > 1 ? 's' : ''}${children > 0 ? ` y ${children} Niño${children > 1 ? 's' : ''}` : ''}</strong></p><p>Nº Cotización: <strong>${quoteNumber}</strong> | Validez: <strong>${document.getElementById('validez-cupos').value}</strong></p>`;
+        if (customerBox) {
+            customerBox.innerHTML = `
+                ${clientName ? `<p>Para: <strong>${clientName.toUpperCase()}</strong></p>` : ''}
+                <p>Pasajeros: <strong>${paxString}</strong></p>
+                <p>Nº Cotización: <strong>${quoteNumber}</strong> | Validez: <strong>${document.getElementById('validez-cupos')?.value || ''}</strong></p>
+            `;
+        }
 
         const advisor = ADVISORS[advisorSelect.value];
-        document.getElementById('advisor-photo').src = advisor.photoUrl;
-        document.getElementById('advisor-name').textContent = advisor.name;
-
-        const whatsappLink = `https://wa.me/${advisorWhatsappInput.value}`;['advisor-whatsapp-btn', 'cta-reservar', 'cta-contactar'].forEach(id => {
+        const whatsappLink = `https://wa.me/${advisorWhatsappInput.value}`;
+        ['cta-reservar', 'cta-contactar'].forEach(id => {
             const el = document.getElementById(id);
-            const baseText = id === 'cta-reservar' ? `¡Hola ${advisor.name}! Estoy listo para reservar según la cotización *${quoteNumber}*.` : `Hola ${advisor.name}, tengo una pregunta sobre la cotización *${quoteNumber}*.`;
-            el.href = `${whatsappLink}?text=${encodeURIComponent(baseText)}`;
+            if (el) {
+                const baseText = id === 'cta-reservar' ? `¡Hola ${advisor.name}! Estoy listo para reservar según la cotización *${quoteNumber}*.` : `Hola ${advisor.name}, tengo una pregunta sobre la cotización *${quoteNumber}*.`;
+                el.href = `${whatsappLink}?text=${encodeURIComponent(baseText)}`;
+            }
         });
 
         confirmationComponentsContainer.innerHTML = '';
         let dynamicTermsHTML = '';
 
-        // 1. RENDERIZAR HOTELES (RESTAURADO CON FECHAS Y RÉGIMEN)
-        if(document.querySelectorAll('.hotel-form-wrapper').length > 0) dynamicTermsHTML += TERMS_AND_CONDITIONS.hotels;
-        document.querySelectorAll('.hotel-form-wrapper').forEach((form, index) => {
+        // 1. RENDERIZAR HOTELES
+        const hotelWrappers = document.querySelectorAll('.hotel-form-wrapper');
+        if(hotelWrappers.length > 0) dynamicTermsHTML += TERMS_AND_CONDITIONS.hotels;
+        hotelWrappers.forEach((form, index) => {
             const num = form.id.match(/\d+/)[0];
             let galleryHTML =[1, 2, 3].map(i => pastedImages[`hotel-${num}-foto-${i}`] ? `<img src="${pastedImages[`hotel-${num}-foto-${i}`]}">` : '').join('');
             
-            let hotelDetailsHTML = `
-                <div class="data-item">${ICONS.destination}<div class="data-item-content"><strong>Destino:</strong><p>${document.getElementById(`destino-${num}`).value}</p></div></div>
-                <div class="data-item">${ICONS.calendar}<div class="data-item-content"><strong>Fechas:</strong><p>${formatDate(document.getElementById(`fecha-viaje-${num}`).value)}</p></div></div>
-                <div class="data-item">${ICONS.moon}<div class="data-item-content"><strong>Noches:</strong><p>${document.getElementById(`cantidad-noches-${num}`).options[document.getElementById(`cantidad-noches-${num}`).selectedIndex].text}</p></div></div>
-                <div class="data-item">${ICONS.bed}<div class="data-item-content"><strong>Habitaciones:</strong><p>${document.getElementById(`cantidad-habitaciones-${num}`).options[document.getElementById(`cantidad-habitaciones-${num}`).selectedIndex].text}</p></div></div>`;
+            const destino = document.getElementById(`destino-${num}`)?.value || '';
+            const fecha = document.getElementById(`fecha-viaje-${num}`)?.value || '';
+            const nochesEl = document.getElementById(`cantidad-noches-${num}`);
+            const habsEl = document.getElementById(`cantidad-habitaciones-${num}`);
+            const regimen = document.getElementById(`regimen-${num}`)?.value || '';
+            const valor = document.getElementById(`valor-total-${num}`)?.value || '';
+            const moneda = document.getElementById(`moneda-${num}`)?.value || 'COP';
+            const hotelName = document.getElementById(`hotel-${num}`)?.value || '';
 
             confirmationComponentsContainer.innerHTML += `
                 <div class="quote-option-box">
-                    <div class="option-header"><h3>Hotel ${index + 1}</h3><span class="option-price">${formatCurrency(document.getElementById(`valor-total-${num}`).value, document.getElementById(`moneda-${num}`).value)}</span></div>
+                    <div class="option-header"><h3>Hotel ${index + 1}</h3><span class="option-price">${formatCurrency(valor, moneda)}</span></div>
                     <div class="option-body">
-                        <h4>${document.getElementById(`hotel-${num}`).value}</h4>
+                        <h4>${hotelName}</h4>
                         <div class="photo-gallery">${galleryHTML}</div>
                         <div class="details-grid">
-                            ${hotelDetailsHTML}
-                            <div class="data-item full-width">${ICONS.check}<div class="data-item-content"><strong>Plan Incluye:</strong><p>${REGIMEN_TEMPLATES[document.getElementById(`regimen-${num}`).value] || 'No especificado'}</p></div></div>
+                            <div class="data-item">${ICONS.destination}<div class="data-item-content"><strong>Destino:</strong><p>${destino}</p></div></div>
+                            <div class="data-item">${ICONS.calendar}<div class="data-item-content"><strong>Fechas:</strong><p>${formatDate(fecha)}</p></div></div>
+                            <div class="data-item">${ICONS.moon}<div class="data-item-content"><strong>Noches:</strong><p>${nochesEl ? nochesEl.options[nochesEl.selectedIndex].text : ''}</p></div></div>
+                            <div class="data-item">${ICONS.bed}<div class="data-item-content"><strong>Habitaciones:</strong><p>${habsEl ? habsEl.options[habsEl.selectedIndex].text : ''}</p></div></div>
+                            <div class="data-item full-width">${ICONS.check}<div class="data-item-content"><strong>Plan Incluye:</strong><p>${REGIMEN_TEMPLATES[regimen] || 'No especificado'}</p></div></div>
                         </div>
                     </div>
                 </div>`;
         });
 
-        // 2. RENDERIZAR CRUCEROS
-        if(document.querySelectorAll('.cruises-form-wrapper').length > 0) dynamicTermsHTML += TERMS_AND_CONDITIONS.cruises;
-        document.querySelectorAll('.cruises-form-wrapper').forEach((form, index) => {
+        // 2. RENDERIZAR CRUCEROS (NUEVA ARQUITECTURA)
+        const cruiseWrappers = document.querySelectorAll('.cruises-form-wrapper');
+        if(cruiseWrappers.length > 0) dynamicTermsHTML += TERMS_AND_CONDITIONS.cruises;
+        
+        cruiseWrappers.forEach((form, index) => {
             const num = form.id.match(/\d+/)[0];
+            
+            const titulo = document.getElementById(`titulo-crucero-${num}`)?.value || `OPCIÓN DE CRUCERO ${index + 1}`;
+            const naviera = document.getElementById(`naviera-${num}`)?.value || '';
+            const barco = document.getElementById(`barco-${num}`)?.value || '';
+            const puerto = document.getElementById(`puerto-${num}`)?.value || '';
+            const fecha = document.getElementById(`fecha-zarpe-${num}`)?.value || '';
+            const noches = document.getElementById(`noches-crucero-${num}`)?.value || '';
+            
             let galleryHTML =[1, 2, 3].map(i => pastedImages[`crucero-${num}-foto-${i}`] ? `<img src="${pastedImages[`crucero-${num}-foto-${i}`]}">` : '').join('');
             let mapHTML = pastedImages[`crucero-${num}-mapa`] ? `<div class="single-photo-container"><img src="${pastedImages[`crucero-${num}-mapa`]}"></div>` : '';
             
-            confirmationComponentsContainer.innerHTML += `
-                <div class="quote-option-box">
-                    <div class="option-header" style="background-color: var(--c-brand-dark-accent);">
-                        <h3>CRUCERO ${index + 1} - ${document.getElementById(`naviera-${num}`).value}</h3>
-                        <span class="option-price">${formatCurrency(document.getElementById(`valor-crucero-${num}`).value, document.getElementById(`moneda-crucero-${num}`).value)}</span>
+            const logoUrl = NAVIERA_LOGOS[naviera];
+            const logoHTML = logoUrl ? `<img src="${logoUrl}" class="naviera-logo" alt="${naviera}">` : '';
+
+            // Construir Tabla de Itinerario si existe
+            let itineraryHTML = '';
+            const itinContainer = document.getElementById(`itinerary-container-${num}`);
+            if (itinContainer && itinContainer.querySelector('table')) {
+                itineraryHTML = `<table class="pdf-itinerary-table"><tr><th>Día</th><th>Fecha</th><th>Puerto</th><th>Llegada</th><th>Salida</th></tr>`;
+                const rows = itinContainer.querySelectorAll('tr');
+                for(let i = 1; i < rows.length; i++) { // Skip header
+                    const cells = rows[i].querySelectorAll('td');
+                    const inputs = rows[i].querySelectorAll('input');
+                    if(cells.length >= 5 && inputs.length >= 3) {
+                        itineraryHTML += `<tr>
+                            <td>${cells[0].textContent}</td>
+                            <td>${cells[1].textContent}</td>
+                            <td><strong>${inputs[0].value || '-'}</strong></td>
+                            <td>${inputs[1].value || '-'}</td>
+                            <td>${inputs[2].value || '-'}</td>
+                        </tr>`;
+                    }
+                }
+                itineraryHTML += `</table>`;
+            }
+
+            // Construir Cabinas
+            let cabinsHTML = '';
+            const cabinElements = document.querySelectorAll(`[id^="cabin-wrapper-${num}-"]`);
+            cabinElements.forEach(cabinEl => {
+                const cId = cabinEl.id.split('-').pop();
+                const tipo = document.getElementById(`tipo-cabina-${num}-${cId}`)?.value || '';
+                const numCabina = document.getElementById(`num-cabina-${num}-${cId}`)?.value || 'Garantizada';
+                const pax = document.getElementById(`pax-cabina-${num}-${cId}`)?.value || '';
+                const inclusiones = document.getElementById(`inclusiones-cabina-${num}-${cId}`)?.value || '';
+                const precioUSD = document.getElementById(`precio-usd-${num}-${cId}`)?.value || '';
+
+                cabinsHTML += `
+                    <div class="cabin-card">
+                        <div class="cabin-card-header">
+                            <h5>Cabina: ${tipo}</h5>
+                            <span class="cabin-price-tag">Total: ${formatCurrency(precioUSD, 'USD')}</span>
+                        </div>
+                        <div class="cabin-details">
+                            <p><strong>Número:</strong> ${numCabina}</p>
+                            <p><strong>Pasajeros:</strong> ${pax}</p>
+                            <div class="cabin-inclusions"><strong>Incluye:</strong> ${inclusiones}</div>
+                        </div>
+                        <p style="font-size: 10px; color: #999; margin-top: 10px; text-align: right;">*Precio total para todos los pasajeros en esta cabina.</p>
                     </div>
+                `;
+            });
+
+            confirmationComponentsContainer.innerHTML += `
+                <div class="quote-option-box" style="position: relative;">
+                    <div class="option-header">
+                        <h3 style="max-width: 70%;">${titulo}</h3>
+                    </div>
+                    ${logoHTML}
                     <div class="option-body">
-                        <h4 style="text-align: center; font-size: 24px; margin-bottom: 20px;">🚢 ${document.getElementById(`barco-${num}`).value}</h4>
+                        <h4 style="text-align: center; font-size: 22px; margin-bottom: 20px; color: var(--c-dark-blue);">🚢 ${naviera} - ${barco}</h4>
+                        
+                        <div class="cruise-specs-grid">
+                            <div class="cruise-spec-item">${ICONS.destination} <div><strong>Puerto de Embarque:</strong><span>${puerto}</span></div></div>
+                            <div class="cruise-spec-item">${ICONS.calendar} <div><strong>Fecha de Embarque:</strong><span>${formatDate(fecha)}</span></div></div>
+                            <div class="cruise-spec-item">${ICONS.moon} <div><strong>Duración:</strong><span>${noches} Noches</span></div></div>
+                        </div>
+
                         ${mapHTML}
                         <div class="photo-gallery">${galleryHTML}</div>
                         
-                        <div class="cruise-specs-grid">
-                            <div class="cruise-spec-item">${ICONS.destination} <div><strong>Embarque:</strong><span>${document.getElementById(`puerto-${num}`).value}</span></div></div>
-                            <div class="cruise-spec-item">${ICONS.calendar} <div><strong>Zarpe:</strong><span>${formatDate(document.getElementById(`fecha-zarpe-${num}`).value)}</span></div></div>
-                            <div class="cruise-spec-item">${ICONS.moon} <div><strong>Noches:</strong><span>${document.getElementById(`noches-crucero-${num}`).value}</span></div></div>
-                            <div class="cruise-spec-item">${ICONS.bed} <div><strong>Cabina:</strong><span>${document.getElementById(`cabina-${num}`).value}</span></div></div>
-                        </div>
-
-                        <div class="cruise-inclusions">
-                            <strong style="color: var(--c-brand-primary); display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">${ICONS.check} INCLUSIONES Y PROPINAS:</strong>
-                            <p style="margin: 0; font-size: 14px; color: var(--c-dark-blue); font-weight: 600;">${document.getElementById(`inclusiones-${num}`).value} | Propinas: ${document.getElementById(`propinas-${num}`).value}</p>
-                        </div>
-
-                        <div class="cruise-itinerary">
+                        ${itineraryHTML ? `<div style="margin: 25px 0;">
                             <strong style="color: var(--c-dark-blue); display: block; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px;">📍 ITINERARIO DEL VIAJE:</strong>
-                            <p>${document.getElementById(`itinerario-${num}`).value}</p>
+                            ${itineraryHTML}
+                        </div>` : ''}
+
+                        <div style="margin-top: 30px;">
+                            <h4 style="color: var(--c-brand-primary); margin-bottom: 15px; border-bottom: 2px solid var(--c-brand-primary); display: inline-block;">Opciones de Cabina Disponibles</h4>
+                            ${cabinsHTML}
                         </div>
                     </div>
                 </div>`;
         });
 
-        // 3. RENDERIZAR VUELOS (RESTAURADO CON OPCIONES Y PRECIOS)
+        // 3. RENDERIZAR VUELOS
         if (document.getElementById('flights-form-wrapper')) {
             dynamicTermsHTML += TERMS_AND_CONDITIONS.flights;
-            const departureCity = document.getElementById('ciudad-salida').value;
+            const departureCity = document.getElementById('ciudad-salida')?.value || '';
             let optionsHTML = [1, 2].map(i => {
-                const wrapper = document.getElementById(`flight-${i}-form-wrapper`);
-                if ((i === 1 || (wrapper && wrapper.style.display !== 'none')) && document.getElementById(`flight-${i}-airline`)) {
-                    const airline = document.getElementById(`flight-${i}-airline`).value; 
-                    const price = document.getElementById(`flight-${i}-price`).value;
-                    if (airline && price) return `<div class="item-option"><strong>Opción ${i}:</strong> ${airline} <span class="item-price">Desde ${formatCurrency(price)}</span></div>`;
+                const airlineEl = document.getElementById(`flight-${i}-airline`);
+                const priceEl = document.getElementById(`flight-${i}-price`);
+                if (airlineEl && priceEl && airlineEl.value && priceEl.value) {
+                    return `<div class="item-option"><strong>Opción ${i}:</strong> ${airlineEl.value} <span class="item-price">Desde ${formatCurrency(priceEl.value)}</span></div>`;
                 } 
                 return '';
             }).join('');
@@ -587,38 +769,58 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>`;
         }
 
-        // 4. RENDERIZAR TOURS Y TRASLADOS (RESTAURADO CON FOTOS Y PRECIOS)
+        // 4. RENDERIZAR TOURS Y TRASLADOS
         ['tours', 'transfers'].forEach(type => {
             if (document.getElementById(`${type}-form-wrapper`)) {
                 if (type === 'transfers') dynamicTermsHTML += TERMS_AND_CONDITIONS.transfers;
                 
                 const imgHTML = pastedImages[`${type.slice(0, -1)}-main-photo`] ? `<div class="single-photo-container"><img src="${pastedImages[`${type.slice(0, -1)}-main-photo`]}"></div>` : '';
                 const nameKey = type === 'tours' ? 'name' : 'desc';
-                const desc = document.getElementById(`${type.slice(0, -1)}-1-${nameKey}`).value; 
-                const price = document.getElementById(`${type.slice(0, -1)}-1-price`).value;
+                const descEl = document.getElementById(`${type.slice(0, -1)}-1-${nameKey}`);
+                const priceEl = document.getElementById(`${type.slice(0, -1)}-1-price`);
                 
-                confirmationComponentsContainer.innerHTML += `
-                    <div class="component-section">
-                        <div class="option-header"><h3>${type === 'tours' ? 'Tours Opcionales' : 'Traslados'}</h3></div>
-                        <div class="option-body">
-                            ${imgHTML}
-                            <div class="item-option">
-                                <strong>${desc}</strong>
-                                <span class="item-price">Desde ${formatCurrency(price)}</span>
+                if (descEl && priceEl) {
+                    confirmationComponentsContainer.innerHTML += `
+                        <div class="component-section">
+                            <div class="option-header"><h3>${type === 'tours' ? 'Tours Opcionales' : 'Traslados'}</h3></div>
+                            <div class="option-body">
+                                ${imgHTML}
+                                <div class="item-option">
+                                    <strong>${descEl.value}</strong>
+                                    <span class="item-price">Desde ${formatCurrency(priceEl.value)}</span>
+                                </div>
                             </div>
-                        </div>
-                    </div>`;
+                        </div>`;
+                }
             }
         });
 
         // INYECCIÓN DE LA BARRA DE PAGOS
-        document.getElementById('confirm-pago-reserva').textContent = formatCurrency(document.getElementById('pago-reserva').value);
-        document.getElementById('confirm-pago-segundo').textContent = formatCurrency(document.getElementById('pago-segundo').value);
-        document.getElementById('confirm-fecha-limite').textContent = document.getElementById('fecha-limite-pago').value;
-        document.getElementById('confirm-no-incluye').textContent = document.getElementById('no-incluye').value;
+        const pagoReservaEl = document.getElementById('confirm-pago-reserva');
+        if(pagoReservaEl) pagoReservaEl.textContent = formatCurrency(document.getElementById('pago-reserva')?.value || '', 'USD');
+        
+        const fechaLimiteEl = document.getElementById('confirm-fecha-limite');
+        if(fechaLimiteEl) fechaLimiteEl.textContent = formatDate(document.getElementById('fecha-limite-pago')?.value);
 
-        document.getElementById('confirm-terms-content').innerHTML = dynamicTermsHTML + GENERAL_TERMS;
-        document.getElementById('terms-section-confirm').style.display = 'block';
+        const totalEstimadoInput = document.getElementById('total-estimado-cop')?.value;
+        const totalEstimadoContainer = document.getElementById('confirm-total-estimado-container');
+        const totalEstimadoText = document.getElementById('confirm-total-estimado');
+        
+        if (totalEstimadoInput && totalEstimadoContainer && totalEstimadoText) {
+            totalEstimadoText.textContent = totalEstimadoInput;
+            totalEstimadoContainer.style.display = 'block';
+        } else if (totalEstimadoContainer) {
+            totalEstimadoContainer.style.display = 'none';
+        }
+
+        const noIncluyeEl = document.getElementById('confirm-no-incluye');
+        if(noIncluyeEl) noIncluyeEl.textContent = document.getElementById('no-incluye')?.value || '';
+
+        const termsContentEl = document.getElementById('confirm-terms-content');
+        if(termsContentEl) {
+            termsContentEl.innerHTML = dynamicTermsHTML + GENERAL_TERMS;
+            document.getElementById('terms-section-confirm').style.display = 'block';
+        }
     }
 
     document.getElementById('edit-quote-btn').addEventListener('click', () => showView('form'));
@@ -633,7 +835,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const pdf = new window.jspdf.jsPDF({ orientation: 'p', unit: 'px', format:[canvas.width, canvas.height] });
             pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, canvas.width, canvas.height);
             
-            const scaleFactor = canvas.width / elementToPrint.offsetWidth;['advisor-whatsapp-btn', 'cta-reservar', 'cta-contactar'].forEach(id => {
+            const scaleFactor = canvas.width / elementToPrint.offsetWidth;
+            ['cta-reservar', 'cta-contactar'].forEach(id => {
                 const element = document.getElementById(id);
                 if (!element || !element.href) return;
                 const rect = element.getBoundingClientRect();
