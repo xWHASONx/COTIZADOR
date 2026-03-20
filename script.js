@@ -271,7 +271,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (sectionKey === 'cruises') {
             populateSelect(`noches-crucero-${counter}`, 1, 30, 7, 'noche');
-            document.getElementById(`trm-crucero-${counter}`).value = currentTRM;
             if (counter === 1) document.querySelector(`.add-section-btn[data-section="cruises"]`).style.display = 'none';
             if (counter > 1) document.querySelector(`#cruises-form-wrapper-${counter - 1} .add-subsection-btn`).style.display = 'none';
         }
@@ -282,7 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         addEventListenersToSection(cloneNode);
     }
-
+   
     function populateSelect(id, min, max, defaultVal, singular, plural = singular + 's') {
         const select = document.getElementById(id);
         if(!select) return;
@@ -583,8 +582,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function formatCurrency(value, currency = 'COP') {
         if (!value) return '';
         const number = parseFloat(String(value).replace(/[^0-9.-]+/g, ""));
-        if (isNaN(number)) return value; // Si escriben texto manual, lo retorna tal cual
-        return number.toLocaleString(currency === 'COP' ? 'es-CO' : 'en-US', { style: 'currency', currency, minimumFractionDigits: 0 });
+        if (isNaN(number)) return value; 
+        return number.toLocaleString(currency === 'COP' ? 'es-CO' : 'en-US', { style: 'currency', currency, minimumFractionDigits: 0 }) + ' ' + currency;
     }
 
     function formatDate(dateStr) {
@@ -716,6 +715,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 const inclusiones = document.getElementById(`inclusiones-cabina-${num}-${cId}`)?.value || '';
                 const precioUSD = document.getElementById(`precio-usd-${num}-${cId}`)?.value || '';
                 const reservaUSD = document.getElementById(`reserva-usd-${num}-${cId}`)?.value || '';
+                const estimadoCOP = document.getElementById(`estimado-cop-${num}-${cId}`)?.value || '';
+
+                let copDisclaimer = '';
+                if (estimadoCOP) {
+                    copDisclaimer = `
+                        <div style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed #ccc;">
+                            <strong style="color: var(--c-brand-primary); font-size: 15px;">Estimado en Pesos: ${formatCurrency(estimadoCOP, 'COP')}</strong>
+                            <p style="font-size: 10px; color: #666; margin-top: 5px; line-height: 1.3;">*La tarifa oficial del crucero es en dólares estadounidenses y el valor dado en pesos es únicamente un estimado ya que el valor real puede variar dependiendo de la tasa de cambio el día del pago. El pago del crucero se realiza directamente a la naviera a través de un link oficial donde se deberá cancelar el valor con tarjeta débito o crédito.</p>
+                        </div>
+                    `;
+                }
 
                 cabinsHTML += `
                     <div class="cabin-card">
@@ -731,11 +741,12 @@ document.addEventListener('DOMContentLoaded', () => {
                             <p><strong>Pasajeros:</strong> ${pax}</p>
                             <div class="cabin-inclusions"><strong>Incluye:</strong> ${inclusiones}</div>
                         </div>
+                        ${copDisclaimer}
                         <p style="font-size: 10px; color: #999; margin-top: 10px; text-align: right;">*Precio total para todos los pasajeros en esta cabina.</p>
                     </div>
                 `;
             });
-
+           
             confirmationComponentsContainer.innerHTML += `
                 <div class="quote-option-box" style="position: relative;">
                     <div class="option-header">
@@ -821,21 +832,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // INYECCIÓN DE LA BARRA DE PAGOS
-        const pagoReservaEl = document.getElementById('confirm-pago-reserva');
-        if(pagoReservaEl) pagoReservaEl.textContent = formatCurrency(document.getElementById('pago-reserva')?.value || '', 'USD');
+        const fechaLimiteVal = document.getElementById('fecha-limite-pago')?.value;
+        const paymentBar = document.querySelector('.premium-payment-bar');
         
-        const fechaLimiteEl = document.getElementById('confirm-fecha-limite');
-        if(fechaLimiteEl) fechaLimiteEl.textContent = formatDate(document.getElementById('fecha-limite-pago')?.value);
-
-        const totalEstimadoInput = document.getElementById('total-estimado-cop')?.value;
-        const totalEstimadoContainer = document.getElementById('confirm-total-estimado-container');
-        const totalEstimadoText = document.getElementById('confirm-total-estimado');
-        
-        if (totalEstimadoInput && totalEstimadoContainer && totalEstimadoText) {
-            totalEstimadoText.textContent = totalEstimadoInput;
-            totalEstimadoContainer.style.display = 'block';
-        } else if (totalEstimadoContainer) {
-            totalEstimadoContainer.style.display = 'none';
+        if (fechaLimiteVal && paymentBar) {
+            paymentBar.style.display = 'flex';
+            paymentBar.innerHTML = `
+                <div class="payment-step" style="text-align: center; width: 100%;">
+                    <span style="font-size: 16px;">Paga el restante antes de:</span>
+                    <h3 style="font-size: 24px; margin-top: 5px;">${fechaLimiteVal}</h3>
+                </div>
+            `;
+        } else if (paymentBar) {
+            paymentBar.style.display = 'none';
         }
 
         const noIncluyeEl = document.getElementById('confirm-no-incluye');
