@@ -90,7 +90,18 @@
                 <fieldset class="form-fieldset"><legend>3. Detalles Finales y Pagos</legend>
                     <div class="form-grid">
                         <div class="form-group full-width"><label for="no-incluye">Qué NO incluye tu viaje</label><textarea id="no-incluye" rows="3">Gastos o servicios no especificados en la cotización. Vuelos (a menos que se especifique). Propinas no prepagadas.</textarea></div>
-                        <div class="form-group full-width"><label for="fecha-limite-pago">Paga el restante antes de (Fecha o Texto)</label><input type="text" id="fecha-limite-pago" placeholder="Ej: 45 días antes del viaje"></div>
+                        
+                        <!-- RESERVA DE GRUPO -->
+                        <div class="form-group full-width" style="background: #f4f6f8; padding: 15px; border-radius: 8px; border: 1px solid #ddd;">
+                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin: 0;">
+                                <input type="checkbox" id="is-group-booking" style="width: 20px; height: 20px;"> 
+                                <strong>¿Es una reserva de grupo? (Mostrar Total Global al final del PDF)</strong>
+                            </label>
+                        </div>
+                        <div id="group-booking-fields" class="form-grid full-width" style="display: none; background: #e0f7fa; padding: 15px; border-radius: 8px; border: 1px solid #b2ebf2;">
+                            <div class="form-group"><label>Total Global (Ej: $10,500 USD)</label><input type="text" id="global-total"></div>
+                            <div class="form-group"><label>Mensaje Personalizado</label><input type="text" id="global-message" placeholder="Ej: Asegura tu precio enviando copia de los pasaportes"></div>
+                        </div>
                     </div>
                 </fieldset>
                 
@@ -147,6 +158,7 @@
                         <div class="form-group"><label>Puerto de Embarque</label><input type="text" id="puerto-PLACEHOLDER" placeholder="Ej: Miami, FL" required></div>
                         <div class="form-group"><label>Fecha de Embarque</label><input type="date" id="fecha-zarpe-PLACEHOLDER" required></div>
                         <div class="form-group"><label>Noches</label><select id="noches-crucero-PLACEHOLDER"></select></div>
+                        <div class="form-group full-width"><label>Link del video del barco (Opcional)</label><input type="url" id="video-link-PLACEHOLDER" placeholder="Ej: https://youtube.com/watch?v=..."></div>
                         
                         <div class="form-group full-width">
                             <label>Itinerario (Generar Tabla Automática)</label>
@@ -192,7 +204,8 @@
                     <div class="form-group full-width"><label>Qué incluye tu crucero</label><textarea id="inclusiones-cabina-CRUISEID-CABINID" rows="2" placeholder="Ej: Pensión completa, paquete de bebidas, propinas incluidas..." required></textarea></div>
                     <div class="form-group"><label>Precio Total Cabina (USD)</label><input type="text" id="precio-usd-CRUISEID-CABINID" placeholder="Ej: 1500" required></div>
                     <div class="form-group"><label>Reserva con (USD)</label><input type="text" id="reserva-usd-CRUISEID-CABINID" placeholder="Ej: 250"></div>
-                    <div class="form-group full-width"><label>Estimado en COP (Opcional)</label><input type="text" id="estimado-cop-CRUISEID-CABINID" placeholder="Ej: 6000000"></div>
+                    <div class="form-group"><label>Paga el restante antes de</label><input type="text" id="fecha-pago-CRUISEID-CABINID" placeholder="Ej: 15/Ago/2026"></div>
+                    <div class="form-group"><label>Estimado en COP (Opcional)</label><input type="text" id="estimado-cop-CRUISEID-CABINID" placeholder="Ej: 6000000"></div>
                 </div>
             </div>
         </template>
@@ -201,44 +214,92 @@
             <div id="flights-form-wrapper" class="dynamic-section-wrapper"><fieldset class="form-fieldset">
                 <button type="button" class="remove-section-btn" data-section="flights">&times;</button><legend>Vuelos</legend>
                 <div class="form-grid">
-                    <div class="form-group full-width"><label for="ciudad-salida">Ciudad de Salida</label><input type="text" id="ciudad-salida" placeholder="Ej: Medellín" required></div>
-                    <div class="form-group full-width"><label>Imagen Banner (1030x200px)</label><div class="paste-area" data-img-id="flight-banner-preview"><p>Pegar imagen aquí</p><img src="" style="display:none;"></div></div>
+                    <div class="form-group full-width"><label>Ciudad de Salida</label><input type="text" id="ciudad-salida" required></div>
+                    <div class="form-group full-width"><label>Imagen Banner</label><div class="paste-area" data-img-id="flight-banner-preview"><p>Pegar imagen aquí</p><img src="" style="display:none;"></div></div>
+                    
                     <div class="sub-fieldset full-width"><label>Opción de Vuelo 1</label><div class="form-grid small-gap">
-                        <div class="form-group"><label for="flight-1-airline">Aerolínea / Ruta</label><input type="text" id="flight-1-airline" required></div>
-                        <div class="form-group"><label for="flight-1-price">Precio por persona</label><input type="text" id="flight-1-price" inputmode="numeric" required></div>
+                        <div class="form-group full-width"><label>Aerolínea / Ruta</label><input type="text" id="flight-1-airline" required></div>
+                        <div class="form-group full-width"><label>Descripción / Horarios</label><textarea id="flight-1-desc" rows="2"></textarea></div>
+                        <div class="form-group"><label>Precio por persona</label><input type="text" id="flight-1-price" required></div>
                     </div></div>
+                    
                     <div id="flight-2-form-wrapper" class="sub-fieldset full-width" style="display: none;"><label>Opción de Vuelo 2</label><button type="button" class="remove-section-btn" data-subsection="flight-2">&times;</button><div class="form-grid small-gap">
-                        <div class="form-group"><label for="flight-2-airline">Aerolínea / Ruta</label><input type="text" id="flight-2-airline"></div>
-                        <div class="form-group"><label for="flight-2-price">Precio por persona</label><input type="text" id="flight-2-price" inputmode="numeric"></div>
+                        <div class="form-group full-width"><label>Aerolínea / Ruta</label><input type="text" id="flight-2-airline"></div>
+                        <div class="form-group full-width"><label>Descripción / Horarios</label><textarea id="flight-2-desc" rows="2"></textarea></div>
+                        <div class="form-group"><label>Precio por persona</label><input type="text" id="flight-2-price"></div>
                     </div></div>
-                    <button type="button" class="add-subsection-btn" data-subsection="flight-2">+ Añadir 2da opción</button>
+                    
+                    <div id="flight-3-form-wrapper" class="sub-fieldset full-width" style="display: none;"><label>Opción de Vuelo 3</label><button type="button" class="remove-section-btn" data-subsection="flight-3">&times;</button><div class="form-grid small-gap">
+                        <div class="form-group full-width"><label>Aerolínea / Ruta</label><input type="text" id="flight-3-airline"></div>
+                        <div class="form-group full-width"><label>Descripción / Horarios</label><textarea id="flight-3-desc" rows="2"></textarea></div>
+                        <div class="form-group"><label>Precio por persona</label><input type="text" id="flight-3-price"></div>
+                    </div></div>
+                    
+                    <button type="button" class="add-subsection-btn" data-subsection="flight-2" id="btn-add-flight-2">+ Añadir 2da opción</button>
+                    <button type="button" class="add-subsection-btn" data-subsection="flight-3" id="btn-add-flight-3" style="display:none;">+ Añadir 3ra opción</button>
                 </div>
             </fieldset></div>
         </template>
+
         <template id="template-tours">
             <div id="tours-form-wrapper" class="dynamic-section-wrapper"><fieldset class="form-fieldset">
                 <button type="button" class="remove-section-btn" data-section="tours">&times;</button><legend>Tours</legend>
-                <div class="form-group full-width"><label>Imagen del Tour</label><div class="paste-area" data-img-id="tour-main-photo"><p>Pegar imagen aquí</p><img src="" style="display:none;"></div></div>
-                <div class="sub-fieldset full-width"><label>Opción de Tour 1</label><div class="form-grid small-gap">
-                    <div class="form-group"><label for="tour-1-name">Nombre</label><input type="text" id="tour-1-name" required></div>
-                    <div class="form-group"><label for="tour-1-price">Precio por persona</label><input type="text" id="tour-1-price" inputmode="numeric" required></div>
+                <div class="form-group full-width"><label>Galería del Tour (Pegar hasta 3)</label><div class="gallery-paste-areas">
+                    <div class="paste-area" data-img-id="tour-foto-1"><p>Pegar Foto 1</p><img src="" style="display:none;"></div>
+                    <div class="paste-area" data-img-id="tour-foto-2"><p>Pegar Foto 2</p><img src="" style="display:none;"></div>
+                    <div class="paste-area" data-img-id="tour-foto-3"><p>Pegar Foto 3</p><img src="" style="display:none;"></div>
                 </div></div>
+                
+                <div class="sub-fieldset full-width"><label>Opción de Tour 1</label><div class="form-grid small-gap">
+                    <div class="form-group full-width"><label>Nombre</label><input type="text" id="tour-1-name" required></div>
+                    <div class="form-group full-width"><label>Descripción</label><textarea id="tour-1-desc" rows="2"></textarea></div>
+                    <div class="form-group"><label>Precio por persona</label><input type="text" id="tour-1-price" required></div>
+                </div></div>
+
+                <div id="tour-2-form-wrapper" class="sub-fieldset full-width" style="display: none;"><label>Opción de Tour 2</label><button type="button" class="remove-section-btn" data-subsection="tour-2">&times;</button><div class="form-grid small-gap">
+                    <div class="form-group full-width"><label>Nombre</label><input type="text" id="tour-2-name"></div>
+                    <div class="form-group full-width"><label>Descripción</label><textarea id="tour-2-desc" rows="2"></textarea></div>
+                    <div class="form-group"><label>Precio por persona</label><input type="text" id="tour-2-price"></div>
+                </div></div>
+
+                <div id="tour-3-form-wrapper" class="sub-fieldset full-width" style="display: none;"><label>Opción de Tour 3</label><button type="button" class="remove-section-btn" data-subsection="tour-3">&times;</button><div class="form-grid small-gap">
+                    <div class="form-group full-width"><label>Nombre</label><input type="text" id="tour-3-name"></div>
+                    <div class="form-group full-width"><label>Descripción</label><textarea id="tour-3-desc" rows="2"></textarea></div>
+                    <div class="form-group"><label>Precio por persona</label><input type="text" id="tour-3-price"></div>
+                </div></div>
+
+                <button type="button" class="add-subsection-btn" data-subsection="tour-2" id="btn-add-tour-2">+ Añadir 2da opción</button>
+                <button type="button" class="add-subsection-btn" data-subsection="tour-3" id="btn-add-tour-3" style="display:none;">+ Añadir 3ra opción</button>
             </fieldset></div>
         </template>
+
         <template id="template-transfers">
             <div id="transfers-form-wrapper" class="dynamic-section-wrapper"><fieldset class="form-fieldset">
                 <button type="button" class="remove-section-btn" data-section="transfers">&times;</button><legend>Traslados</legend>
-                <div class="form-group full-width"><label>Imagen</label><div class="paste-area" data-img-id="transfer-main-photo"><p>Pegar imagen aquí</p><img src="" style="display:none;"></div></div>
+                
                 <div class="sub-fieldset full-width"><label>Opción de Traslado 1</label><div class="form-grid small-gap">
-                    <div class="form-group"><label for="transfer-1-desc">Descripción</label><input type="text" id="transfer-1-desc" required></div>
-                    <div class="form-group"><label for="transfer-1-price">Precio por persona</label><input type="text" id="transfer-1-price" inputmode="numeric" required></div>
+                    <div class="form-group full-width"><label>Descripción</label><input type="text" id="transfer-1-desc" required></div>
+                    <div class="form-group"><label>Precio por persona</label><input type="text" id="transfer-1-price" required></div>
                 </div></div>
+
+                <div id="transfer-2-form-wrapper" class="sub-fieldset full-width" style="display: none;"><label>Opción de Traslado 2</label><button type="button" class="remove-section-btn" data-subsection="transfer-2">&times;</button><div class="form-grid small-gap">
+                    <div class="form-group full-width"><label>Descripción</label><input type="text" id="transfer-2-desc"></div>
+                    <div class="form-group"><label>Precio por persona</label><input type="text" id="transfer-2-price"></div>
+                </div></div>
+
+                <div id="transfer-3-form-wrapper" class="sub-fieldset full-width" style="display: none;"><label>Opción de Traslado 3</label><button type="button" class="remove-section-btn" data-subsection="transfer-3">&times;</button><div class="form-grid small-gap">
+                    <div class="form-group full-width"><label>Descripción</label><input type="text" id="transfer-3-desc"></div>
+                    <div class="form-group"><label>Precio por persona</label><input type="text" id="transfer-3-price"></div>
+                </div></div>
+
+                <button type="button" class="add-subsection-btn" data-subsection="transfer-2" id="btn-add-transfer-2">+ Añadir 2da opción</button>
+                <button type="button" class="add-subsection-btn" data-subsection="transfer-3" id="btn-add-transfer-3" style="display:none;">+ Añadir 3ra opción</button>
             </fieldset></div>
         </template>
 
         <!-- SECCIÓN DE CONFIRMACIÓN (PDF) -->
         <div id="confirmation-section" style="display: none;">
-            <div id="voucher-to-print">
+            <div id="voucher-to-print" style="background-color: #fff; position: relative; overflow: hidden;">
                 
                 <!-- HEADER CON NUEVO BANNER (SIN CAJA BLANCA) -->
                 <header class="confirmation-header" style="padding: 0; background: none; height: auto; display: block; border-bottom: none;">
@@ -252,8 +313,8 @@
                     
                     <div id="confirmation-components-container"></div>
                     
-                    <!-- BARRA DE PAGOS VERDE ESMERALDA -->
-                    <div class="premium-payment-bar" style="display: none;"></div>
+                    <!-- BARRA DE PAGOS VERDE ESMERALDA (SOLO PARA GRUPOS) -->
+                    <div class="premium-payment-bar" id="group-payment-bar" style="display: none;"></div>
 
                     <div class="inclusions-box" style="margin-top: 20px;">
                         <h4>Qué NO incluye tu viaje</h4>
@@ -271,14 +332,14 @@
                     
                     <div id="terms-section-confirm" class="component-section" style="display: none;">
                         <h3 style="background-color: var(--c-dark);">Términos y Condiciones del Plan</h3>
-                        <div id="confirm-terms-content" class="terms-content-body" style="padding: 20px; font-size: 11px; color: #555; text-align: justify;"></div>
-                    </div>
-                    
-                    <!-- FOOTER CYAN FINAL (IMAGEN CERRANDO EL PDF) -->
-                    <div style="margin-top: 30px; padding: 0;">
-                        <img src="https://i.imgur.com/qCpmxBj.png" alt="Footer Cyan Travel" style="width: 100%; height: auto; display: block; border-radius: 0 0 24px 24px;">
+                        <div id="confirm-terms-content" class="terms-content-body" style="padding: 0; font-size: 11px; color: #555; text-align: justify;"></div>
                     </div>
                 </div> <!-- Cierre de voucher-content -->
+                
+                <!-- FOOTER CYAN FINAL (IMAGEN CERRANDO EL PDF DE LADO A LADO) -->
+                <div style="margin-top: 30px; padding: 0; width: 100%;">
+                    <img src="https://i.imgur.com/qCpmxBj.png" alt="Footer Cyan Travel" style="width: 100%; height: auto; display: block; border-radius: 0 0 24px 24px;">
+                </div>
             </div> <!-- Cierre de voucher-to-print -->
             
             <!-- BOTONES DE ACCIÓN -->
