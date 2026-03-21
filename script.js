@@ -708,7 +708,8 @@ document.addEventListener('DOMContentLoaded', () => {
             let mapHTML = pastedImages[`crucero-${num}-mapa`] ? `<div class="single-photo-container"><img src="${pastedImages[`crucero-${num}-mapa`]}"></div>` : '';
             
             const logoUrl = NAVIERA_LOGOS[naviera];
-            const logoHTML = logoUrl ? `<img src="${logoUrl}" class="naviera-logo" alt="${naviera}" style="max-height: 40px; max-width: 120px; object-fit: contain; background: white; padding: 5px 10px; border-radius: 8px;">` : '';
+            // Logo limpio, sin fondo blanco forzado, más grande y elegante
+            const logoHTML = logoUrl ? `<img src="${logoUrl}" alt="${naviera}" style="max-height: 60px; max-width: 200px; object-fit: contain;">` : '';
 
             // Construir Tabla de Itinerario si existe
             let itineraryHTML = '';
@@ -778,11 +779,12 @@ document.addEventListener('DOMContentLoaded', () => {
            
             confirmationComponentsContainer.innerHTML += `
                 <div class="quote-option-box" style="position: relative;">
-                    <div class="option-header" style="display: flex; justify-content: space-between; align-items: center;">
-                        <h3 style="max-width: 70%; margin: 0;">${titulo}</h3>
-                        ${logoHTML}
+                    <div class="option-header">
+                        <h3 style="margin: 0;">${titulo}</h3>
                     </div>
                     <div class="option-body">
+                        
+                        ${logoHTML ? `<div style="text-align: center; margin-bottom: 25px;">${logoHTML}</div>` : ''}
                         
                         <div class="cruise-specs-grid">
                             <div class="cruise-spec-item">${ICONS.ship} <div><strong>Barco:</strong><span>${barco}</span></div></div>
@@ -791,7 +793,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div class="cruise-spec-item">${ICONS.moon} <div><strong>Duración:</strong><span>${noches} Noches</span></div></div>
                         </div>
 
-                        ${videoLink ? `<div style="text-align: center; margin-bottom: 20px;"><a href="${videoLink}" target="_blank" style="background: #ff0000; color: white; padding: 10px 20px; border-radius: 50px; text-decoration: none; font-weight: bold; display: inline-block;">🎬 Ver video del barco</a></div>` : ''}
+                        ${videoLink ? `<div style="text-align: center; margin-bottom: 20px;"><a href="${videoLink}" target="_blank" class="pdf-link" style="background: #ff0000; color: white; padding: 10px 20px; border-radius: 50px; text-decoration: none; font-weight: bold; display: inline-block;">🎬 Ver video del barco</a></div>` : ''}
 
                         ${mapHTML}
                         <div class="photo-gallery">${galleryHTML}</div>
@@ -939,9 +941,11 @@ document.addEventListener('DOMContentLoaded', () => {
             pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, canvas.width, canvas.height);
             
             const scaleFactor = canvas.width / elementToPrint.offsetWidth;
-            ['cta-reservar', 'cta-contactar'].forEach(id => {
-                const element = document.getElementById(id);
-                if (!element || !element.href) return;
+            
+            // Buscar TODOS los botones que tengan la clase .pdf-link (WhatsApp y Videos)
+            const pdfLinks = elementToPrint.querySelectorAll('.pdf-link');
+            pdfLinks.forEach(element => {
+                if (!element.href) return;
                 const rect = element.getBoundingClientRect();
                 const containerRect = elementToPrint.getBoundingClientRect();
                 pdf.link(
